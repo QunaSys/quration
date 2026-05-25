@@ -87,21 +87,51 @@ bool Visit(
         std::unordered_map<DiGraph::IdType, std::uint32_t>& mp,
         std::list<DiGraph::Node>& sorted
 ) {
-    if (mp[id] == 1u) {
-        return false;
-    } else if (mp[id] == 2u) {
-        return true;
-    }
-    assert(mp[id] == 0u);
-    mp[id] = 1u;
-    for (const auto& node : id2node.at(id)->child) {
-        const auto success = Visit(node, id2node, mp, sorted);
-        if (!success) {
+    struct Frame {
+        DiGraph::IdType id;
+        bool exit;
+    };
+
+    auto stack = std::stack<Frame>();
+    stack.push(Frame{id, false});
+
+    while (!stack.empty()) {
+        // exit==true:  node is visited, and try to visit children
+        // exit==false: try to enter this node
+        const auto [current, exit] = stack.top();
+        stack.pop();
+
+        if (exit) {
+            if (mp[current] == 2u) {
+                continue;
+            }
+            assert(mp[current] == 1u);
+            mp[current] = 2u;
+            sorted.emplace_front(*id2node.at(current));
+            continue;
+        }
+
+        if (mp[current] == 1u) {
             return false;
         }
+        if (mp[current] == 2u) {
+            continue;
+        }
+
+        assert(mp[current] == 0u);
+        mp[current] = 1u;
+        stack.push(Frame{current, true});
+
+        for (const auto& node : id2node.at(current)->child) {
+            if (mp[node] == 1u) {
+                return false;
+            }
+            if (mp[node] == 0u) {
+                stack.push(Frame{node, false});
+            }
+        }
     }
-    mp[id] = 2u;
-    sorted.emplace_front(*id2node.at(id));
+
     return true;
 }
 }  // namespace
