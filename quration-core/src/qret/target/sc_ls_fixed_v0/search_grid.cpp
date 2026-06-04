@@ -703,9 +703,21 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
             return std::nullopt;
         }
         auto ancilla = route->logical_path;
+        // Capture contacts before popping: path = [q_src, contact_src, ..., contact_dst, q_dst]
+        auto contacts = std::vector<Coord3D>{};
+        if (ancilla.size() >= 3) {
+            contacts.push_back(*std::next(ancilla.begin()));
+            contacts.push_back(*std::prev(std::prev(ancilla.end())));
+        }
         ancilla.pop_front();
         ancilla.pop_back();
-        return Ancilla2D{.qs = qs, .es = es, .m = std::nullopt, .ancilla = std::move(ancilla)};
+        return Ancilla2D{
+                .qs = qs,
+                .es = es,
+                .m = std::nullopt,
+                .ancilla = std::move(ancilla),
+                .qubit_contacts = std::move(contacts),
+        };
     }
     if (qs.size() == 1 && es.empty() && use_magic_state && boundaries.size() == 1) {
         const auto q_dst = *qs.begin();
@@ -716,6 +728,11 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
             return std::nullopt;
         }
         auto ancilla = route->logical_path;
+        // Capture q_dst contact before popping: path = [magic_factory, ..., contact_dst, q_dst]
+        auto contacts = std::vector<Coord3D>{};
+        if (ancilla.size() >= 3) {
+            contacts.push_back(*std::prev(std::prev(ancilla.end())));
+        }
         ancilla.pop_front();
         ancilla.pop_back();
         return Ancilla2D{
@@ -723,6 +740,7 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
                 .es = es,
                 .m = route->magic_factory,
                 .ancilla = std::move(ancilla),
+                .qubit_contacts = std::move(contacts),
         };
     }
     if (qs.size() == 1 && es.size() == 1 && !use_magic_state && boundaries.size() == 1) {
@@ -735,9 +753,20 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
             return std::nullopt;
         }
         auto ancilla = route->logical_path;
+        // Capture q_dst contact before popping: path = [e_factory, ..., contact_dst, q_dst]
+        auto contacts = std::vector<Coord3D>{};
+        if (ancilla.size() >= 3) {
+            contacts.push_back(*std::prev(std::prev(ancilla.end())));
+        }
         ancilla.pop_front();
         ancilla.pop_back();
-        return Ancilla2D{.qs = qs, .es = es, .m = std::nullopt, .ancilla = std::move(ancilla)};
+        return Ancilla2D{
+                .qs = qs,
+                .es = es,
+                .m = std::nullopt,
+                .ancilla = std::move(ancilla),
+                .qubit_contacts = std::move(contacts),
+        };
     }
 
     const auto& topology = plane.GetTopology();
@@ -883,7 +912,7 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
     }
 
     // Construct ancilla.
-    auto ret = Ancilla2D{.qs = qs, .es = es, .m = std::nullopt, .ancilla = {}};
+    auto ret = Ancilla2D{.qs = qs, .es = es, .m = std::nullopt, .ancilla = {}, .qubit_contacts = {}};
     if (use_magic_state) {
         const auto& m_imag_node = tree.GetNode(MId);
         if (m_imag_node.adj.size() != 1) {
@@ -895,7 +924,7 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
         ret.m = MSymbol{plane.GetNode(neighbor_place).symbol};
     }
     // Collect ancilla nodes from the Steiner tree; ancilla_ids is a companion hash set
-    // for fast duplicate checks in the bridge-fix loop below.
+    // for fast duplicate checks in the detour insertion loop below.
     auto ancilla_ids = std::unordered_set<std::int32_t>{};
     for (const auto& node : tree) {
         if (node.id == MId) {
@@ -911,6 +940,8 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
     // Post-process: a qubit terminal connecting two or more ancilla subtrees in
     // the Steiner tree splits the ancilla set (the qubit cell is excluded).
     // Repair each such split by adding an ancilla-only detour path.
+    // Also record one representative contact cell per qubit for visualization.
+    auto qubit_contact_map = std::unordered_map<std::int32_t, Coord3D>{};
     for (const auto q_id : qubit_terminal_ids) {
         if (!tree.HasNode(q_id)) {
             continue;
@@ -930,6 +961,13 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
                 continue;
             }
             ancilla_nbrs.push_back(adj_id);
+        }
+
+        // Record the first ancilla neighbor as the representative contact for
+        // visualization (one contact per qubit, regardless of how many ancilla neighbors it has).
+        if (!ancilla_nbrs.empty()) {
+            const auto place = from_ind(ancilla_nbrs[0]);
+            qubit_contact_map[q_id] = Coord3D{place.x, place.y, plane.GetTopology().GetZ()};
         }
 
         if (ancilla_nbrs.size() < 2) {
@@ -991,6 +1029,15 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
                 }
                 cur = prev.at(cur);
             }
+        }
+    }
+
+    // Populate qubit_contacts in qs order for the visualizer.
+    for (const auto q : qs) {
+        const auto q_place = state.GetPlace(q).XY();
+        const auto q_id = to_ind(q_place.x, q_place.y);
+        if (qubit_contact_map.contains(q_id)) {
+            ret.qubit_contacts.push_back(qubit_contact_map.at(q_id));
         }
     }
 
