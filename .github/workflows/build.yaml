@@ -511,20 +511,29 @@ jobs:
           name: pyqret
           pattern: pyqret-*
 
-  release:
-    if: github.event_name == 'release'
+  release-pyqret:
+    name: 🕊️ Release pyqret to PyPI
     needs: [merge]
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Download merged artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: pyqret
-          path: dist
 
-      - name: Upload artifact to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*
+      - name: Install Twine
+        run: python -m pip install twine==6.1.0 packaging==24.2
+
+      - name: Release to PyPI
+        run: |
+          COUNTER=0
+          for f in *; do
+            echo "Checking $f"
+            if ! python -m twine check $f; then
+              COUNTER=$((COUNTER + 1))
+            fi
+          done
+          [[ $COUNTER = 0 ]] && python -m twine upload *
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.TWINE_API_TOKEN }}
