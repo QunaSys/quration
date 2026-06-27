@@ -365,7 +365,7 @@ def draw_qubit_cell(ax: plt.Axes, q: QubitSpan) -> None:
     z_color = "#ef4444"
     x_color = "#0284c7"
     if q.dir == 0:
-        # 左右が Z 境界、上下が X 境界
+        # Left/right edges are Z boundaries; top/bottom edges are X boundaries.
         edge_list = [
             ((x - CELL_HALF, y - CELL_HALF), (x - CELL_HALF, y + CELL_HALF), z_color),
             ((x + CELL_HALF, y - CELL_HALF), (x + CELL_HALF, y + CELL_HALF), z_color),
@@ -373,7 +373,7 @@ def draw_qubit_cell(ax: plt.Axes, q: QubitSpan) -> None:
             ((x - CELL_HALF, y - CELL_HALF), (x + CELL_HALF, y - CELL_HALF), x_color),
         ]
     else:
-        # 上下が Z 境界、左右が X 境界
+        # Top/bottom edges are Z boundaries; left/right edges are X boundaries.
         edge_list = [
             ((x - CELL_HALF, y - CELL_HALF), (x - CELL_HALF, y + CELL_HALF), x_color),
             ((x + CELL_HALF, y - CELL_HALF), (x + CELL_HALF, y + CELL_HALF), x_color),
