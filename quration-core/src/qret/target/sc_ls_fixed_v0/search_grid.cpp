@@ -506,9 +506,27 @@ std::optional<SearchRoute::Route2D> SearchRoute::FindCnotRoute2D(
     const auto& dst = state.GetPlace(q_dst);
     const auto dir_src = state.GetDir(q_src);
 
+    // verify source and targets are on the same node at time T
     if (src.z != dst.z || plane_0.GetTopology().GetZ() != src.z) {
         return std::nullopt;
     }
+
+    {
+        const auto& state_1 = plane_1.GetParent().GetParent();
+        const auto& src_1 = state_1.GetPlace(q_src);
+        const auto& dst_1 = state_1.GetPlace(q_dst);
+        // verify source and targets are on the same node at time T+1
+        if (src_1.z != dst_1.z
+            || plane_1.GetTopology().GetZ() != src_1.z) {
+            return std::nullopt;
+        }
+        // verify control is available at T, and target is available at T+1
+        if (!plane_0.GetNode(src.XY()).is_available
+            || !plane_1.GetNode(dst_1.XY()).is_available) {
+            return std::nullopt;
+        }
+    }
+
 
     const auto search = BuildCnotSearchData(plane_0, plane_1, q_dst, boundaries_dst);
     const auto best =
