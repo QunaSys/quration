@@ -109,6 +109,21 @@
       }
     },
     {
+      "name": "dist-test",
+      "displayName": "default: intended for distribution with test",
+      "inherits": [
+        "_toolchain_vcpkg",
+        "_release"
+      ],
+      "cacheVariables": {
+        "QRET_BUILD_APPLICATION": "ON",
+        "QRET_BUILD_ALGORITHM": "ON",
+        "QRET_BUILD_EXAMPLE": "ON",
+        "QRET_BUILD_TEST": "ON",
+        "QRET_USE_QULACS": "OFF"
+      }
+    }, 
+   {
       "name": "all-debug",
       "displayName": "default: all debug",
       "inherits": [
@@ -238,6 +253,11 @@
       "jobs": 8
     },
     {
+      "name": "build-dist-test",
+      "configurePreset": "dist-test",
+      "jobs": 8
+    },
+    {
       "name": "build-all-debug",
       "configurePreset": "all-debug",
       "jobs": 8
@@ -304,6 +324,13 @@
     {
       "name": "test-all-release",
       "configurePreset": "all-release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-dist-test",
+      "configurePreset": "dist-test",
       "output": {
         "outputOnFailure": true
       }

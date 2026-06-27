@@ -23,15 +23,15 @@ using runtime::SimulatorConfig, runtime::Simulator;
 namespace {
 Json MakeFunction(
         const std::string& name,
-        const Json& bb_list,
+        const Json& basicblock_list,
         std::size_t num_qubits,
         std::size_t num_registers,
         std::size_t num_tmp_registers = 0
 ) {
     auto function = Json::object();
     function["name"] = name;
-    function["entry_point"] = bb_list[0]["name"];
-    function["bb_list"] = bb_list;
+    function["entry_point"] = basicblock_list[0]["name"];
+    function["basicblock_list"] = basicblock_list;
     function["argument"]["num_qubits"] = num_qubits;
     function["argument"]["qubits"]["q"] = num_qubits;
     function["argument"]["num_registers"] = num_registers;
@@ -39,10 +39,12 @@ Json MakeFunction(
     function["num_tmp_registers"] = num_tmp_registers;
     return function;
 }
-Json MakeModule(const std::string& name, const Json& circuit_list) {
+Json MakeModule(const std::string& name, const Json& function_list) {
     auto module = Json::object();
     module["name"] = name;
-    module["circuit_list"] = circuit_list;
+    module["entry_function"] =
+            function_list.empty() ? "" : function_list[0]["name"].get<std::string>();
+    module["function_list"] = function_list;
     return module;
 }
 }  // namespace
@@ -212,7 +214,8 @@ TEST(TestMetadata, AllMetadata) {
     {
         j = *builder.GetModule();
         std::cout << j << std::endl;
-        const auto inst_list_json = j["circuit_list"][0]["bb_list"][0]["inst_list"];
+        const auto inst_list_json =
+                j["function_list"][0]["basicblock_list"][0]["inst_list"];
 
         // 1st inst without metadata.
         EXPECT_FALSE(inst_list_json[0].contains("metadata"));
@@ -384,7 +387,8 @@ TEST(TestIRDeserializationValidation, SwitchRegistersKey) {
     EXPECT_NO_THROW(ir::LoadJson(module, context));
 
     auto serialized = Json(*context.owned_module.back());
-    const auto& switch_json = serialized["circuit_list"][0]["bb_list"][0]["inst_list"][0];
+    const auto& switch_json =
+            serialized["function_list"][0]["basicblock_list"][0]["inst_list"][0];
     EXPECT_TRUE(switch_json.contains("registers"));
     EXPECT_FALSE(switch_json.contains("value"));
 }

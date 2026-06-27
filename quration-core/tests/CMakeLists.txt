@@ -1,6 +1,6 @@
 set(CORE_LIB_NAME "${PROJECT_NAME}-core")
 
-function(add_test directory filename)
+function(add_qret_test directory filename)
   string(REPLACE "/" "_" directory_name ${directory})
   set(target ${directory_name}_${filename})
   add_executable(${target} ${directory}/${filename}.cpp)
@@ -20,79 +20,99 @@ function(add_test directory filename)
                         -fcoverage-mapping)
   endif()
 
-  gtest_discover_tests(
-    ${target}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} DISCOVERY_MODE PRE_TEST
-    PROPERTIES ENVIRONMENT GRIDSYNTH_PATH=${GRIDSYNTH_PATH})
+  set(test_environment "GRIDSYNTH_PATH=${GRIDSYNTH_PATH}")
+  set(test_environment_modification
+      "PATH=path_list_prepend:$<TARGET_FILE_DIR:${CORE_LIB_NAME}>"
+      "PATH=path_list_prepend:$<TARGET_FILE_DIR:${target}>")
+
+  if(WIN32)
+    gtest_add_tests(
+      TARGET ${target}
+      SOURCES ${directory}/${filename}.cpp
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+      TEST_LIST ${target}_tests)
+    if(${target}_tests)
+      set_tests_properties(
+        ${${target}_tests}
+        PROPERTIES ENVIRONMENT "${test_environment}"
+                   ENVIRONMENT_MODIFICATION "${test_environment_modification}")
+    endif()
+  else()
+    gtest_discover_tests(
+      ${target}
+      WORKING_DIRECTORY ${CMAKE_SOURCE_DIR} DISCOVERY_MODE PRE_TEST
+      PROPERTIES ENVIRONMENT "${test_environment}" ENVIRONMENT_MODIFICATION
+                 "${test_environment_modification}")
+  endif()
 endfunction()
 
 # analysis
-add_test(analysis circuit_drawer)
-add_test(analysis compute_graph)
+add_qret_test(analysis circuit_drawer)
+add_qret_test(analysis compute_graph)
 
 # base
-add_test(base cast)
-add_test(base graph)
-add_test(base gridsynth)
-add_test(base iterator)
-add_test(base list)
-add_test(base option)
-add_test(base portable_function)
-add_test(base string)
-add_test(base type)
+add_qret_test(base cast)
+add_qret_test(base graph)
+add_qret_test(base gridsynth)
+add_qret_test(base iterator)
+add_qret_test(base list)
+add_qret_test(base option)
+add_qret_test(base portable_function)
+add_qret_test(base string)
+add_qret_test(base type)
 
 # frontend
-add_test(frontend builder)
-add_test(frontend functor)
-add_test(frontend openqasm2)
-add_test(frontend openqasm3)
+add_qret_test(frontend builder)
+add_qret_test(frontend functor)
+add_qret_test(frontend openqasm2)
+add_qret_test(frontend openqasm3)
 
 # ir
-add_test(ir circuit)
-add_test(ir instructions)
-add_test(ir json)
+add_qret_test(ir circuit)
+add_qret_test(ir instructions)
+add_qret_test(ir json)
 
 # math
-add_test(math boolean_formula)
-add_test(math clifford)
-add_test(math fraction)
-add_test(math pauli)
+add_qret_test(math boolean_formula)
+add_qret_test(math clifford)
+add_qret_test(math fraction)
+add_qret_test(math pauli)
 
 # parser
-add_test(parser openqasm2)
-add_test(parser openqasm3)
+add_qret_test(parser openqasm2)
+add_qret_test(parser openqasm3)
 
 # runtime
-add_test(runtime call_stack)
-add_test(runtime clifford_state)
-add_test(runtime full_quantum_state)
-add_test(runtime simulator)
-add_test(runtime toffoli_state)
+add_qret_test(runtime call_stack)
+add_qret_test(runtime clifford_state)
+add_qret_test(runtime full_quantum_state)
+add_qret_test(runtime simulator)
+add_qret_test(runtime toffoli_state)
 
 # target
-add_test(target/sc_ls_fixed_v0 asm_printer)
-add_test(target/sc_ls_fixed_v0 calc_compile_info_qec)
-add_test(target/sc_ls_fixed_v0 geometry)
-add_test(target/sc_ls_fixed_v0 pipeline_state)
-add_test(target/sc_ls_fixed_v0 lowering)
-add_test(target/sc_ls_fixed_v0 mapping)
-add_test(target/sc_ls_fixed_v0 routing)
-add_test(target/sc_ls_fixed_v0 search_grid)
-add_test(target/sc_ls_fixed_v0 search_chip_comm)
-add_test(target/sc_ls_fixed_v0 simulator)
-add_test(target/sc_ls_fixed_v0 state)
-add_test(target/sc_ls_fixed_v0 topology)
-add_test(target/sc_ls_fixed_v0 validation)
+add_qret_test(target/sc_ls_fixed_v0 asm_printer)
+add_qret_test(target/sc_ls_fixed_v0 calc_compile_info_qec)
+add_qret_test(target/sc_ls_fixed_v0 geometry)
+add_qret_test(target/sc_ls_fixed_v0 pipeline_state)
+add_qret_test(target/sc_ls_fixed_v0 lowering)
+add_qret_test(target/sc_ls_fixed_v0 mapping)
+add_qret_test(target/sc_ls_fixed_v0 routing)
+add_qret_test(target/sc_ls_fixed_v0 search_grid)
+add_qret_test(target/sc_ls_fixed_v0 search_chip_comm)
+add_qret_test(target/sc_ls_fixed_v0 simulator)
+add_qret_test(target/sc_ls_fixed_v0 state)
+add_qret_test(target/sc_ls_fixed_v0 topology)
+add_qret_test(target/sc_ls_fixed_v0 validation)
 
 # transforms
-add_test(transforms/ipo inliner)
-add_test(transforms/scalar decomposition)
-add_test(transforms/scalar delete_consecutive_same_pauli)
-add_test(transforms/scalar delete_opt_hint)
-add_test(transforms/scalar ignore_global_phase)
-add_test(transforms/scalar static_condition_pruning)
+add_qret_test(transforms/ipo inliner)
+add_qret_test(transforms/scalar decomposition)
+add_qret_test(transforms/scalar delete_consecutive_same_pauli)
+add_qret_test(transforms/scalar delete_opt_hint)
+add_qret_test(transforms/scalar ignore_global_phase)
+add_qret_test(transforms/scalar static_condition_pruning)
 
 # Test cmd
 if(QRET_BUILD_APPLICATION)
-  add_test(cmd main)
+  add_qret_test(cmd main)
 endif()
