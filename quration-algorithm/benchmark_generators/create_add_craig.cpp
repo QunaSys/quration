@@ -1,31 +1,94 @@
-#include <fmt/core.h>
+#include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
 
+#include <cstddef>
+#include <cstdint>
 #include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 
 #include "qret/algorithm/arithmetic/integer.h"
 #include "qret/frontend/builder.h"
+#include "qret/ir/context.h"
 #include "qret/ir/json.h"
+#include "qret/transforms/ipo/inliner.h"
 
-int main() {
-    using qret::frontend::gate::AddCraigGen;
-    const auto size = std::size_t{5};
-    const auto dst_value = 10;
-    const auto src_value = 17;
+struct AddCraigParams {
+    std::size_t size;
+};
 
-    // create circuit
+void from_json(const nlohmann::json& j, AddCraigParams& p) {
+    p.size = j.at("size").get<std::size_t>();
+}
+
+AddCraigParams LoadAddCraigJson(const std::string& path) {
+    auto ifs = std::ifstream(path.data());
+    if (!ifs.good()) {
+        throw std::runtime_error("Could not open file: " + path);
+    }
+    nlohmann::json j;
+    ifs >> j;
+    return j.get<AddCraigParams>();
+};
+
+int main(std::int32_t argc, const char* const* const argv) {
+    namespace po = boost::program_options;
+    po::options_description desc(
+            "Create AddCraig circuit from JSON file\n\n"
+            "Input JSON fields:\n"
+            "  size: Number of bits in each addend register."
+    );
+    desc.add_options()
+        ("help", "Print usage instructions")
+        ("input", po::value<std::string>()->required(), "Input JSON file")
+        ("output", po::value<std::string>()->required(), "Path to the output file")
+        ("inline", "Option to enable inline expansion");
+
+    po::variables_map vm;
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        if (vm.count("help") > 0) {
+            std::cout << desc << std::endl;
+            return 0;
+        }
+        po::notify(vm);
+    } catch (const po::error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << desc << std::endl;
+        return 1;
+    }
+
+    std::string input_file;
+    if (vm.count("input") > 0) {
+        input_file = vm["input"].as<std::string>();
+    }
+    const auto params = LoadAddCraigJson(input_file);
+
     qret::ir::IRContext context;
-    auto* module = qret::ir::Module::Create("craig", context);
+    auto* module = qret::ir::Module::Create("AddCraigModule", context);
     auto builder = qret::frontend::CircuitBuilder(module);
-    auto gen = AddCraigGen(&builder, size);
-    gen.Generate();
+    auto gen = qret::frontend::gate::AddCraigGen(&builder, params.size);
+    auto* circuit = gen.Generate();
+    auto* ir_circuit = circuit->GetIR();
 
-    // serialization
-    auto j = qret::Json();
-    j = *builder.GetModule();
+    // Inline expansion
+    if (vm.count("inline") > 0) {
+        qret::ir::RecursiveInlinerPass().RunOnFunction(*ir_circuit);
+    }
 
-    // write json to file
-    auto ofs = std::ofstream(fmt::format("add_craig_{}.json", size));
-    ofs << std::setw(4) << j;
+    std::string output_file;
+    if (vm.count("output") > 0) {
+        output_file = vm["output"].as<std::string>();
+    }
+    std::ofstream ofs(output_file);
+    if (!ofs) {
+        std::cerr << "Failed to open output file: " << output_file << std::endl;
+        return 1;
+    }
+    auto module_json = qret::Json(*module);
+    ofs << module_json;
+    ofs.close();
 
     return 0;
 }

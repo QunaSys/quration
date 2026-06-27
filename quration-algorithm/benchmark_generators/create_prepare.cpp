@@ -41,11 +41,16 @@ PREPAREParams LoadPREPAREJson(const std::string& path) {
 
 int main(std::int32_t argc, const char* const* const argv) {
     namespace po = boost::program_options;
-    po::options_description desc("Create PREPARE circuit from JSON file");
+    po::options_description desc(
+            "Create PREPARE circuit from JSON file\n\n"
+            "Input JSON fields:\n"
+            "  lcu_coefficients: Coefficients used to build the LCU alias-sampling table.\n"
+            "  sub_bit_precision: Bit precision used for reversible sampling."
+    );
     desc.add_options()
         ("help", "Print usage instructions")
-        ("file", po::value<std::string>()->required(), "Path to JSON file of input parameters")
-        ("out", po::value<std::string>()->default_value("out.json"), "Path to the output file")
+        ("input", po::value<std::string>()->required(), "Input JSON file")
+        ("output", po::value<std::string>()->required(), "Path to the output file")
         ("inline", "Option to enable inline expansion.");
 
     po::variables_map vm;
@@ -63,8 +68,8 @@ int main(std::int32_t argc, const char* const* const argv) {
     }
 
     std::string input_file;
-    if (vm.count("file") > 0) {
-        input_file = vm["file"].as<std::string>();
+    if (vm.count("input") > 0) {
+        input_file = vm["input"].as<std::string>();
     }
     const auto params = LoadPREPAREJson(input_file);
     const auto size = qret::math::BitSizeI(params.lcu_coefficients.size() - 1);
@@ -91,8 +96,8 @@ int main(std::int32_t argc, const char* const* const argv) {
     }
 
     std::string output_file;
-    if (vm.count("out") > 0) {
-        output_file = vm["out"].as<std::string>();
+    if (vm.count("output") > 0) {
+        output_file = vm["output"].as<std::string>();
     }
     std::ofstream ofs(output_file);
     if (!ofs) {
