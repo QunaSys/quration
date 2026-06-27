@@ -11,7 +11,7 @@ function(set_version VERSION)
 endfunction()
 
 function(add_subdirectory_with_runtime_output directory runtime_output)
-  if(MSVC OR "${runtime_output}" STREQUAL "")
+  if("${runtime_output}" STREQUAL "")
     add_subdirectory(${directory})
   else()
     if(DEFINED CMAKE_RUNTIME_OUTPUT_DIRECTORY)
@@ -20,12 +20,23 @@ function(add_subdirectory_with_runtime_output directory runtime_output)
     else()
       set(had_runtime_output_directory FALSE)
     endif()
-    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${runtime_output}")
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "$<1:${runtime_output}>")
     add_subdirectory(${directory})
     if(had_runtime_output_directory)
       set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${previous_runtime_output_directory}")
     else()
       unset(CMAKE_RUNTIME_OUTPUT_DIRECTORY)
     endif()
+  endif()
+endfunction()
+
+function(qret_copy_runtime_dependencies target)
+  if(MSVC AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+    add_custom_command(
+      TARGET ${target}
+      POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_if_different
+              $<TARGET_RUNTIME_DLLS:${target}> $<TARGET_FILE_DIR:${target}>
+      COMMAND_EXPAND_LISTS)
   endif()
 endfunction()
