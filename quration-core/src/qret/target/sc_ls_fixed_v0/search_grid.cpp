@@ -520,8 +520,11 @@ std::optional<SearchRoute::Route2D> SearchRoute::FindCnotRoute2D(
             || plane_1.GetTopology().GetZ() != src_1.z) {
             return std::nullopt;
         }
-        // verify control is available at T, and target is available at T+1
+        // verify control and target are available at both T and T+1
+        // this is conservative conditioning, and can be relaxed
         if (!plane_0.GetNode(src.XY()).is_available
+            || !plane_0.GetNode(dst.XY()).is_available
+            || !plane_1.GetNode(src_1.XY()).is_available
             || !plane_1.GetNode(dst_1.XY()).is_available) {
             return std::nullopt;
         }
