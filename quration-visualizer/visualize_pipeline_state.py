@@ -648,10 +648,10 @@ def draw_running_ancilla(
 
 def validate_topology(target: dict[str, Any], *, allow_non_dim2: bool) -> None:
     machine_option = target.get("machine_option", {})
-    machine_type = str(machine_option.get("type", "")).lower()
-    if machine_type not in {"", "dim2"} and not allow_non_dim2:
+    topology_type = str(machine_option.get("topology_type", "")).lower()
+    if topology_type not in {"", "dim2"} and not allow_non_dim2:
         msg = (
-            f"machine_option.type is '{machine_type.upper()}' (not Dim2). "
+            f"machine_option.topology_type is '{topology_type.upper()}' (not Dim2). "
             "This viewer is optimized for Dim2 and may show unexpected layout."
         )
         print(f"[WARN] {msg}")

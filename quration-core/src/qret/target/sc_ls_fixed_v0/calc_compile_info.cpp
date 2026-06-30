@@ -73,13 +73,14 @@ DepGraph::DepGraph(const MachineFunction& mf) {
     graph_ = DiGraph();
     auto q2id = std::map<QSymbol, DiGraph::IdType>();
     auto c2id = std::map<CSymbol, DiGraph::IdType>();
+    auto m2id = std::map<MSymbol, DiGraph::IdType>();
     auto e2id = std::map<ESymbol, DiGraph::IdType>();
     for (CSymbol::IdType i = 0; i < NumReservedCSymbols; ++i) {
         c2id[CSymbol{i}] = std::numeric_limits<DiGraph::IdType>::max();
     }
     auto measurement_c = std::unordered_set<CSymbol>{};
 
-    auto add_edge = [&q2id, &c2id, &e2id, &measurement_c, &target, this](
+    auto add_edge = [&q2id, &c2id, &m2id, &e2id, &measurement_c, &target, this](
                             const DiGraph::IdType id,
                             const ScLsInstructionBase& inst
                     ) {
@@ -105,6 +106,15 @@ DepGraph::DepGraph(const MachineFunction& mf) {
                 q2id.erase(src);
                 q2id[dst] = id;
             }
+        }
+
+        // Check mtarget.
+        for (const auto& m : inst.MTarget()) {
+            if (m2id.contains(m)) {
+                const auto old = m2id.at(m);
+                graph_.AddEdge(old, id);
+            }
+            m2id[m] = id;
         }
 
         // Check etarget.

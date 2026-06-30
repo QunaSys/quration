@@ -850,7 +850,7 @@ bool ScLsSimulator::SearchTwistDir(Beat beat, Twist* inst) {
         for (auto b = beat; b < beat + inst->Latency(); ++b) {
             auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
             if (plane.GetTopology().OutOfPlane(ancilla.XY())
-                || !plane.GetNode(ancilla.XY()).is_available) {
+                || !plane.GetNode(ancilla.XY()).IsFreeAncilla()) {
                 runnable = false;
                 break;
             }
@@ -952,7 +952,7 @@ bool ScLsSimulator::SearchRotateDir(Beat beat, Rotate* inst) {
         for (auto b = beat; b < beat + inst->Latency(); ++b) {
             auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
             if (plane.GetTopology().OutOfPlane(ancilla.XY())
-                || !plane.GetNode(ancilla.XY()).is_available) {
+                || !plane.GetNode(ancilla.XY()).IsFreeAncilla()) {
                 runnable = false;
                 break;
             }
@@ -1561,6 +1561,9 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DBFSAndRun(
     path.pop_front();  // Delete coord of magic factory.
     path.pop_back();  // Delete coord of 'q_dst'.
     inst->SetPath(std::move(path));
+    if (!MagicFactoryIsAvailable(beat, inst->MagicFactory())) {
+        return false;
+    }
     // Run LATTICE_SURGERY_MAGIC.
     RunLatticeSurgeryMagic(beat, inst);
     RunInstructionInQueue(queue, inst);
@@ -1596,6 +1599,9 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DSteinerAndRun(
     }
     inst->SetMagicFactory(ancilla.m.value());
     inst->SetPath(ancilla.ancilla);
+    if (!MagicFactoryIsAvailable(beat, inst->MagicFactory())) {
+        return false;
+    }
     // Run LATTICE_SURGERY_MAGIC.
     RunLatticeSurgeryMagic(beat, inst);
     RunInstructionInQueue(queue, inst);

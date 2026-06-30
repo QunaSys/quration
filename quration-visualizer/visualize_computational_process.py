@@ -1300,12 +1300,12 @@ def main() -> None:
         st.error(f"Failed to parse json: {ex}")
         return
 
-    if ftqc.machine_type.lower() != "dim2" or ftqc.topology_count > 1:
+    if ftqc.topology_type.lower() != "dim2" or ftqc.topology_count > 1:
         st.error(
             "visualize_computational_process.py currently supports only Dim2 single-chip JSON."
         )
         st.caption(
-            f"Detected machine_type={ftqc.machine_type}, topology_count={ftqc.topology_count}. "
+            f"Detected topology_type={ftqc.topology_type}, topology_count={ftqc.topology_count}. "
             "Dim3 / DistributedDim2 / DistributedDim3 are intentionally unsupported."
         )
         return

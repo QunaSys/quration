@@ -183,6 +183,7 @@ void LowerUnary(LowerContextOfBB& ctx, MachineBasicBlock& bb, const ir::UnaryIns
     switch (inst->GetOpcode().GetCode()) {
         case ir::Opcode::Table::H: {
             bb.EmplaceBack(Hadamard::New(q, ctx.condition));
+            bb.EmplaceBack(Rotate::New(q, 4, ctx.condition));
             break;
         }
         case ir::Opcode::Table::S:

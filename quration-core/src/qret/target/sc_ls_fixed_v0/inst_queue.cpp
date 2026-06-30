@@ -262,6 +262,14 @@ bool InstQueue::Peek(const std::size_t size) {
         }
         emap_[e] = inst;
     };
+    const auto update_mmap = [&](MSymbol m, ScLsInstructionBase* inst) {
+        auto itr = mmap_.find(m);
+        if (itr != mmap_.end()) {
+            auto* prev = itr->second;
+            AddDependency(nodes_, prev, inst, prev->Latency());
+        }
+        mmap_[m] = inst;
+    };
 
     nodes_.reserve(nodes_.size() + size);
 
@@ -281,6 +289,9 @@ bool InstQueue::Peek(const std::size_t size) {
         }
         for (const auto& e : inst->ETarget()) {
             update_emap(e, inst);
+        }
+        for (const auto& m : inst->MTarget()) {
+            update_mmap(m, inst);
         }
         for (const auto& c : inst->Condition()) {
             set_c_dep(c, inst);
@@ -452,13 +463,18 @@ void InstQueue::InsertAfter(ScLsInstructionBase* inst, ScLsInstructionBase* new_
         child_node.parents[new_inst] = tmp_len;
     }
 
-    // Replace 'inst' with 'new_inst' in 'qmap_', 'cmap_', and 'emap_'.
+    // Replace 'inst' with 'new_inst' in 'qmap_', 'cmap_', 'mmap_', and 'emap_'.
     for (auto&& [_, tmp_inst] : qmap_) {
         if (tmp_inst == inst) {
             tmp_inst = new_inst;
         }
     }
     for (auto&& [_, tmp_inst] : cmap_) {
+        if (tmp_inst == inst) {
+            tmp_inst = new_inst;
+        }
+    }
+    for (auto&& [_, tmp_inst] : mmap_) {
         if (tmp_inst == inst) {
             tmp_inst = new_inst;
         }
@@ -503,6 +519,13 @@ void InstQueue::Replace(
             ++e_itr;
         }
     }
+    for (auto m_itr = mmap_.begin(); m_itr != mmap_.end();) {
+        if (m_itr->second == inst) {
+            m_itr = mmap_.erase(m_itr);
+        } else {
+            ++m_itr;
+        }
+    }
     for (auto* new_inst : new_insts) {
         for (const auto& e : new_inst->ETarget()) {
             const auto prev = emap_.find(e);
@@ -510,6 +533,13 @@ void InstQueue::Replace(
                 AddDependency(nodes_, prev->second, new_inst, prev->second->Latency());
             }
             emap_[e] = new_inst;
+        }
+        for (const auto& m : new_inst->MTarget()) {
+            const auto prev = mmap_.find(m);
+            if (prev != mmap_.end()) {
+                AddDependency(nodes_, prev->second, new_inst, prev->second->Latency());
+            }
+            mmap_[m] = new_inst;
         }
     }
 

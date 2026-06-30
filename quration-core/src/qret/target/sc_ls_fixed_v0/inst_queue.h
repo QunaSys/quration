@@ -204,6 +204,7 @@ private:
 
     std::unordered_map<QSymbol, ScLsInstructionBase*> qmap_ = {};
     std::unordered_map<CSymbol, ScLsInstructionBase*> cmap_ = {};
+    std::unordered_map<MSymbol, ScLsInstructionBase*> mmap_ = {};
     std::unordered_map<ESymbol, ScLsInstructionBase*> emap_ = {};
     std::unordered_map<ScLsInstructionBase*, Node> nodes_ = {};
 
