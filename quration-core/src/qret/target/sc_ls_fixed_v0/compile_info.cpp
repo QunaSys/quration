@@ -75,10 +75,10 @@ double ScLsFixedV0CompileInfo::ChipCellActiveQubitAreaRatioPeak() const {
     j["use_magic_state_cultivation"] = use_magic_state_cultivation;
     j["magic_factory_seed_offset"] = magic_factory_seed_offset;
     j["magic_generation_period"] = magic_generation_period;
-    j["prob_magic_state_creation"] = prob_magic_state_creation;
-    j["maximum_magic_state_stock"] = maximum_magic_state_stock;
+    j["magic_generation_success_probability"] = magic_generation_success_probability;
+    j["magic_generation_maximum_stock"] = magic_generation_maximum_stock;
     j["entanglement_generation_period"] = entanglement_generation_period;
-    j["maximum_entangled_state_stock"] = maximum_entangled_state_stock;
+    j["entanglement_generation_maximum_stock"] = entanglement_generation_maximum_stock;
     j["reaction_time"] = reaction_time;
     if (topology) {
         j["topology"] = *topology;
@@ -145,9 +145,9 @@ std::string ScLsFixedV0CompileInfo::Markdown() const {
     ss << "# Compile information of SC_LS_FIXED_V0\n\n";
     ss << "## Constant\n\n";
     ss << prefix << "magic_generation_period: " << magic_generation_period << '\n';
-    ss << prefix << "maximum_magic_state_stock: " << maximum_magic_state_stock << '\n';
+    ss << prefix << "magic_generation_maximum_stock: " << magic_generation_maximum_stock << '\n';
     ss << prefix << "entanglement_generation_period: " << entanglement_generation_period << '\n';
-    ss << prefix << "maximum_entangled_state_stock: " << maximum_entangled_state_stock << '\n';
+    ss << prefix << "entanglement_generation_maximum_stock: " << entanglement_generation_maximum_stock << '\n';
     ss << prefix << "reaction_time: " << reaction_time << '\n';
     for (const auto& grid : *topology) {
         if (grid.IsPlane()) {
@@ -256,10 +256,11 @@ void to_json(Json& j, const ScLsFixedV0CompileInfo& info) {
 }
 void from_json(const Json& j, ScLsFixedV0CompileInfo& info) {
     // about constants
+    j["magic_generation_success_probability"].get_to(info.magic_generation_success_probability);
     j["magic_generation_period"].get_to(info.magic_generation_period);
-    j["maximum_magic_state_stock"].get_to(info.maximum_magic_state_stock);
+    j["magic_generation_maximum_stock"].get_to(info.magic_generation_maximum_stock);
     j["entanglement_generation_period"].get_to(info.entanglement_generation_period);
-    j["maximum_entangled_state_stock"].get_to(info.maximum_entangled_state_stock);
+    j["entanglement_generation_maximum_stock"].get_to(info.entanglement_generation_maximum_stock);
     j["reaction_time"].get_to(info.reaction_time);
     if (j.contains("topology")) {
         info.topology = Topology::FromJSON(j["topology"]);
@@ -336,11 +337,11 @@ std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) 
         << indent << "use_magic_state_cultivation: " << info.use_magic_state_cultivation << '\n'
         << indent << "magic_factory_seed_offset: " << info.magic_factory_seed_offset << '\n'
         << indent << "magic_generation_period: " << info.magic_generation_period << '\n'
-        << indent << "prob_magic_state_creation: " << info.prob_magic_state_creation << '\n'
-        << indent << "maximum_magic_state_stock: " << info.maximum_magic_state_stock << '\n'
+        << indent << "magic_generation_success_probability: " << info.magic_generation_success_probability << '\n'
+        << indent << "magic_generation_maximum_stock: " << info.magic_generation_maximum_stock << '\n'
         << indent << "entanglement_generation_period: " << info.entanglement_generation_period
         << '\n'
-        << indent << "maximum_entangled_state_stock: " << info.maximum_entangled_state_stock << '\n'
+        << indent << "entanglement_generation_maximum_stock: " << info.entanglement_generation_maximum_stock << '\n'
         << indent << "reaction_time: " << info.reaction_time << '\n';
     for (const auto& grid : *info.topology) {
         if (grid.IsPlane()) {

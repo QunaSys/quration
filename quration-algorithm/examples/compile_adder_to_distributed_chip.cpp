@@ -34,11 +34,11 @@ void Run(const std::size_t size, const std::string& topology_path) {
     const auto target = ScLsFixedV0TargetMachine(
             topology,
             ScLsFixedV0MachineOption{
-                    .type = ScLsFixedV0MachineType::DistributedDim2,
+                    .topology_type = ScLsFixedV0TopologyType::DistributedDim2,
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 10,
+                    .magic_generation_maximum_stock = 10,
                     .entanglement_generation_period = 100,
-                    .maximum_entangled_state_stock = 10,
+                    .entanglement_generation_maximum_stock = 10,
                     .reaction_time = 15,
             }
     );

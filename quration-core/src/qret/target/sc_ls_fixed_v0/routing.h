@@ -27,7 +27,7 @@ inline Beat AllowedMaxIdleBeats(
         Beat relax_offset = 10
 ) {
     const auto expected = option.use_magic_state_cultivation
-            ? 1.0 / std::max(0.001, option.prob_magic_state_creation)
+            ? 1.0 / std::max(0.001, option.magic_generation_success_probability)
             : 1.0;
     const auto mul = std::max(Beat{1}, static_cast<Beat>(std::ceil(expected)));
     const auto mx = std::max(

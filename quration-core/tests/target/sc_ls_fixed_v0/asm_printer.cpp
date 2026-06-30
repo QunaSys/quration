@@ -72,9 +72,9 @@ TEST(PrintAssembly, Plane) {
                 topology,
                 ScLsFixedV0MachineOption{
                         .magic_generation_period = 15,
-                        .maximum_magic_state_stock = 100,
+                        .magic_generation_maximum_stock = 100,
                         .entanglement_generation_period = 15,
-                        .maximum_entangled_state_stock = 100,
+                        .entanglement_generation_maximum_stock = 100,
                         .reaction_time = 1,
                 }
         );
@@ -114,9 +114,9 @@ TEST(PrintAssembly, Grid) {
                 topology,
                 ScLsFixedV0MachineOption{
                         .magic_generation_period = 15,
-                        .maximum_magic_state_stock = 100,
+                        .magic_generation_maximum_stock = 100,
                         .entanglement_generation_period = 15,
-                        .maximum_entangled_state_stock = 100,
+                        .entanglement_generation_maximum_stock = 100,
                         .reaction_time = 1,
                 }
         );
@@ -157,11 +157,11 @@ TEST(PrintAssembly, Distribute) {
         const auto target = ScLsFixedV0TargetMachine(
                 topology,
                 ScLsFixedV0MachineOption{
-                        .type = ScLsFixedV0MachineType::DistributedDim2,
+                        .topology_type = ScLsFixedV0TopologyType::DistributedDim2,
                         .magic_generation_period = 15,
-                        .maximum_magic_state_stock = 100,
+                        .magic_generation_maximum_stock = 100,
                         .entanglement_generation_period = 15,
-                        .maximum_entangled_state_stock = 100,
+                        .entanglement_generation_maximum_stock = 100,
                         .reaction_time = 15,
                 }
         );

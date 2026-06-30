@@ -41,7 +41,7 @@ static Opt<std::string> DumpPBCString(
 }
 
 struct LowerContextOfBB {
-    const ScLsFixedV0MachineType machine_type;
+    const ScLsFixedV0TopologyType machine_type;
     const std::uint64_t csym_offset;
     const std::list<CSymbol> condition;
 
@@ -199,8 +199,8 @@ void LowerUnary(LowerContextOfBB& ctx, MachineBasicBlock& bb, const ir::UnaryIns
             const auto csym = ctx.GetNewC();
             // FIXME: Implement TDag correctly.
             // T ---> Lattice surgery of q (Z) and M + Twist q
-            if (ctx.machine_type == ScLsFixedV0MachineType::DistributedDim2
-                || ctx.machine_type == ScLsFixedV0MachineType::DistributedDim3) {
+            if (ctx.machine_type == ScLsFixedV0TopologyType::DistributedDim2
+                || ctx.machine_type == ScLsFixedV0TopologyType::DistributedDim3) {
                 // Use LatticeSurgeryMultinode instruction.
                 bb.EmplaceBack(
                         LatticeSurgeryMultinode::New(
@@ -326,7 +326,7 @@ void LowerBB(LowerContextOfBB& ctx, MachineBasicBlock& insert_at_end, const ir::
 
 void LowerCircuit(
         MachineBasicBlock& bb,
-        const ScLsFixedV0MachineType machine_type,
+        const ScLsFixedV0TopologyType machine_type,
         const std::uint64_t csym_offset,
         const ir::Function& func
 ) {
@@ -809,7 +809,7 @@ bool Lowering::RunOnMachineFunction(MachineFunction& mf) {
 
         pbc::LowerCircuit(num_magic_factories, num_qubits, NumReservedCSymbols, inst_block, func);
     } else {
-        LowerCircuit(inst_block, target.machine_option.type, NumReservedCSymbols, func);
+        LowerCircuit(inst_block, target.machine_option.topology_type, NumReservedCSymbols, func);
     }
 
     auto changed = true;

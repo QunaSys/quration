@@ -18,10 +18,10 @@ struct QRET_EXPORT ScLsFixedV0CompileInfo : CompileInfo {
     bool use_magic_state_cultivation = false;
     std::uint64_t magic_factory_seed_offset = 0;
     std::uint64_t magic_generation_period = 0;
-    double prob_magic_state_creation = 1.0;
-    std::uint64_t maximum_magic_state_stock = 0;
+    double magic_generation_success_probability = 1.0;
+    std::uint64_t magic_generation_maximum_stock = 0;
     std::uint64_t entanglement_generation_period = 0;
-    std::uint64_t maximum_entangled_state_stock = 0;
+    std::uint64_t entanglement_generation_maximum_stock = 0;
     std::uint64_t reaction_time = 0;
     std::shared_ptr<const Topology> topology = nullptr;
 

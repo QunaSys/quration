@@ -34,9 +34,9 @@ ir::Function* LoadAddCuccaroCircuit(std::size_t size, ir::IRContext& context) {
 ScLsFixedV0MachineOption BuildMachineOption() {
     return ScLsFixedV0MachineOption{
             .magic_generation_period = 15,
-            .maximum_magic_state_stock = 100,
+            .magic_generation_maximum_stock = 100,
             .entanglement_generation_period = 15,
-            .maximum_entangled_state_stock = 100,
+            .entanglement_generation_maximum_stock = 100,
             .reaction_time = 1,
     };
 }

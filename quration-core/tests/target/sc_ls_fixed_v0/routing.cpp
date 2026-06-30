@@ -90,9 +90,9 @@ TEST(Routing, Plane) {
                 topology,
                 ScLsFixedV0MachineOption{
                         .magic_generation_period = 15,
-                        .maximum_magic_state_stock = 100,
+                        .magic_generation_maximum_stock = 100,
                         .entanglement_generation_period = 15,
-                        .maximum_entangled_state_stock = 100,
+                        .entanglement_generation_maximum_stock = 100,
                         .reaction_time = 1,
                 }
         );
@@ -125,9 +125,9 @@ TEST(Routing, LatticeSurgeryConnectManyQubits) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -207,9 +207,9 @@ TEST(Routing, CnotRemainsCnotAndUsesBentPath) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -259,9 +259,9 @@ TEST(Routing, LatticeSurgeryMagicConnectManyQubits) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -356,9 +356,9 @@ TEST(Routing, Grid) {
                 topology,
                 ScLsFixedV0MachineOption{
                         .magic_generation_period = 15,
-                        .maximum_magic_state_stock = 100,
+                        .magic_generation_maximum_stock = 100,
                         .entanglement_generation_period = 15,
-                        .maximum_entangled_state_stock = 100,
+                        .entanglement_generation_maximum_stock = 100,
                         .reaction_time = 1,
                 }
         );
@@ -403,11 +403,11 @@ TEST(Routing, Distribute) {
         const auto target = ScLsFixedV0TargetMachine(
                 topology,
                 ScLsFixedV0MachineOption{
-                        .type = ScLsFixedV0MachineType::DistributedDim2,
+                        .topology_type = ScLsFixedV0TopologyType::DistributedDim2,
                         .magic_generation_period = 15,
-                        .maximum_magic_state_stock = 100,
+                        .magic_generation_maximum_stock = 100,
                         .entanglement_generation_period = 15,
-                        .maximum_entangled_state_stock = 100,
+                        .entanglement_generation_maximum_stock = 100,
                         .reaction_time = 15,
                 }
         );
@@ -431,9 +431,9 @@ TEST(Routing, LatticeSurgeryPathIsConnectedWhenQubitIsBridge) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -482,7 +482,7 @@ TEST(Routing, LatticeSurgeryPathIsConnectedWhenQubitIsBridge) {
     };
 
     // IsValidLsPath checks connectivity, boundary contact for every qubit,
-    // and endpoint touch — the full set of ISA path validity rules.
+    // and endpoint touch  Ethe full set of ISA path validity rules.
     EXPECT_TRUE(detail::IsValidLsPath(ls_inst->Path(), qubit_boundaries, {}))
             << "LATTICE_SURGERY path is invalid: " << ls_inst->ToString();
 }

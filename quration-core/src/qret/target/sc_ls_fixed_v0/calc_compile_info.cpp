@@ -936,9 +936,9 @@ bool CompileInfoWithQecResourceEstimation::RunOnMachineFunction(MachineFunction&
 
     try {
         compile_info.code_distance = EstimateMinimumCodeDistance(
-                option.physical_error_rate,
-                option.drop_rate,
-                option.allowed_failure_prob,
+                option.logical_error_rate_base,
+                option.logical_error_rate_drop_rate,
+                option.allowed_failure_probability,
                 compile_info.qubit_volume
         );
         compile_info.execution_time_sec = EstimateExecutionTimeSec(
@@ -968,12 +968,12 @@ bool InitCompileInfo::RunOnMachineFunction(MachineFunction& mf) {
     compile_info.use_magic_state_cultivation = target.machine_option.use_magic_state_cultivation;
     compile_info.magic_factory_seed_offset = target.machine_option.magic_factory_seed_offset;
     compile_info.magic_generation_period = target.machine_option.magic_generation_period;
-    compile_info.prob_magic_state_creation = target.machine_option.prob_magic_state_creation;
-    compile_info.maximum_magic_state_stock = target.machine_option.maximum_magic_state_stock;
+    compile_info.magic_generation_success_probability = target.machine_option.magic_generation_success_probability;
+    compile_info.magic_generation_maximum_stock = target.machine_option.magic_generation_maximum_stock;
     compile_info.entanglement_generation_period =
             target.machine_option.entanglement_generation_period;
-    compile_info.maximum_entangled_state_stock =
-            target.machine_option.maximum_entangled_state_stock;
+    compile_info.entanglement_generation_maximum_stock =
+            target.machine_option.entanglement_generation_maximum_stock;
     compile_info.reaction_time = target.machine_option.reaction_time;
     compile_info.topology = target.topology;
 
