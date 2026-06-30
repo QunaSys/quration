@@ -947,7 +947,7 @@ bool ScLsSimulator::SearchRotateDir(Beat beat, Rotate* inst) {
     }
     inst->SetDir(4);
     for (auto dir = std::uint32_t{0}; dir < 4; ++dir) {
-        const auto ancilla = Rotate::Ancilla(place, dir);
+        const auto ancilla = Rotate::GetAncilla(place, dir);
         auto runnable = true;
         for (auto b = beat; b < beat + inst->Latency(); ++b) {
             auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
@@ -979,7 +979,7 @@ bool ScLsSimulator::IsRotateRunnable(Beat beat, Rotate* inst) {
     for (auto b = beat; b < beat + inst->Latency(); ++b) {
         auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
         const auto& topology = plane.GetTopology();
-        const auto ancilla = Rotate::Ancilla(place, dir);
+        const auto ancilla = Rotate::GetAncilla(place, dir);
 
         if (topology.OutOfPlane(place.XY())) {
             return false;
@@ -1004,7 +1004,7 @@ void ScLsSimulator::RunRotate(Beat beat, Rotate* inst) {
     const auto& place = state.GetPlace(qubit);
 
     // Update buffer.
-    const auto ancilla = Rotate::Ancilla(place, dir);
+    const auto ancilla = Rotate::GetAncilla(place, dir);
     for (auto b = beat; b < beat + inst->Latency(); ++b) {
         auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
         plane.GetNode(place.XY()).is_available = false;

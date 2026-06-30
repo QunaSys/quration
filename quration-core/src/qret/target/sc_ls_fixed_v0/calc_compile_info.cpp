@@ -549,14 +549,14 @@ TimeSeries::TimeSeries(const MachineFunction& mf) {
 
         auto& chip_info = beat2chip_[beat];
         if (beat == 0) {
-            auto space = std::int32_t{0};
+            auto space = std::uint32_t{0};
             for (const auto& grid : *target.topology) {
                 space += grid.GetMaxX() * grid.GetMaxY() * grid.GetZSize();
                 for (const auto& plane : grid) {
-                    space -= plane.NumBanned();
+                    space -= static_cast<std::uint32_t>(plane.NumBanned());
                 }
             }
-            chip_info.space = static_cast<std::uint32_t>(space);
+            chip_info.space = space;
         } else {
             chip_info = beat2chip_[beat - 1];
             chip_info.used_ancilla_count = 0;
@@ -572,7 +572,7 @@ TimeSeries::TimeSeries(const MachineFunction& mf) {
             } else if (inst->Type() == ScLsInstructionType::DEALLOCATE) {
                 chip_info.q_symb--;
             }
-            chip_info.used_ancilla_count += inst->CountAncillae();
+            chip_info.used_ancilla_count += static_cast<std::uint32_t>(inst->CountAncillae());
         }
     }
 }

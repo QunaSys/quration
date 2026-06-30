@@ -994,7 +994,7 @@ public:
     New(QSymbol qubit, std::uint32_t dir, const std::list<CSymbol>& condition) {
         return std::unique_ptr<Rotate>(new Rotate(qubit, dir, condition));
     }
-    static Coord3D Ancilla(const Coord3D& coord, std::uint32_t dir);
+    static Coord3D GetAncilla(const Coord3D& coord, std::uint32_t dir);
 
     [[nodiscard]] QSymbol Qubit() const {
         return QTarget().front();
