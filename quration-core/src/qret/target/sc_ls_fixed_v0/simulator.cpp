@@ -1347,6 +1347,7 @@ bool ScLsSimulator::SearchLatticeSurgeryPath2DSteinerAndRun(
             inst->QubitList(),
             inst->BasisList(),
             {},
+            {},
             false
     );
     if (!tmp_ancilla) {
@@ -1580,6 +1581,7 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DSteinerAndRun(
             inst->QubitList(),
             inst->BasisList(),
             {},
+            {},
             true
     );
     if (!tmp_ancilla) {
@@ -1774,6 +1776,7 @@ bool ScLsSimulator::SearchLatticeSurgeryMultinodePathAndRun(
             inst->QubitList(),
             inst->BasisList(),
             inst->EFactoryList(),
+            inst->EHandleList(),
             inst->UseMagicFactory()
     );
     if (!tmp_ancilla.has_value()) {

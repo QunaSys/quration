@@ -191,6 +191,7 @@ TEST(SearchRoute, FindAncillaProducesConnectedSetWhenQubitIsBridge) {
             {QSymbol{0}, QSymbol{1}, QSymbol{2}},
             {Pauli::X(), Pauli::X(), Pauli::X()},
             {},
+            {},
             false
     );
 

@@ -704,9 +704,25 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
         const std::list<QSymbol>& qs,
         const std::list<Pauli>& boundaries,
         const std::list<ESymbol>& es,
+        const std::list<EHandle>& ehs,
         bool use_magic_state
 ) {
-    // Fast paths for common small cases.
+    if (es.size() != ehs.size()) {
+        throw std::logic_error("ESymbol and EHandle list sizes must match.");
+    }
+
+    const auto& topology = plane.GetTopology();
+    auto& state = plane.GetParent().GetParent();
+    const auto can_use_entanglement = [&state](ESymbol e, EHandle h) {
+        const auto pair = state.GetTopology().GetPair(e);
+        const auto& e_state = state.GetState(e);
+        if (e_state.IsReserved(h)) {
+            return true;
+        }
+        return e_state.IsAvailable() && state.GetState(pair).IsAvailable();
+    };
+
+    // Fast paths for two qubits
     if (qs.size() == 2 && es.empty() && !use_magic_state && boundaries.size() == 2) {
         const auto q_src = *qs.begin();
         const auto q_dst = *std::next(qs.begin());
@@ -728,6 +744,8 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
         ancilla.pop_back();
         return Ancilla2D{.qs = qs, .es = es, .m = std::nullopt, .ancilla = std::move(ancilla)};
     }
+
+    // Fast paths for one qubit and magic state
     if (qs.size() == 1 && es.empty() && use_magic_state && boundaries.size() == 1) {
         const auto q_dst = *qs.begin();
         const auto boundary_dst = *boundaries.begin();
@@ -746,9 +764,15 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
                 .ancilla = std::move(ancilla),
         };
     }
+
+    // Fast paths for one qubit and one entanglement
     if (qs.size() == 1 && es.size() == 1 && !use_magic_state && boundaries.size() == 1) {
         const auto q_dst = *qs.begin();
         const auto e_factory = *es.begin();
+        const auto e_handle = *ehs.begin();
+        if (!can_use_entanglement(e_factory, e_handle)) {
+            return std::nullopt;
+        }
         const auto boundary_dst = *boundaries.begin();
         SearchHelper::SetCostsOfFreeAncillae(plane, Unreachable2D);
         const auto route = FindRoute2DE(plane, e_factory, q_dst, GetBoundaryCode(boundary_dst));
@@ -760,9 +784,6 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
         ancilla.pop_back();
         return Ancilla2D{.qs = qs, .es = es, .m = std::nullopt, .ancilla = std::move(ancilla)};
     }
-
-    const auto& topology = plane.GetTopology();
-    auto& state = plane.GetParent().GetParent();
 
     static constexpr auto MId = -1;
     const auto ind_width = topology.GetMaxY();
@@ -852,8 +873,12 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
             b_itr++;
         }
     }
-    for (const auto e_factory : es) {
-        if (!state.GetState(e_factory).IsAvailable()) {
+    auto e_itr = es.begin();
+    auto h_itr = ehs.begin();
+    while (e_itr != es.end() && h_itr != ehs.end()) {
+        const auto e_factory = *e_itr;
+        const auto e_handle = *h_itr;
+        if (!can_use_entanglement(e_factory, e_handle)) {
             return std::nullopt;
         }
 
@@ -865,6 +890,8 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
         for (const auto place : GetNeighbors(e_place)) {
             add_to_node_if_free_ancilla(place, e_node);
         }
+        e_itr++;
+        h_itr++;
     }
 
     // BFS to construct graph.
