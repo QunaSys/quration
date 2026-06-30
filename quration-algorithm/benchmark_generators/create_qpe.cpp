@@ -20,7 +20,7 @@
 #include "qret/transforms/ipo/inliner.h"
 
 struct QPEParams {
-    std::vector<qret::frontend::gate::PauliArray> paulis;
+    std::vector<qret::frontend::gate::PauliArray> pauli_strings;
     std::vector<double> lcu_coefficients;
     std::size_t hadamard_size;
     std::size_t system_size;
@@ -34,11 +34,11 @@ void from_json(const nlohmann::json& j, QPEParams& p) {
     p.sub_bit_precision = j.at("sub_bit_precision").get<std::size_t>();
     p.lcu_coefficients = j.at("lcu_coefficients").get<std::vector<double>>();
 
-    p.paulis.clear();
-    const auto& paulis_json = j.at("paulis");
-    p.paulis.reserve(paulis_json.size());
+    p.pauli_strings.clear();
+    const auto& pauli_strings_json = j.at("pauli_strings");
+    p.pauli_strings.reserve(pauli_strings_json.size());
 
-    for (const auto& pauli_array_json : paulis_json) {
+    for (const auto& pauli_array_json : pauli_strings_json) {
         auto current_array = qret::frontend::gate::PauliArray();
         for (const auto& pauli_string_json : pauli_array_json) {
             auto pauli_string = std::vector<qret::math::Pauli>();
@@ -49,7 +49,7 @@ void from_json(const nlohmann::json& j, QPEParams& p) {
             }
             current_array.emplace_back(pauli_string);
         }
-        p.paulis.emplace_back(current_array);
+        p.pauli_strings.emplace_back(current_array);
     }
 }
 
@@ -68,7 +68,7 @@ int main(std::int32_t argc, const char* const* const argv) {
     po::options_description desc(
             "Create QPE circuit from JSON file\n\n"
             "Input JSON fields:\n"
-            "  paulis: SELECT Pauli data, grouped by term and Pauli string.\n"
+            "  pauli_strings: SELECT Pauli data, grouped by term and Pauli string.\n"
             "  lcu_coefficients: Coefficients used to build the PREPARE table.\n"
             "  system_size: Number of system qubits.\n"
             "  hadamard_size: Number of phase-estimation control qubits.\n"
@@ -110,7 +110,7 @@ int main(std::int32_t argc, const char* const* const argv) {
     auto builder = qret::frontend::CircuitBuilder(module);
     auto gen = qret::frontend::gate::PhaseEstimationGen(
             &builder,
-            params.paulis,
+            params.pauli_strings,
             alias_sampling,
             params.hadamard_size,
             params.system_size,
