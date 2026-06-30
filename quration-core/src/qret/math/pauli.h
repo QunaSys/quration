@@ -130,7 +130,7 @@ public:
      * @brief Compute the inverse of this Pauli string.
      */
     void Inverse() {
-        sign_ = (4 - sign_) % 4;
+        sign_ = (static_cast<SignType>(4 - sign_)) % 4;
     }
 
     /**

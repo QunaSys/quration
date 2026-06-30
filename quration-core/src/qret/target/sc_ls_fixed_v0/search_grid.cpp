@@ -1574,7 +1574,7 @@ std::optional<SearchRoute::Route3D> SearchRoute::FindRoute3D(
     route.dst = plane_2.GetParent().GetParent().GetPlace(q_dst);
     route.Audit();
 
-    return std::move(route);
+    return route;
 }
 std::optional<SearchRoute::Route3D> SearchRoute::FindCnotRoute3D(
         QuantumGrid& grid_0,
@@ -1760,7 +1760,7 @@ std::optional<SearchRoute::Route3DM> SearchRoute::FindRoute3DM(
     route.dst = plane_2.GetParent().GetParent().GetPlace(q_dst);
     route.Audit();
 
-    return std::move(route);
+    return route;
 }
 bool SearchRoute::TransReachable(QuantumGrid& grid, const Coord3D& src, std::int32_t dst_z) {
     const auto [s, d] = std::minmax(src.z, dst_z);
