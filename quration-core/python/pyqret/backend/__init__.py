@@ -325,12 +325,12 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.reaction_time
 
     @property
-    def runtime(self) -> int:  # noqa:D102
-        return self._impl.runtime
+    def execution_time(self) -> int:  # noqa:D102
+        return self._impl.execution_time
 
     @property
-    def runtime_without_topology(self) -> int:  # noqa:D102
-        return self._impl.runtime_without_topology
+    def execution_time_without_topology(self) -> int:  # noqa:D102
+        return self._impl.execution_time_without_topology
 
     @property
     def gate_count(self) -> int:  # noqa:D102
@@ -349,24 +349,24 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.gate_throughput
 
     @property
-    def measurement_feedback_count(self) -> int:  # noqa:D102
-        return self._impl.measurement_feedback_count
+    def reaction_count(self) -> int:  # noqa:D102
+        return self._impl.reaction_count
 
     @property
-    def measurement_feedback_depth(self) -> int:  # noqa:D102
-        return self._impl.measurement_feedback_depth
+    def reaction_depth(self) -> int:  # noqa:D102
+        return self._impl.reaction_depth
 
     @property
-    def measurement_feedback_rate(self) -> list[int]:  # noqa:D102
-        return self._impl.measurement_feedback_rate
+    def reaction_rate(self) -> list[int]:  # noqa:D102
+        return self._impl.reaction_rate
 
     @property
-    def runtime_estimation_measurement_feedback_count(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_measurement_feedback_count
+    def execution_time_estimation_from_reaction_count(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_from_reaction_count
 
     @property
-    def runtime_estimation_measurement_feedback_depth(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_measurement_feedback_depth
+    def execution_time_estimation_from_reaction_depth(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_from_reaction_depth
 
     @property
     def magic_state_consumption_count(self) -> int:  # noqa:D102
@@ -381,12 +381,12 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.magic_state_consumption_rate
 
     @property
-    def runtime_estimation_magic_state_consumption_count(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_magic_state_consumption_count
+    def execution_time_estimation_magic_state_consumption_count(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_magic_state_consumption_count
 
     @property
-    def runtime_estimation_magic_state_consumption_depth(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_magic_state_consumption_depth
+    def execution_time_estimation_magic_state_consumption_depth(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_magic_state_consumption_depth
 
     @property
     def magic_factory_count(self) -> int:  # noqa:D102
@@ -425,8 +425,8 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.execution_time_sec
 
     @property
-    def num_physical_qubits(self) -> int:  # noqa:D102
-        return self._impl.num_physical_qubits
+    def physical_qubit_count(self) -> int:  # noqa:D102
+        return self._impl.physical_qubit_count
 
     def to_json(self) -> dict:  # noqa:D102
         j = self._impl.to_json()

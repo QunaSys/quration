@@ -335,8 +335,9 @@ void BindCompileInfo(nb::module_& m) {
             .def_ro("magic_generation_period", &ScLsFixedV0CompileInfo::magic_generation_period)
             .def_ro("maximum_magic_state_stock", &ScLsFixedV0CompileInfo::maximum_magic_state_stock)
             .def_ro("reaction_time", &ScLsFixedV0CompileInfo::reaction_time)
-            .def_ro("runtime", &ScLsFixedV0CompileInfo::runtime)
-            .def_ro("runtime_without_topology", &ScLsFixedV0CompileInfo::runtime_without_topology)
+            .def_ro("execution_time", &ScLsFixedV0CompileInfo::execution_time)
+            .def_ro("execution_time_without_topology",
+                    &ScLsFixedV0CompileInfo::execution_time_without_topology)
             .def_ro("gate_count", &ScLsFixedV0CompileInfo::gate_count)
             .def("count_per_gate",
                  [](const ScLsFixedV0CompileInfo& info) {
@@ -348,25 +349,23 @@ void BindCompileInfo(nb::module_& m) {
                  })
             .def_ro("gate_depth", &ScLsFixedV0CompileInfo::gate_depth)
             .def_ro("gate_throughput", &ScLsFixedV0CompileInfo::gate_throughput)
-            .def_ro("measurement_feedback_count",
-                    &ScLsFixedV0CompileInfo::measurement_feedback_count)
-            .def_ro("measurement_feedback_depth",
-                    &ScLsFixedV0CompileInfo::measurement_feedback_depth)
-            .def_ro("measurement_feedback_rate", &ScLsFixedV0CompileInfo::measurement_feedback_rate)
-            .def_ro("runtime_estimation_measurement_feedback_count",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_measurement_feedback_count)
-            .def_ro("runtime_estimation_measurement_feedback_depth",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_measurement_feedback_depth)
+            .def_ro("reaction_count", &ScLsFixedV0CompileInfo::reaction_count)
+            .def_ro("reaction_depth", &ScLsFixedV0CompileInfo::reaction_depth)
+            .def_ro("reaction_rate", &ScLsFixedV0CompileInfo::reaction_rate)
+            .def_ro("execution_time_estimation_from_reaction_count",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_from_reaction_count)
+            .def_ro("execution_time_estimation_from_reaction_depth",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_from_reaction_depth)
             .def_ro("magic_state_consumption_count",
                     &ScLsFixedV0CompileInfo::magic_state_consumption_count)
             .def_ro("magic_state_consumption_depth",
                     &ScLsFixedV0CompileInfo::magic_state_consumption_depth)
             .def_ro("magic_state_consumption_rate",
                     &ScLsFixedV0CompileInfo::magic_state_consumption_rate)
-            .def_ro("runtime_estimation_magic_state_consumption_count",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_magic_state_consumption_count)
-            .def_ro("runtime_estimation_magic_state_consumption_depth",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_magic_state_consumption_depth)
+            .def_ro("execution_time_estimation_magic_state_consumption_count",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_magic_state_consumption_count)
+            .def_ro("execution_time_estimation_magic_state_consumption_depth",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_magic_state_consumption_depth)
             .def_ro("magic_factory_count", &ScLsFixedV0CompileInfo::magic_factory_count)
             .def_ro("entanglement_consumption_count",
                     &ScLsFixedV0CompileInfo::entanglement_consumption_count)
@@ -374,10 +373,10 @@ void BindCompileInfo(nb::module_& m) {
                     &ScLsFixedV0CompileInfo::entanglement_consumption_depth)
             .def_ro("entanglement_consumption_rate",
                     &ScLsFixedV0CompileInfo::entanglement_consumption_rate)
-            .def_ro("runtime_estimation_entanglement_consumption_count",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_entanglement_consumption_count)
-            .def_ro("runtime_estimation_entanglement_consumption_depth",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_entanglement_consumption_depth)
+            .def_ro("execution_time_estimation_entanglement_consumption_count",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_entanglement_consumption_count)
+            .def_ro("execution_time_estimation_entanglement_consumption_depth",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_entanglement_consumption_depth)
             .def_ro("entanglement_factory_count",
                     &ScLsFixedV0CompileInfo::entanglement_factory_count)
             .def_ro("chip_cell_count", &ScLsFixedV0CompileInfo::chip_cell_count)
@@ -392,7 +391,7 @@ void BindCompileInfo(nb::module_& m) {
             .def_ro("qubit_volume", &ScLsFixedV0CompileInfo::qubit_volume)
             .def_ro("code_distance", &ScLsFixedV0CompileInfo::code_distance)
             .def_ro("execution_time_sec", &ScLsFixedV0CompileInfo::execution_time_sec)
-            .def_ro("num_physical_qubits", &ScLsFixedV0CompileInfo::num_physical_qubits)
+            .def_ro("physical_qubit_count", &ScLsFixedV0CompileInfo::physical_qubit_count)
             // methods
             .def("to_json", [](const ScLsFixedV0CompileInfo& info) { return info.Json().dump(); })
             .def("to_markdown", [](const ScLsFixedV0CompileInfo& info) { return info.Markdown(); });

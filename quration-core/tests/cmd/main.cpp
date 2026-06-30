@@ -133,7 +133,7 @@ TEST(QretMainProfile, JsonAndMarkdownFromScLsFixedV0PipelineState) {
             std::vector<const char*>{BinName, "profile", input.c_str(), json_output.c_str()};
     EXPECT_EQ(0, qret::cmd::QretMain(argv_json.size(), argv_json.data()));
     EXPECT_TRUE(std::filesystem::exists(json_file));
-    EXPECT_NE(std::string::npos, ReadFile(json_file).find("\"runtime\""));
+    EXPECT_NE(std::string::npos, ReadFile(json_file).find("\"execution_time\""));
 
     const auto markdown_output = markdown_file.string();
     auto argv_markdown = std::vector<const char*>{

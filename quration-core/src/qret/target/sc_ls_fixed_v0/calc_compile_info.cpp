@@ -624,8 +624,8 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
         }
     }
 
-    // runtime_estimation_magic_state_consumption_count
-    compile_info.runtime_estimation_magic_state_consumption_count =
+    // execution_time_estimation_magic_state_consumption_count
+    compile_info.execution_time_estimation_magic_state_consumption_count =
             compile_info.magic_state_consumption_count
             * target.machine_option.magic_generation_period;
 
@@ -637,16 +637,16 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
         throw std::logic_error("Entanglement consumption count must be even.");
     }
     compile_info.entanglement_consumption_count /= 2;
-    // runtime_estimation_entanglement_consumption_count
-    compile_info.runtime_estimation_entanglement_consumption_count =
+    // execution_time_estimation_entanglement_consumption_count
+    compile_info.execution_time_estimation_entanglement_consumption_count =
             compile_info.entanglement_consumption_count
             * target.machine_option.entanglement_generation_period;
 
     // dependency graph of instruction
     auto graph = DepGraph(mf);
 
-    // runtime_without_topology
-    compile_info.runtime_without_topology = CalcRuntimeWithoutTopology(mf);
+    // execution_time_without_topology
+    compile_info.execution_time_without_topology = CalcRuntimeWithoutTopology(mf);
 
     // gate_depth
     for (const auto& bb : mf) {
@@ -666,8 +666,8 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
     }
     compile_info.magic_state_consumption_depth = graph.CalcHeaviest();
 
-    // runtime_estimation_magic_state_consumption_depth
-    compile_info.runtime_estimation_magic_state_consumption_depth =
+    // execution_time_estimation_magic_state_consumption_depth
+    compile_info.execution_time_estimation_magic_state_consumption_depth =
             compile_info.magic_state_consumption_depth
             * target.machine_option.magic_generation_period;
 
@@ -680,13 +680,13 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
     }
     compile_info.entanglement_consumption_depth = graph.CalcHeaviest();
 
-    // runtime_estimation_entanglement_consumption_depth
-    compile_info.runtime_estimation_entanglement_consumption_depth =
+    // execution_time_estimation_entanglement_consumption_depth
+    compile_info.execution_time_estimation_entanglement_consumption_depth =
             compile_info.entanglement_consumption_depth
             * target.machine_option.entanglement_generation_period;
 
-    // measurement_feedback_count, runtime_estimation_measurement_feedback_count
-    compile_info.measurement_feedback_count = [&mf]() {
+    // reaction_count, execution_time_estimation_from_reaction_count
+    compile_info.reaction_count = [&mf]() {
         auto feedback = std::set<CSymbol>();
         for (const auto& bb : mf) {
             for (const auto& minst : bb) {
@@ -698,10 +698,10 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
         }
         return feedback.size();
     }();
-    compile_info.runtime_estimation_measurement_feedback_count =
-            compile_info.measurement_feedback_count * target.machine_option.reaction_time;
+    compile_info.execution_time_estimation_from_reaction_count =
+            compile_info.reaction_count * target.machine_option.reaction_time;
 
-    // measurement_feedback_depth
+    // reaction_depth
     {
         graph.SetAllLength(0);
 
@@ -738,11 +738,11 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
             }
         }
     }
-    compile_info.measurement_feedback_depth = graph.CalcLongest();
+    compile_info.reaction_depth = graph.CalcLongest();
 
-    // runtime_estimation_measurement_feedback_depth
-    compile_info.runtime_estimation_measurement_feedback_depth =
-            compile_info.measurement_feedback_depth * target.machine_option.reaction_time;
+    // execution_time_estimation_from_reaction_depth
+    compile_info.execution_time_estimation_from_reaction_depth =
+            compile_info.reaction_depth * target.machine_option.reaction_time;
 
     return false;
 }
@@ -760,14 +760,14 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
 
     const auto time_series = TimeSeries(mf);
 
-    // runtime
-    compile_info.runtime = time_series.GetRuntime();
+    // execution_time
+    compile_info.execution_time = time_series.GetRuntime();
 
-    if (compile_info.runtime == 0) {
+    if (compile_info.execution_time == 0) {
         return false;
     }
 
-    // gate_throughput, measurement_feedback_rate, magic_state_consumption_rate,
+    // gate_throughput, reaction_rate, magic_state_consumption_rate,
     // entanglement_consumption_rate
     struct FeedbackInfo {
         Beat beat;
@@ -777,17 +777,17 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
     for (std::uint64_t i = 0; i < NumReservedCSymbols; ++i) {
         feedback_info.emplace(CSymbol{i}, FeedbackInfo{.beat = 0, .counted = false});
     }
-    compile_info.gate_throughput.resize(compile_info.runtime, 0);
-    compile_info.measurement_feedback_rate.resize(compile_info.runtime, 0);
-    compile_info.magic_state_consumption_rate.resize(compile_info.runtime, 0);
-    compile_info.entanglement_consumption_rate.resize(compile_info.runtime, 0);
-    for (auto beat = Beat{0}; beat < compile_info.runtime; ++beat) {
+    compile_info.gate_throughput.resize(compile_info.execution_time, 0);
+    compile_info.reaction_rate.resize(compile_info.execution_time, 0);
+    compile_info.magic_state_consumption_rate.resize(compile_info.execution_time, 0);
+    compile_info.entanglement_consumption_rate.resize(compile_info.execution_time, 0);
+    for (auto beat = Beat{0}; beat < compile_info.execution_time; ++beat) {
         const auto& insts = time_series.GetInstructions(beat);
 
         // gate_throughput
         compile_info.gate_throughput[beat] = insts.size();
 
-        // measurement_feedback_rate
+        // reaction_rate
         for (const auto& inst : insts) {
             for (const auto& c : inst->CCreate()) {
                 if (feedback_info.contains(c)) {
@@ -816,7 +816,7 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
 
                 auto& info = feedback_info.at(c);
                 if (!info.counted) {
-                    compile_info.measurement_feedback_rate[info.beat]++;
+                    compile_info.reaction_rate[info.beat]++;
                     info.counted = true;
                 }
             }
@@ -838,11 +838,11 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
 
     // chip_cell_algorithmic_qubit, chip_cell_algorithmic_qubit_ratio, chip_cell_active_qubit_area,
     // chip_cell_active_qubit_area_ratio
-    compile_info.chip_cell_algorithmic_qubit.resize(compile_info.runtime);
-    compile_info.chip_cell_algorithmic_qubit_ratio.resize(compile_info.runtime);
-    compile_info.chip_cell_active_qubit_area.resize(compile_info.runtime);
-    compile_info.chip_cell_active_qubit_area_ratio.resize(compile_info.runtime);
-    for (auto beat = Beat{0}; beat < compile_info.runtime; ++beat) {
+    compile_info.chip_cell_algorithmic_qubit.resize(compile_info.execution_time);
+    compile_info.chip_cell_algorithmic_qubit_ratio.resize(compile_info.execution_time);
+    compile_info.chip_cell_active_qubit_area.resize(compile_info.execution_time);
+    compile_info.chip_cell_active_qubit_area_ratio.resize(compile_info.execution_time);
+    for (auto beat = Beat{0}; beat < compile_info.execution_time; ++beat) {
         compile_info.chip_cell_algorithmic_qubit[beat] =
                 time_series.GetChipInfo(beat).ChipCellAlgorithmicQubit();
         compile_info.chip_cell_algorithmic_qubit_ratio[beat] =
@@ -943,10 +943,10 @@ bool CompileInfoWithQecResourceEstimation::RunOnMachineFunction(MachineFunction&
         );
         compile_info.execution_time_sec = EstimateExecutionTimeSec(
                 compile_info.code_distance,
-                compile_info.runtime,
+                compile_info.execution_time,
                 option.code_cycle_time_sec
         );
-        compile_info.num_physical_qubits = EstimatePhysicalQubitCount(
+        compile_info.physical_qubit_count = EstimatePhysicalQubitCount(
                 compile_info.code_distance,
                 compile_info.chip_cell_count
         );

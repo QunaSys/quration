@@ -262,11 +262,11 @@ class CreateTable:
         return df  # noqa:DOC201
 
     @staticmethod
-    def runtime(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
-        """Create table of runtime information."""
+    def execution_time(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
+        """Create table of execution time information."""
         df = pd.DataFrame()
 
-        keys = ["runtime", "runtime_without_topology"]
+        keys = ["execution_time", "execution_time_without_topology"]
         for name, j in jsons.items():
             df[name] = [j.get(key, None) for key in keys]
 
@@ -317,18 +317,18 @@ class CreateTable:
         return df  # noqa:DOC201
 
     @staticmethod
-    def measurement_depth(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
-        """Create table of measurement depth information."""
+    def reaction(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
+        """Create table of reaction information."""
         df = pd.DataFrame()
 
         keys = None
         for name, j in jsons.items():
             keys = [
-                "measurement_feedback_count",
-                "measurement_feedback_depth",
+                "reaction_count",
+                "reaction_depth",
             ]
             values = [j.get(key, None) for key in keys]
-            CreateTable._time_series(j, "measurement_feedback_rate", keys, values)
+            CreateTable._time_series(j, "reaction_rate", keys, values)
             new_keys = ["gate_depth"]
             keys.extend(new_keys)
             values.extend([j.get(key, None) for key in new_keys])
@@ -353,8 +353,8 @@ class CreateTable:
             values = [j.get(key, None) for key in keys]
             CreateTable._time_series(j, "magic_state_consumption_rate", keys, values)
             new_keys = [
-                "runtime_estimation_magic_state_consumption_count",
-                "runtime_estimation_magic_state_consumption_depth",
+                "execution_time_estimation_magic_state_consumption_count",
+                "execution_time_estimation_magic_state_consumption_depth",
                 "magic_factory_count",
             ]
             keys.extend(new_keys)
@@ -379,8 +379,8 @@ class CreateTable:
             values = [j.get(key, None) for key in keys]
             CreateTable._time_series(j, "entanglement_consumption_rate", keys, values)
             new_keys = [
-                "runtime_estimation_entanglement_consumption_count",
-                "runtime_estimation_entanglement_consumption_depth",
+                "execution_time_estimation_entanglement_consumption_count",
+                "execution_time_estimation_entanglement_consumption_depth",
                 "entanglement_factory_count",
             ]
             keys.extend(new_keys)
@@ -416,14 +416,14 @@ class CreateTable:
 
 def visualize_table(col: DeltaGenerator, jsons: OrderedDict[str, dict]) -> None:
     """Visualize table."""
-    col.markdown("## Runtime")
-    col.dataframe(CreateTable.runtime(jsons), width="stretch")
+    col.markdown("## Execution time")
+    col.dataframe(CreateTable.execution_time(jsons), width="stretch")
     col.markdown("## Gate")
     col.dataframe(CreateTable.gate(jsons), width="stretch")
     col.markdown("### Details")
     col.dataframe(CreateTable.gate_detail(jsons), width="stretch")
-    col.markdown("## Measurement depth")
-    col.dataframe(CreateTable.measurement_depth(jsons), width="stretch")
+    col.markdown("## Reaction")
+    col.dataframe(CreateTable.reaction(jsons), width="stretch")
     col.markdown("## Magic state consumption")
     col.dataframe(CreateTable.magic_state_consumption(jsons), width="stretch")
     col.markdown("## Entanglement consumption")
@@ -531,7 +531,7 @@ def visualize_time_series(col: DeltaGenerator, jsons: OrderedDict[str, dict], co
     col.markdown("## Time series")
     col.markdown(f"Visualize time series from {tmin} to {tmax} with bin size {bin_size}")
     visualize("gate_throughput", expanded=True)
-    visualize("measurement_feedback_rate")
+    visualize("reaction_rate")
     visualize("magic_state_consumption_rate")
     visualize("entanglement_consumption_rate")
     visualize("chip_cell_algorithmic_qubit")
@@ -541,20 +541,20 @@ def visualize_time_series(col: DeltaGenerator, jsons: OrderedDict[str, dict], co
 
 
 CORE_METRICS = [
-    "runtime",
+    "execution_time",
     "gate_count",
     "gate_depth",
-    "measurement_feedback_count",
+    "reaction_count",
     "magic_state_consumption_count",
     "entanglement_consumption_count",
     "code_distance",
-    "num_physical_qubits",
+    "physical_qubit_count",
     "execution_time_sec",
 ]
 
 TIME_SERIES_KEYS = [
     "gate_throughput",
-    "measurement_feedback_rate",
+    "reaction_rate",
     "magic_state_consumption_rate",
     "entanglement_consumption_rate",
     "chip_cell_algorithmic_qubit",
@@ -640,7 +640,7 @@ def render_overview_tab(
     st.markdown("### Overview")
 
     metric_cols = st.columns(4)
-    summary_metrics = ["runtime", "gate_count", "code_distance", "num_physical_qubits"]
+    summary_metrics = ["execution_time", "gate_count", "code_distance", "physical_qubit_count"]
     for i, metric in enumerate(summary_metrics):
         values = overview_df.loc[metric].dropna()
         if len(values) == 0:
@@ -695,8 +695,8 @@ def render_tables_tab(jsons: OrderedDict[str, dict], topologies: OrderedDict[str
         st.dataframe(CreateTable.topology(topologies), width="stretch")
     col1, col2 = st.columns(2)
     visualize_table(col1, jsons)
-    col2.markdown("## Runtime")
-    col2.dataframe(CreateTable.runtime(jsons), width="stretch")
+    col2.markdown("## Execution time")
+    col2.dataframe(CreateTable.execution_time(jsons), width="stretch")
     col2.markdown("## Gate")
     col2.dataframe(CreateTable.gate(jsons), width="stretch")
     col2.markdown("## Cell consumption")

@@ -117,28 +117,28 @@ private:
  * @brief Calculate compile information without topology.
  * @details Calculate following statistics:
  *
- * * about runtime
- *     * runtime_without_topology
+ * * about execution time
+ *     * execution_time_without_topology
  * * about gate
  *     * gate_count
  *     * gate_count_dict
  *     * gate_depth
- * * about measurement
- *     * measurement_feedback_count
- *     * measurement_feedback_depth
- *     * runtime_estimation_measurement_feedback_count
- *     * runtime_estimation_measurement_feedback_depth
+ * * about reaction
+ *     * reaction_count
+ *     * reaction_depth
+ *     * execution_time_estimation_from_reaction_count
+ *     * execution_time_estimation_from_reaction_depth
  * * about magic state
  *     * magic_state_consumption_count
  *     * magic_state_consumption_depth
- *     * runtime_estimation_magic_state_consumption_count
- *     * runtime_estimation_magic_state_consumption_depth
+ *     * execution_time_estimation_magic_state_consumption_count
+ *     * execution_time_estimation_magic_state_consumption_depth
  *     * magic_factory_count
  * * about entanglement
  *     * entanglement_consumption_count
  *     * entanglement_consumption_depth
- *     * runtime_estimation_entanglement_consumption_count
- *     * runtime_estimation_entanglement_consumption_depth
+ *     * execution_time_estimation_entanglement_consumption_count
+ *     * execution_time_estimation_entanglement_consumption_depth
  *     * entanglement_factory_count
  */
 struct QRET_EXPORT CompileInfoWithoutTopology : public MachineFunctionPass {
@@ -152,12 +152,12 @@ struct QRET_EXPORT CompileInfoWithoutTopology : public MachineFunctionPass {
  * @brief Calculate compile information with topology.
  * @details Calculate following statistics:
  *
- * * about runtime
- *     * runtime
+ * * about execution time
+ *     * execution_time
  * * about gate
  *     * gate_throughput
- * * about measurement
- *     * measurement_feedback_rate
+ * * about reaction
+ *     * reaction_rate
  * * about magic state
  *     * magic_state_consumption_rate
  * * about entanglement
@@ -184,7 +184,7 @@ struct QRET_EXPORT CompileInfoWithTopology : public MachineFunctionPass {
  *
  * * code_distance
  * * execution_time_sec
- * * num_physical_qubits
+ * * physical_qubit_count
  */
 struct QRET_EXPORT CompileInfoWithQecResourceEstimation : public MachineFunctionPass {
     static inline char ID = 0;
@@ -204,7 +204,7 @@ struct QRET_EXPORT CompileInfoWithQecResourceEstimation : public MachineFunction
     EstimateMinimumCodeDistance(double p, double lambda, double eps, std::uint64_t active_volume);
     /**
      * @brief Estimate execution time in seconds.
-     * @details execution_time_sec = runtime * d * t_cycle.
+     * @details execution_time_sec = execution_time * d * t_cycle.
      *
      * @param d Code distance.
      * @param runtime Number of code beats.
@@ -213,7 +213,7 @@ struct QRET_EXPORT CompileInfoWithQecResourceEstimation : public MachineFunction
     static double EstimateExecutionTimeSec(std::uint64_t d, std::uint64_t runtime, double t_cycle);
     /**
      * @brief Estimate number of physical qubits.
-     * @details num_physical_qubits = chip_cell_count * d^2 * 2.
+     * @details physical_qubit_count = chip_cell_count * d^2 * 2.
      *
      * @param d Code distance.
      * @param chip_cell_count Number of cells in the chip.

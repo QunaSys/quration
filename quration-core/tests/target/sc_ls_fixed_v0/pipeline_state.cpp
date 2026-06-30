@@ -98,7 +98,7 @@ TEST(PipelineState, SaveAndLoadWithManager) {
 
     auto original_mf = BuildCompiledMachineFunction(*circuit, *target);
     auto compile_info = std::unique_ptr<ScLsFixedV0CompileInfo>(new ScLsFixedV0CompileInfo());
-    compile_info->runtime = 123;
+    compile_info->execution_time = 123;
     original_mf.InitializeCompileInfo(std::move(compile_info));
 
     auto manager = MFPassManager{};
@@ -119,7 +119,10 @@ TEST(PipelineState, SaveAndLoadWithManager) {
 
     EXPECT_EQ(DumpProgram(original_mf), DumpProgram(loaded_mf));
     EXPECT_TRUE(loaded_mf.HasCompileInfo());
-    EXPECT_EQ(123, static_cast<const ScLsFixedV0CompileInfo*>(loaded_mf.GetCompileInfo())->runtime);
+    EXPECT_EQ(
+            123,
+            static_cast<const ScLsFixedV0CompileInfo*>(loaded_mf.GetCompileInfo())->execution_time
+    );
     EXPECT_EQ(state.opt.passes.size(), loaded_manager.GetAnalysis().run_order.size());
     EXPECT_EQ(
             target->machine_option.reaction_time,

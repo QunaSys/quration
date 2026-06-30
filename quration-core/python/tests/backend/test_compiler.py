@@ -147,8 +147,8 @@ def test_simple_compile():
     assert isinstance(compile_info.magic_generation_period, int)
     assert isinstance(compile_info.maximum_magic_state_stock, int)
     assert isinstance(compile_info.reaction_time, int)
-    assert isinstance(compile_info.runtime, int)
-    assert isinstance(compile_info.runtime_without_topology, int)
+    assert isinstance(compile_info.execution_time, int)
+    assert isinstance(compile_info.execution_time_without_topology, int)
     assert isinstance(compile_info.gate_count, int)
     for k, v in compile_info.count_per_gate.items():
         assert isinstance(k, str)
@@ -156,18 +156,18 @@ def test_simple_compile():
     assert isinstance(compile_info.gate_depth, int)
     for x in compile_info.gate_throughput:
         assert isinstance(x, int)
-    assert isinstance(compile_info.measurement_feedback_count, int)
-    assert isinstance(compile_info.measurement_feedback_depth, int)
-    for x in compile_info.measurement_feedback_rate:
+    assert isinstance(compile_info.reaction_count, int)
+    assert isinstance(compile_info.reaction_depth, int)
+    for x in compile_info.reaction_rate:
         assert isinstance(x, int)
-    assert isinstance(compile_info.runtime_estimation_measurement_feedback_count, int)
-    assert isinstance(compile_info.runtime_estimation_measurement_feedback_depth, int)
+    assert isinstance(compile_info.execution_time_estimation_from_reaction_count, int)
+    assert isinstance(compile_info.execution_time_estimation_from_reaction_depth, int)
     assert isinstance(compile_info.magic_state_consumption_count, int)
     assert isinstance(compile_info.magic_state_consumption_depth, int)
     for x in compile_info.magic_state_consumption_rate:
         assert isinstance(x, int)
-    assert isinstance(compile_info.runtime_estimation_magic_state_consumption_count, int)
-    assert isinstance(compile_info.runtime_estimation_magic_state_consumption_depth, int)
+    assert isinstance(compile_info.execution_time_estimation_magic_state_consumption_count, int)
+    assert isinstance(compile_info.execution_time_estimation_magic_state_consumption_depth, int)
     assert isinstance(compile_info.magic_factory_count, int)
     assert isinstance(compile_info.chip_cell_count, int)
     for x in compile_info.chip_cell_algorithmic_qubit:
@@ -181,7 +181,7 @@ def test_simple_compile():
     assert isinstance(compile_info.qubit_volume, int)
     assert isinstance(compile_info.code_distance, int)
     assert isinstance(compile_info.execution_time_sec, float)
-    assert isinstance(compile_info.num_physical_qubits, int)
+    assert isinstance(compile_info.physical_qubit_count, int)
 
     print(compile_info.to_json())
     print(compile_info.to_markdown())
