@@ -2,7 +2,7 @@
 
 Quration is a toolchain for exploring design space of fault-tolerant quantum computer (FTQC) architectures and curate optimization strategies and co-design techniques to find a state-of-the-art system designs.  
 
-This project is planned by RIKEN and developed by RIKEN and Fixstars.  
+This project is developed and maintained by RIKEN, Fixstars, The University of Osaka, and QunaSys.
 The development of Quration is in progress, and their backward compatibility might be broken in future updates.  
 
 ## License
@@ -81,7 +81,7 @@ cmake --preset dist
 cmake --build --preset build-dist
 ```
 
-Then, you can find the following binaries in `./build/bin` folder for windows, and `./bin/main` and `./bin/examples` for Linux and MacOS.
+Then, you can find the following binaries in `./bin/main` and `./bin/benchmark_generators`.
 
 - `qret`: main program
   - In the case of windows, it is dependent on `qret-core.dll`, `yaml-cpp.dll`, and `boost_program_options-*.dll`
@@ -91,6 +91,7 @@ Then, you can find the following binaries in `./build/bin` folder for windows, a
     - `create_multi_controlled_mod_bi_mul_imm`: Generate circuits for Mod-bimultiplication.
     - `create_add_craig`: Generate craig-adder circuits.
     - `create_add_cuccaro`: Generate cuccaro-adder circuits.
+    - `create_qrom`: Generate QROM circuits.
   - Qubitization-based quantum phase estimation and subroutines:
     - `create_qpe`: Generate the whole qunatum phase estimation programs
     - `create_select`: Generate SELECT circuits
@@ -113,5 +114,5 @@ pip install numpy pandas plotly streamlit graphviz
 ### Usage
 Then, you can run web applications as follows
 
-* `streamlit run visualize_compile_info.py` : Visualizer for profile information
+* `streamlit run visualize_profile.py` : Visualizer for profile information
 * `streamlit run visualize_computational_process.py` : Visualizer for traces of quantum programs
