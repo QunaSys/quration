@@ -47,6 +47,7 @@ struct PyScLsFixedV0Option {
     double drop_rate = 0.0;
     double code_cycle_time_sec = 0.0;
     double allowed_failure_prob = 0.0;
+    std::uint64_t magic_factory_cell_count = 1;
 };
 std::ostream& operator<<(std::ostream& out, const PyScLsFixedV0Option& o) {
     return out << fmt::format(
@@ -54,7 +55,7 @@ std::ostream& operator<<(std::ostream& out, const PyScLsFixedV0Option& o) {
                    "generation_period={},prob_magic_state_creation={},maximum_magic_state_stock={},"
                    "entanglement_generation_period={},maximum_entangled_state_stock={},reaction_"
                    "time={},physical_error_rate={},drop_rate={},code_cycle_time_sec={},"
-                   "allowed_failure_prob={}",
+                   "allowed_failure_prob={},magic_factory_cell_count={}",
                    o.topology,
                    o.use_magic_state_cultivation,
                    o.magic_factory_seed_offset,
@@ -67,7 +68,8 @@ std::ostream& operator<<(std::ostream& out, const PyScLsFixedV0Option& o) {
                    o.physical_error_rate,
                    o.drop_rate,
                    o.code_cycle_time_sec,
-                   o.allowed_failure_prob
+                   o.allowed_failure_prob,
+                   o.magic_factory_cell_count
            );
 }
 
@@ -105,7 +107,8 @@ std::unique_ptr<sc_ls_fixed_v0::ScLsFixedV0TargetMachine> CreateMachine(
                     .physical_error_rate = option.physical_error_rate,
                     .drop_rate = option.drop_rate,
                     .code_cycle_time_sec = option.code_cycle_time_sec,
-                    .allowed_failure_prob = option.allowed_failure_prob
+                    .allowed_failure_prob = option.allowed_failure_prob,
+                    .magic_factory_cell_count = option.magic_factory_cell_count
             }
     );
     return ret;
@@ -234,7 +237,8 @@ void BindCompileOption(nb::module_& m) {
                         double physical_error_rate,
                         double drop_rate,
                         double code_cycle_time_sec,
-                        double allowed_failure_prob) {
+                        double allowed_failure_prob,
+                        std::uint64_t magic_factory_cell_count) {
                          new (t) PyScLsFixedV0Option{
                                  topology,
                                  use_magic_state_cultivation,
@@ -248,7 +252,8 @@ void BindCompileOption(nb::module_& m) {
                                  physical_error_rate,
                                  drop_rate,
                                  code_cycle_time_sec,
-                                 allowed_failure_prob
+                                 allowed_failure_prob,
+                                 magic_factory_cell_count
                          };
                      })
                 .def_rw("topology", &PyScLsFixedV0Option::topology)
@@ -270,6 +275,7 @@ void BindCompileOption(nb::module_& m) {
                 .def_rw("drop_rate", &PyScLsFixedV0Option::drop_rate)
                 .def_rw("code_cycle_time_sec", &PyScLsFixedV0Option::code_cycle_time_sec)
                 .def_rw("allowed_failure_prob", &PyScLsFixedV0Option::allowed_failure_prob)
+                .def_rw("magic_factory_cell_count", &PyScLsFixedV0Option::magic_factory_cell_count)
                 .def("__str__", BindFmtUsingOstream<PyScLsFixedV0Option>);
     }
 }

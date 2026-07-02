@@ -154,7 +154,9 @@ std::optional<qret::sc_ls_fixed_v0::ScLsFixedV0MachineOption> GetMachineOption(
             .physical_error_rate = options.GetDouble("sc_ls_fixed_v0_physical_error_rate", 0.0),
             .drop_rate = options.GetDouble("sc_ls_fixed_v0_drop_rate", 0.0),
             .code_cycle_time_sec = options.GetDouble("sc_ls_fixed_v0_code_cycle_time_sec", 0.0),
-            .allowed_failure_prob = options.GetDouble("sc_ls_fixed_v0_allowed_failure_prob", 0.0)
+            .allowed_failure_prob = options.GetDouble("sc_ls_fixed_v0_allowed_failure_prob", 0.0),
+            .magic_factory_cell_count =
+                    options.GetUInt64("sc_ls_fixed_v0_magic_factory_cell_count", 1),
     };
 }
 
@@ -319,6 +321,12 @@ void ScLsFixedV0CompileBackend::AddCompileOptions(qret::CompileOptionRegistrar& 
             "sc_ls_fixed_v0_allowed_failure_prob",
             0.0,
             "Allowed failure probability (eps) for logical error estimation."
+    );
+    registrar.AddUInt64Option(
+            "sc_ls_fixed_v0_magic_factory_cell_count",
+            1,
+            "Number of surface code cells per magic state factory for resource estimation. "
+            "Qubit plane always uses 1 cell per factory regardless of this value."
     );
     registrar.AddStringOption(
             "sc_ls_fixed_v0_pass",
