@@ -22,6 +22,7 @@ For the design of the intermediate representation and the instruction set, see "
   * `qret::ir::Instruction` : parent class for instruction classes
 * `qret/ir/instructions.h` : various instruction classes
   * `qret::ir::MeasurementInst`
+  * `qret::ir::PauliProductMeasurementInst`
   * `qret::ir::UnaryInst`
   * `qret::ir::ParametrizedRotationInst`
   * `qret::ir::BinaryInst`
