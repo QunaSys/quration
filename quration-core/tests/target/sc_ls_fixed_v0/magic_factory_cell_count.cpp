@@ -72,9 +72,9 @@ TEST(MagicFactoryCellCount, LargerCellCountIncreasesPhysicalQubits) {
 TEST(MagicFactoryCellCount, ZeroCellCountIsRejected) {
     qret::sc_ls_fixed_v0::ScLsFixedV0TargetMachine target;
     target.machine_option.magic_factory_cell_count = 0;
-    target.machine_option.physical_error_rate = 1e-3;
-    target.machine_option.drop_rate = 0.1;
-    target.machine_option.allowed_failure_prob = 1e-6;
+    target.machine_option.logical_error_rate_base = 1e-3;
+    target.machine_option.logical_error_rate_drop_rate = 0.1;
+    target.machine_option.allowed_failure_probability = 1e-6;
     target.machine_option.code_cycle_time_sec = 1e-6;
 
     qret::MachineFunction mf(&target);
@@ -85,7 +85,7 @@ TEST(MagicFactoryCellCount, ZeroCellCountIsRejected) {
     info.chip_cell_count = 100;
     info.magic_factory_count = 4;
     info.qubit_volume = 1000;
-    info.runtime = 100;
+    info.execution_time = 100;
 
     qret::Logger::EnableConsoleOutput();
     auto captured = std::ostringstream();
@@ -97,6 +97,6 @@ TEST(MagicFactoryCellCount, ZeroCellCountIsRejected) {
     std::cout.rdbuf(original);
     qret::Logger::DisableConsoleOutput();
 
-    EXPECT_EQ(info.num_physical_qubits, 0UL);
+    EXPECT_EQ(info.physical_qubit_count, 0UL);
     EXPECT_NE(std::string::npos, captured.str().find("magic_factory_cell_count must be at least 1"));
 }
