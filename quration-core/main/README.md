@@ -109,6 +109,9 @@ qret 'compile' options:
                                         Code cycle time in seconds (t_cycle) for execution time estimation.
   --sc_ls_fixed_v0_allowed_failure_prob arg (=0)
                                         Allowed failure probability (eps) for logical error estimation.
+  --sc_ls_fixed_v0_magic_factory_cell_count arg (=1)
+                                        Number of surface code cells per magic state factory for resource estimation.
+                                        Qubit plane always uses 1 cell per factory regardless of this value.
   --sc_ls_fixed_v0_pass PASS            SC_LS_FIXED_V0 compile pass to run. Accepts a single pass or a comma-separated list.
   --sc_ls_fixed_v0_dump_compile_info_to_json arg  Dump compile information to json
   --sc_ls_fixed_v0_dump_compile_info_to_markdown arg
@@ -146,6 +149,11 @@ qret 'compile' options:
 * `sc_ls_fixed_v0_drop_rate` : QEC リソース推定におけるドロップ率 `Lambda`
 * `sc_ls_fixed_v0_code_cycle_time_sec` : QEC リソース推定におけるコードサイクル時間 `t_cycle`（秒）
 * `sc_ls_fixed_v0_allowed_failure_prob` : QEC リソース推定における許容失敗確率 `eps`
+* `sc_ls_fixed_v0_magic_factory_cell_count` : 魔法状態工場1つあたりの表面符号セル数（リソース推定用）
+  * デフォルト値は `1`
+  * 量子ビットプレーンは常に工場1つにつき1セルを使用する（この値に関係なく）
+  * `effective_cell_count = chip_cell_count + magic_factory_count * (magic_factory_cell_count - 1)` として物理量子ビット数の推定に使用される
+  * `0` を指定するとエラーとなる
 * `sc_ls_fixed_v0_pass` : SC_LS_FIXED_V0 の機械語に実行する最適化パスを指定する
   * 複数の最適化パスを指定する場合は `,` で区切る
   * 例: 次のように指定すると、命令列のコンパイル時情報を取得できる

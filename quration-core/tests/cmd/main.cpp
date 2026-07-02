@@ -148,6 +148,26 @@ TEST(QretMainProfile, JsonAndMarkdownFromScLsFixedV0PipelineState) {
     EXPECT_TRUE(std::filesystem::exists(markdown_file));
     EXPECT_NE(std::string::npos, ReadFile(markdown_file).find("Compile information"));
 }
+TEST(QretMainCompile, MagicFactoryCellCount) {
+    const auto output = MakeTempPath(".magic_factory_cell_count.json");
+    const auto output_str = output.string();
+    auto argv = std::vector<const char*>{
+            BinName,
+            "compile",
+            "--input",
+            "quration-core/tests/data/circuit/add_cuccaro_3.json",
+            "--function",
+            "AddCuccaro(3)",
+            "--output",
+            output_str.c_str(),
+            "--sc_ls_fixed_v0_topology",
+            "quration-core/tests/data/topology/plane.yaml",
+            "--sc_ls_fixed_v0_magic_factory_cell_count",
+            "4",
+    };
+    EXPECT_EQ(0, qret::cmd::QretMain(argv.size(), argv.data()));
+    EXPECT_TRUE(std::filesystem::exists(output));
+}
 TEST(QretMainCompile, OpenQASM2Source) {
     if (!qret::openqasm2::CanParseOpenQASM2()) {
         GTEST_SKIP() << "Skip OpenQASM2 test";
