@@ -9,8 +9,10 @@
 #include <list>
 #include <sstream>
 #include <stdexcept>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 #include "qret/base/cast.h"
@@ -68,6 +70,12 @@ void ValidateNonGateInst(const bool enable_pbc_mode, const ir::Function& func) {
                 if (const auto* i = DynCast<ir::MeasurementInst>(&inst); i != nullptr) {
                     seen_measurement = true;
                     measured_qubits.emplace(i->GetQubit().id);
+                } else if (const auto* i = DynCast<ir::PauliProductMeasurementInst>(&inst);
+                           i != nullptr) {
+                    seen_measurement = true;
+                    for (const auto q : i->GetQubits()) {
+                        measured_qubits.emplace(q.id);
+                    }
                 } else if (inst.IsGate() && seen_measurement) {
                     throw std::runtime_error(
                             "SC_LS_FIXED_V0 lowering error: all measurements must be placed at "
@@ -176,6 +184,78 @@ void LowerMeasurement(
     const auto q = ctx.GetQ(inst->GetQubit());
     const auto c = ctx.GetC(inst->GetRegister());
     bb.EmplaceBack(MeasZX::New(q, MeasZX::Z, c, ctx.condition));
+}
+
+std::tuple<std::list<QSymbol>, std::list<Pauli>, std::list<QSymbol>> GetSymbolListFromPauliProduct(
+        const LowerContextOfBB& ctx,
+        const ir::PauliProductMeasurementInst* inst
+) {
+    auto qsym_list = std::list<QSymbol>{};
+    auto basis_list = std::list<Pauli>{};
+    auto y_list = std::list<QSymbol>{};
+
+    const auto& qs = inst->GetQubits();
+    const auto& ps = inst->GetPaulis();
+    for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+        const auto q = ctx.GetQ(qs[i]);
+        switch (ps[i]) {
+            case math::Pauli::X:
+                qsym_list.emplace_back(q);
+                basis_list.emplace_back(Pauli::X());
+                break;
+            case math::Pauli::Y:
+                qsym_list.emplace_back(q);
+                // Y is implemented as an X-basis measurement bracketed by Z twists.  The
+                // basis list records the direct lattice-surgery basis, and y_list marks
+                // where LowerPauliProductMeasurement must emit those pre/post twists.
+                basis_list.emplace_back(Pauli::X());
+                y_list.emplace_back(q);
+                break;
+            case math::Pauli::Z:
+                qsym_list.emplace_back(q);
+                basis_list.emplace_back(Pauli::Z());
+                break;
+            case math::Pauli::I:
+                break;
+            default:
+                throw std::logic_error("unknown Pauli in Pauli product measurement");
+        }
+    }
+
+    return {qsym_list, basis_list, y_list};
+}
+
+void LowerPauliProductMeasurement(
+        const LowerContextOfBB& ctx,
+        MachineBasicBlock& bb,
+        const ir::PauliProductMeasurementInst* inst
+) {
+    auto [qsym_list, basis_list, y_list] = GetSymbolListFromPauliProduct(ctx, inst);
+
+    for (const auto q : y_list) {
+        auto twist = Twist::New(q, 0, ctx.condition);
+        twist->SetTargetPauli(Pauli::Z());
+        bb.EmplaceBack(std::move(twist));
+    }
+
+    const auto cdest = ctx.GetC(inst->GetRegister());
+    if (basis_list.size() == 1) {
+        if (basis_list.front() == Pauli::X()) {
+            bb.EmplaceBack(MeasZX::New(qsym_list.front(), MeasZX::X, cdest, ctx.condition));
+        } else if (basis_list.front() == Pauli::Z()) {
+            bb.EmplaceBack(MeasZX::New(qsym_list.front(), MeasZX::Z, cdest, ctx.condition));
+        } else {
+            throw std::logic_error("unknown Pauli basis in Pauli product measurement");
+        }
+    } else {
+        bb.EmplaceBack(LatticeSurgery::New(qsym_list, basis_list, {}, cdest, ctx.condition));
+    }
+
+    for (const auto q : y_list) {
+        auto twist = Twist::New(q, 0, ctx.condition);
+        twist->SetTargetPauli(Pauli::Z());
+        bb.EmplaceBack(std::move(twist));
+    }
 }
 
 void LowerUnary(LowerContextOfBB& ctx, MachineBasicBlock& bb, const ir::UnaryInst* inst) {
@@ -304,8 +384,10 @@ void LowerBinary(LowerContextOfBB& ctx, MachineBasicBlock& bb, const ir::BinaryI
 
 void LowerBB(LowerContextOfBB& ctx, MachineBasicBlock& insert_at_end, const ir::BasicBlock& bb) {
     for (const auto& inst : bb) {
-        if (inst.IsMeasurement()) {
-            LowerMeasurement(ctx, insert_at_end, Cast<ir::MeasurementInst>(&inst));
+        if (const auto* product_measurement = DynCast<ir::PauliProductMeasurementInst>(&inst)) {
+            LowerPauliProductMeasurement(ctx, insert_at_end, product_measurement);
+        } else if (const auto* measurement = DynCast<ir::MeasurementInst>(&inst)) {
+            LowerMeasurement(ctx, insert_at_end, measurement);
         } else if (inst.IsUnary()) {
             LowerUnary(ctx, insert_at_end, Cast<ir::UnaryInst>(&inst));
         } else if (inst.IsBinary()) {
@@ -403,6 +485,7 @@ struct AppendToPauliCircuit {
     std::size_t num_qubits;
 
     void Measurement(const ir::MeasurementInst* inst);
+    void PauliProductMeasurement(const ir::PauliProductMeasurementInst* inst);
     void Unary(const ir::UnaryInst* inst);
     void Binary(const ir::BinaryInst* inst);
     void BB(const ir::BasicBlock* bb);
@@ -413,6 +496,18 @@ void AppendToPauliCircuit::Measurement(const ir::MeasurementInst* inst) {
     circuit.EmplaceBack(
             math::PauliMeasurement(math::PauliString::Z(num_qubits, inst->GetQubit().id))
     );
+}
+
+void AppendToPauliCircuit::PauliProductMeasurement(
+        const ir::PauliProductMeasurementInst* inst
+) {
+    auto pauli = math::PauliString(num_qubits);
+    const auto& qs = inst->GetQubits();
+    const auto& ps = inst->GetPaulis();
+    for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+        pauli.Set(qs[i].id, ps[i]);
+    }
+    circuit.EmplaceBack(math::PauliMeasurement(std::move(pauli)));
 }
 
 void AppendToPauliCircuit::Unary(const ir::UnaryInst* inst) {
@@ -501,8 +596,10 @@ void AppendToPauliCircuit::Binary(const ir::BinaryInst* inst) {
 
 void AppendToPauliCircuit::BB(const ir::BasicBlock* bb) {
     for (const auto& inst : *bb) {
-        if (inst.IsMeasurement()) {
-            Measurement(Cast<ir::MeasurementInst>(&inst));
+        if (const auto* product_measurement = DynCast<ir::PauliProductMeasurementInst>(&inst)) {
+            PauliProductMeasurement(product_measurement);
+        } else if (const auto* measurement = DynCast<ir::MeasurementInst>(&inst)) {
+            Measurement(measurement);
         } else if (inst.IsUnary()) {
             Unary(Cast<ir::UnaryInst>(&inst));
         } else if (inst.IsBinary()) {
@@ -536,18 +633,18 @@ std::tuple<std::list<QSymbol>, std::list<Pauli>, std::list<QSymbol>> GetSymbolLi
     auto y_list = std::list<QSymbol>{};
 
     for (auto n = std::size_t{0}; n < pauli.GetNumQubits(); ++n) {
-        switch (pauli[n]) {
-            case 'X': {
+        switch (pauli.Get(n)) {
+            case math::Pauli::X: {
                 qsym_list.emplace_back(n);
                 basis_list.emplace_back(Pauli::X());
                 break;
             }
-            case 'Z': {
+            case math::Pauli::Z: {
                 qsym_list.emplace_back(n);
                 basis_list.emplace_back(Pauli::Z());
                 break;
             }
-            case 'Y': {
+            case math::Pauli::Y: {
                 qsym_list.emplace_back(n);
                 basis_list.emplace_back(Pauli::X());
                 y_list.emplace_back(n);

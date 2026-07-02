@@ -161,6 +161,11 @@ void CalculateStaticRegisterInBB(
             if (static_register.contains(reg.id)) {
                 static_register.erase(reg.id);
             }
+        } else if (const auto* tmp = DynCast<PauliProductMeasurementInst>(&inst)) {
+            const auto reg = tmp->GetRegister();
+            if (static_register.contains(reg.id)) {
+                static_register.erase(reg.id);
+            }
         } else if (const auto* tmp = DynCast<CallInst>(&inst)) {
             // Any generic call is treated as potentially side-effectful on outputs.
             // Conservatively mark all outputs as dynamic.
