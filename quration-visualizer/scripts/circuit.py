@@ -327,6 +327,7 @@ class Instruction:
         self._aux = inst.get("ancilla", [])
         self._terminal = []
         self._paths: list[list[Point]] = []
+        self._qubit_contact_pairs: list[tuple[Point, Point]] = []
         self._beat = inst["metadata"]["beat"]
         self._parents: list[Instruction] = []
         self._children: list[Instruction] = []
@@ -381,11 +382,21 @@ class Instruction:
         elif self.type in {InstructionType.lattice_surgery, InstructionType.cnot}:
             qs = [c.get_qubit_info(q) for q in self.qtarget]
             terminal = [(q.x, q.y) for q in qs]
+            raw_contacts = self._raw.get("qubit_contacts", [])
+            if raw_contacts:
+                self._qubit_contact_pairs = [
+                    (t, (ct[0], ct[1])) for t, ct in zip(terminal, raw_contacts)
+                ]
             return terminal + [(p[0], p[1]) for p in aux], terminal
         elif self.type == InstructionType.lattice_surgery_magic:
             qs = [c.get_qubit_info(q) for q in self.qtarget]
             f = c.get_factory_info(self.mtarget[0])
             terminal = [(q.x, q.y) for q in qs] + [(f.x, f.y)]
+            raw_contacts = self._raw.get("qubit_contacts", [])
+            if raw_contacts:
+                self._qubit_contact_pairs = [
+                    (t, (ct[0], ct[1])) for t, ct in zip(terminal, raw_contacts)
+                ]
             return terminal + [(p[0], p[1]) for p in aux], terminal
         elif self.type == InstructionType.lattice_surgery_multinode:
             qs = [c.get_qubit_info(q) for q in self.qtarget]
@@ -393,6 +404,11 @@ class Instruction:
             if self.mtarget:
                 f = c.get_factory_info(self.mtarget[0])
                 terminal.append((f.x, f.y))
+            raw_contacts = self._raw.get("qubit_contacts", [])
+            if raw_contacts:
+                self._qubit_contact_pairs = [
+                    (t, (ct[0], ct[1])) for t, ct in zip(terminal, raw_contacts)
+                ]
             return terminal + [(p[0], p[1]) for p in aux], terminal
         elif self.type == InstructionType.move:
             q = c.get_qubit_info(self.qtarget[0])
@@ -510,6 +526,17 @@ class Instruction:
             InstructionType.swap_trans,
             InstructionType.move_trans,
         }:
+            if self._qubit_contact_pairs:
+                # Use explicit qubit→contact segments from the compiler instead of
+                # inferring them via DFS, to avoid spurious extra contact lines for
+                # bridge qubits.
+                qubit_positions = {q_pos for q_pos, _ in self._qubit_contact_pairs}
+                contact_start = [c_pos for _, c_pos in self._qubit_contact_pairs]
+                non_qubit_terminals = [pos for pos in self.terminal if pos not in qubit_positions]
+                all_non_qubit = set(self.aux) - qubit_positions
+                qubit_to_contact = [[q, c] for q, c in self._qubit_contact_pairs]
+                ancilla_paths = make_paths(all_non_qubit, contact_start + non_qubit_terminals)
+                return qubit_to_contact + ancilla_paths
             return make_paths(set(self.aux), list(self.terminal))
         return []
 

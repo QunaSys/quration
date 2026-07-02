@@ -463,6 +463,7 @@ std::string LatticeSurgery::ToString() const {
 Json LatticeSurgery::ToJson() const {
     auto j = DefaultJson();
     j["basis_list"] = BasisList();
+    j["qubit_contacts"] = QubitContacts();
     return j;
 }
 std::unique_ptr<LatticeSurgery> LatticeSurgery::FromJson(const Json& j) {
@@ -472,6 +473,9 @@ std::unique_ptr<LatticeSurgery> LatticeSurgery::FromJson(const Json& j) {
     const auto cdest = j.at("ccreate")[0].template get<CSymbol>();
     const auto condition = JsonToT<CSymbol>(j, "condition");
     auto ret = New(qubit_list, basis_list, path, cdest, condition);
+    if (j.contains("qubit_contacts")) {
+        ret->SetQubitContacts(j["qubit_contacts"].template get<std::vector<Coord3D>>());
+    }
     ret->SetMetadata(j);
     return ret;
 }
@@ -490,6 +494,7 @@ std::string LatticeSurgeryMagic::ToString() const {
 Json LatticeSurgeryMagic::ToJson() const {
     auto j = DefaultJson();
     j["basis_list"] = BasisList();
+    j["qubit_contacts"] = QubitContacts();
     return j;
 }
 std::unique_ptr<LatticeSurgeryMagic> LatticeSurgeryMagic::FromJson(const Json& j) {
@@ -500,6 +505,9 @@ std::unique_ptr<LatticeSurgeryMagic> LatticeSurgeryMagic::FromJson(const Json& j
     const auto magic_factory = j.at("mtarget")[0].template get<MSymbol>();
     const auto condition = JsonToT<CSymbol>(j, "condition");
     auto ret = New(qubit_list, basis_list, path, cdest, magic_factory, condition);
+    if (j.contains("qubit_contacts")) {
+        ret->SetQubitContacts(j["qubit_contacts"].template get<std::vector<Coord3D>>());
+    }
     ret->SetMetadata(j);
     return ret;
 }
@@ -524,6 +532,7 @@ std::string LatticeSurgeryMultinode::ToString() const {
 Json LatticeSurgeryMultinode::ToJson() const {
     auto j = DefaultJson();
     j["basis_list"] = BasisList();
+    j["qubit_contacts"] = QubitContacts();
     return j;
 }
 std::unique_ptr<LatticeSurgeryMultinode> LatticeSurgeryMultinode::FromJson(const Json& j) {
@@ -544,6 +553,9 @@ std::unique_ptr<LatticeSurgeryMultinode> LatticeSurgeryMultinode::FromJson(const
                 e_factory_list,
                 e_handle_list,
                 condition);
+    if (j.contains("qubit_contacts")) {
+        ret->SetQubitContacts(j["qubit_contacts"].template get<std::vector<Coord3D>>());
+    }
     ret->SetMetadata(j);
     return ret;
 }

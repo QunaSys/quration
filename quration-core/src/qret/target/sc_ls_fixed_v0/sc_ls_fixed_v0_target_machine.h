@@ -122,6 +122,9 @@ struct QRET_EXPORT ScLsFixedV0MachineOption {
     double logical_error_rate_drop_rate = 0.0;  //!< Drop rate (Lambda)
     double code_cycle_time_sec = 0.0;  //!< Code cycle time in seconds (t_cycle)
     double allowed_failure_probability = 0.0;  //!< Allowed failure probability (eps)
+    std::uint64_t magic_factory_cell_count =
+            1;  //!< Number of surface code cells per magic state factory for resource estimation.
+                //!< Qubit plane always uses 1 cell per factory regardless of this value.
 };
 
 inline void to_json(Json& j, const ScLsFixedV0MachineOption& option) {
@@ -139,6 +142,7 @@ inline void to_json(Json& j, const ScLsFixedV0MachineOption& option) {
     j["logical_error_rate_drop_rate"] = option.logical_error_rate_drop_rate;
     j["code_cycle_time_sec"] = option.code_cycle_time_sec;
     j["allowed_failure_probability"] = option.allowed_failure_probability;
+    j["magic_factory_cell_count"] = option.magic_factory_cell_count;
 }
 
 inline void from_json(const Json& j, ScLsFixedV0MachineOption& option) {
@@ -168,6 +172,9 @@ inline void from_json(const Json& j, ScLsFixedV0MachineOption& option) {
     }
     if (j.contains("allowed_failure_probability")) {
         j.at("allowed_failure_probability").get_to(option.allowed_failure_probability);
+    }
+    if (j.contains("magic_factory_cell_count")) {
+        j.at("magic_factory_cell_count").get_to(option.magic_factory_cell_count);
     }
 }
 

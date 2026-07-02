@@ -1324,9 +1324,16 @@ bool ScLsSimulator::SearchLatticeSurgeryPath2DBFSAndRun(
     const auto& route = tmp_route.value();
     // Update LATTICE_SURGERY.
     auto path = route.logical_path;
+    // Capture contacts before popping: path = [q_src, contact_src, ..., contact_dst, q_dst]
+    auto qubit_contacts = std::vector<Coord3D>{};
+    if (path.size() >= 3) {
+        qubit_contacts.push_back(*std::next(path.begin()));
+        qubit_contacts.push_back(*std::prev(std::prev(path.end())));
+    }
     path.pop_front();  // Delete coord of 'q_src'.
     path.pop_back();  // Delete coord of 'q_dst'.
     inst->SetPath(std::move(path));
+    inst->SetQubitContacts(std::move(qubit_contacts));
     // Run LATTICE_SURGERY.
     RunLatticeSurgery(beat, inst);
     RunInstructionInQueue(queue, inst);
@@ -1358,6 +1365,7 @@ bool ScLsSimulator::SearchLatticeSurgeryPath2DSteinerAndRun(
     const auto& ancilla = tmp_ancilla.value();
     // Update LATTICE_SURGERY.
     inst->SetPath(ancilla.ancilla);
+    inst->SetQubitContacts(ancilla.qubit_contacts);
     // Run LATTICE_SURGERY.
     RunLatticeSurgery(beat, inst);
     RunInstructionInQueue(queue, inst);
@@ -1558,12 +1566,18 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DBFSAndRun(
     // Update LATTICE_SURGERY_MAGIC.
     inst->SetMagicFactory(route.magic_factory);
     auto path = route.logical_path;
+    // Capture q_dst contact before popping: path = [magic_factory, ..., contact_dst, q_dst]
+    auto qubit_contacts = std::vector<Coord3D>{};
+    if (path.size() >= 3) {
+        qubit_contacts.push_back(*std::prev(std::prev(path.end())));
+    }
     path.pop_front();  // Delete coord of magic factory.
     path.pop_back();  // Delete coord of 'q_dst'.
     inst->SetPath(std::move(path));
     if (!MagicFactoryIsAvailable(beat, inst->MagicFactory())) {
         return false;
     }
+    inst->SetQubitContacts(std::move(qubit_contacts));
     // Run LATTICE_SURGERY_MAGIC.
     RunLatticeSurgeryMagic(beat, inst);
     RunInstructionInQueue(queue, inst);
@@ -1602,6 +1616,7 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DSteinerAndRun(
     if (!MagicFactoryIsAvailable(beat, inst->MagicFactory())) {
         return false;
     }
+    inst->SetQubitContacts(ancilla.qubit_contacts);
     // Run LATTICE_SURGERY_MAGIC.
     RunLatticeSurgeryMagic(beat, inst);
     RunInstructionInQueue(queue, inst);
@@ -1799,6 +1814,7 @@ bool ScLsSimulator::SearchLatticeSurgeryMultinodePathAndRun(
         inst->SetMagicFactory(*ancilla.m);
     }
     inst->SetPath(ancilla.ancilla);
+    inst->SetQubitContacts(ancilla.qubit_contacts);
     // Run LATTICE_SURGERY_MULTINODE.
     RunLatticeSurgeryMultinode(beat, inst);
     RunInstructionInQueue(queue, inst);

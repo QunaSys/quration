@@ -425,7 +425,7 @@ TEST(Routing, Distribute) {
     }
 }
 
-TEST(Routing, LatticeSurgeryPathIsConnectedWhenQubitIsBridge) {
+TEST(Routing, LatticeSurgeryPathIsConnectedWithCollinearQubits) {
     auto topology = Topology::FromYAML(LoadFile("quration-core/tests/data/topology/plane_ls.yaml"));
     const auto target = ScLsFixedV0TargetMachine(
             topology,

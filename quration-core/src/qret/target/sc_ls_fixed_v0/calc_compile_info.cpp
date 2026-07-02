@@ -966,9 +966,14 @@ bool CompileInfoWithQecResourceEstimation::RunOnMachineFunction(MachineFunction&
                 compile_info.execution_time,
                 option.code_cycle_time_sec
         );
+        if (option.magic_factory_cell_count == 0) {
+            throw std::runtime_error("magic_factory_cell_count must be at least 1");
+        }
+        const auto effective_cell_count = compile_info.chip_cell_count
+                + compile_info.magic_factory_count * (option.magic_factory_cell_count - 1);
         compile_info.physical_qubit_count = EstimatePhysicalQubitCount(
                 compile_info.code_distance,
-                compile_info.chip_cell_count
+                effective_cell_count
         );
     } catch (const std::runtime_error& error) {
         LOG_ERROR("{}", error.what());

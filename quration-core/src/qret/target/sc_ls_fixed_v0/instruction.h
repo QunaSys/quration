@@ -1091,6 +1091,15 @@ public:
     void SetPath(std::list<Coord3D>&& path) {
         ancilla_ = std::move(path);
     }
+    [[nodiscard]] const std::vector<Coord3D>& QubitContacts() const {
+        return qubit_contacts_;
+    }
+    void SetQubitContacts(const std::vector<Coord3D>& contacts) {
+        qubit_contacts_ = contacts;
+    }
+    void SetQubitContacts(std::vector<Coord3D>&& contacts) {
+        qubit_contacts_ = std::move(contacts);
+    }
     [[nodiscard]] CSymbol CDest() const {
         return CCreate().front();
     }
@@ -1157,6 +1166,7 @@ private:
     std::list<Pauli> basis_list_;
     std::list<Coord3D> ancilla_;
     std::list<CSymbol> c_;
+    std::vector<Coord3D> qubit_contacts_;
 };
 class QRET_EXPORT LatticeSurgeryMagic : public ScLsInstructionBase {
 public:
@@ -1198,6 +1208,15 @@ public:
     }
     void SetPath(std::list<Coord3D>&& path) {
         ancilla_ = std::move(path);
+    }
+    [[nodiscard]] const std::vector<Coord3D>& QubitContacts() const {
+        return qubit_contacts_;
+    }
+    void SetQubitContacts(const std::vector<Coord3D>& contacts) {
+        qubit_contacts_ = contacts;
+    }
+    void SetQubitContacts(std::vector<Coord3D>&& contacts) {
+        qubit_contacts_ = std::move(contacts);
     }
     [[nodiscard]] MSymbol MagicFactory() const {
         return MTarget().front();
@@ -1278,6 +1297,7 @@ private:
     std::list<Coord3D> ancilla_;
     std::list<CSymbol> c_;
     std::list<MSymbol> m_;
+    std::vector<Coord3D> qubit_contacts_;
 };
 class QRET_EXPORT LatticeSurgeryMultinode : public ScLsInstructionBase {
 public:
@@ -1323,6 +1343,15 @@ public:
     }
     void SetPath(std::list<Coord3D>&& path) {
         ancilla_ = std::move(path);
+    }
+    [[nodiscard]] const std::vector<Coord3D>& QubitContacts() const {
+        return qubit_contacts_;
+    }
+    void SetQubitContacts(const std::vector<Coord3D>& contacts) {
+        qubit_contacts_ = contacts;
+    }
+    void SetQubitContacts(std::vector<Coord3D>&& contacts) {
+        qubit_contacts_ = std::move(contacts);
     }
     [[nodiscard]] CSymbol CDest() const {
         return CCreate().front();
@@ -1439,6 +1468,7 @@ private:
     std::list<ESymbol> e_;
     std::list<EHandle> eh_;
     std::list<Coord3D> ancilla_;
+    std::vector<Coord3D> qubit_contacts_;
 };
 class QRET_EXPORT Move : public ScLsInstructionBase {
 public:

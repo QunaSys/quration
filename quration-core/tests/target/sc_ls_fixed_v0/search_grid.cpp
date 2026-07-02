@@ -174,7 +174,7 @@ bool IsAncillaPathConnected(const std::list<Coord3D>& path) {
     return remaining.empty();
 }
 
-TEST(SearchRoute, FindAncillaProducesConnectedSetWhenQubitIsBridge) {
+TEST(SearchRoute, FindAncillaProducesConnectedSetWithCollinearQubits) {
     const auto topology =
             Topology::FromYAML(LoadFile("quration-core/tests/data/topology/plane.yaml"));
     const auto option = ScLsFixedV0MachineOption{};

@@ -114,10 +114,11 @@ qret 'compile' options:
                                         Code cycle time in seconds (t_cycle) for execution time estimation.
   --sc_ls_fixed_v0_allowed_failure_probability arg (=0)
                                         Allowed failure probability (eps) for logical error estimation.
-  --sc_ls_fixed_v0_pass PASS            SC_LS_FIXED_V0 compile pass to run. Accepts a single pass or a comma-separated 
-                                        list.
-  --sc_ls_fixed_v0_dump_compile_info_to_json arg
-                                        Dump compile information to json
+  --sc_ls_fixed_v0_magic_factory_cell_count arg (=1)
+                                        Number of surface code cells per magic state factory for resource estimation.
+                                        Qubit plane always uses 1 cell per factory regardless of this value.
+  --sc_ls_fixed_v0_pass PASS            SC_LS_FIXED_V0 compile pass to run. Accepts a single pass or a comma-separated list.
+  --sc_ls_fixed_v0_dump_compile_info_to_json arg  Dump compile information to json
   --sc_ls_fixed_v0_dump_compile_info_to_markdown arg
                                         Dump compile information to markdown
 ```
@@ -156,7 +157,11 @@ Explanation of non-trivial options:
 * `sc_ls_fixed_v0_pass` : specifies optimization passes to run on SC_LS_FIXED_V0 machine code
   * Separate multiple optimization passes with `,`.
   * Example: specify the following to obtain compile-time information for the instruction sequence:
-    * `"sc_ls_fixed_v0::calc_info_without_topology,sc_ls_fixed_v0::calc_info_with_topology"`
+* `sc_ls_fixed_v0_magic_factory_cell_count` : The number of surface code cells for magic-state factory, used for resource estimation
+  * deafult to `1`. Raise error when `0`.
+  * Effective cell count is calculated as `effective_cell_count = chip_cell_count + magic_factory_count * (magic_factory_cell_count - 1)`
+  * Qubit plane always uses a single cell for each magic-factory
+* `"sc_ls_fixed_v0::calc_info_without_topology,sc_ls_fixed_v0::calc_info_with_topology"`
 * `sc_ls_fixed_v0_dump_compile_info_to_json` : dumps compile-time statistics in JSON format
 * `sc_ls_fixed_v0_dump_compile_info_to_markdown` : dumps compile-time statistics in Markdown format
 

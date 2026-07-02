@@ -267,6 +267,8 @@ struct QRET_EXPORT SearchRoute {
         std::optional<MSymbol> m;
 
         std::list<Coord3D> ancilla;
+        // One contact cell per qubit in qs (in order), for visualization.
+        std::vector<Coord3D> qubit_contacts;
 
         void Audit() const {
             // TODO: Check if ancilla is connected.

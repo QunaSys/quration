@@ -70,6 +70,7 @@ class ScLsFixedV0Option:
         logical_error_rate_drop_rate: float = 0.0,
         code_cycle_time_sec: float = 0.0,
         allowed_failure_probability: float = 0.0,
+        magic_factory_cell_count: int = 1,
     ) -> None:
         """Compiling options for the SC_LS_FIXED_V0 Machine.
 
@@ -87,6 +88,7 @@ class ScLsFixedV0Option:
             logical_error_rate_drop_rate (float, optional): drop rate Lambda for logical error estimation. Defaults to 0.0.
             code_cycle_time_sec (float, optional): code cycle time in seconds (t_cycle). Defaults to 0.0.
             allowed_failure_probability (float, optional): allowed failure probability eps. Defaults to 0.0.
+            magic_factory_cell_count (int, optional): number of surface code cells per magic state factory for resource estimation. The qubit plane always uses 1 cell per factory regardless of this value. Defaults to 1.
         """
         self._impl = _M.ScLsFixedV0Option(
             topology,
@@ -102,6 +104,7 @@ class ScLsFixedV0Option:
             logical_error_rate_drop_rate,
             code_cycle_time_sec,
             allowed_failure_probability,
+            magic_factory_cell_count,
         )
 
     @property
@@ -153,6 +156,11 @@ class ScLsFixedV0Option:
     def allowed_failure_probability(self) -> float:
         """Allowed failure probability eps."""
         return self._impl.allowed_failure_probability
+
+    @property
+    def magic_factory_cell_count(self) -> int:
+        """Number of surface code cells per magic state factory for resource estimation."""
+        return self._impl.magic_factory_cell_count
 
     def __str__(self) -> str:
         return str(self._impl)
@@ -266,7 +274,9 @@ class Compiler:
         """
         self._impl.add_pass(name)
 
-    def add_external_pass(self, name: str, cmd: str, input_path: str | Path, output_path: str | Path) -> None:
+    def add_external_pass(
+        self, name: str, cmd: str, input_path: str | Path, output_path: str | Path
+    ) -> None:
         """Add an external pass to the compiler.
 
         Args:
