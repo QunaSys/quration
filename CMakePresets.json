@@ -109,6 +109,21 @@
       }
     },
     {
+      "name": "dist-test",
+      "displayName": "default: intended for distribution with test",
+      "inherits": [
+        "_toolchain_vcpkg",
+        "_release"
+      ],
+      "cacheVariables": {
+        "QRET_BUILD_APPLICATION": "ON",
+        "QRET_BUILD_ALGORITHM": "ON",
+        "QRET_BUILD_EXAMPLE": "ON",
+        "QRET_BUILD_TEST": "ON",
+        "QRET_USE_QULACS": "OFF"
+      }
+    }, 
+   {
       "name": "all-debug",
       "displayName": "default: all debug",
       "inherits": [
@@ -225,71 +240,91 @@
     {
       "name": "build-dev-debug",
       "configurePreset": "dev-debug",
+      "configuration": "Debug",
       "jobs": 8
     },
     {
       "name": "build-dev-release",
       "configurePreset": "dev-release",
+      "configuration": "Release",
       "jobs": 8
     },
     {
       "name": "build-dist",
       "configurePreset": "dist",
+      "configuration": "Release",
+      "jobs": 8
+    },
+    {
+      "name": "build-dist-test",
+      "configurePreset": "dist-test",
+      "configuration": "Release",
       "jobs": 8
     },
     {
       "name": "build-all-debug",
       "configurePreset": "all-debug",
+      "configuration": "Debug",
       "jobs": 8
     },
     {
       "name": "build-all-release",
       "configurePreset": "all-release",
+      "configuration": "Release",
       "jobs": 8
     },
     {
       "name": "build-cov-debug",
       "configurePreset": "cov-debug",
+      "configuration": "Debug",
       "jobs": 8
     },
     {
       "name": "build-python-release",
       "configurePreset": "python-release",
+      "configuration": "Release",
       "jobs": 8
     },
     {
       "name": "build-clang20-dev-debug",
       "configurePreset": "clang20-dev-debug",
+      "configuration": "Debug",
       "jobs": 8
     },
     {
       "name": "build-clang20-dev-release",
       "configurePreset": "clang20-dev-release",
+      "configuration": "Release",
       "jobs": 8
     },
     {
       "name": "build-clang20-all-debug",
       "configurePreset": "clang20-all-debug",
+      "configuration": "Debug",
       "jobs": 8
     },
     {
       "name": "build-clang20-all-release",
       "configurePreset": "clang20-all-release",
+      "configuration": "Release",
       "jobs": 8
     },
     {
       "name": "build-clang20-cov-debug",
       "configurePreset": "clang20-cov-debug",
+      "configuration": "Debug",
       "jobs": 8
     },
     {
       "name": "build-clang20-python-release",
       "configurePreset": "clang20-python-release",
+      "configuration": "Release",
       "jobs": 8
     },
     {
       "name": "build-gcc12-all-release",
       "configurePreset": "gcc12-all-release",
+      "configuration": "Release",
       "jobs": 8
     }
   ],
@@ -297,6 +332,7 @@
     {
       "name": "test-all-debug",
       "configurePreset": "all-debug",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
@@ -304,6 +340,15 @@
     {
       "name": "test-all-release",
       "configurePreset": "all-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "test-dist-test",
+      "configurePreset": "dist-test",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }
@@ -311,6 +356,7 @@
     {
       "name": "test-cov-debug",
       "configurePreset": "cov-debug",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
@@ -318,6 +364,7 @@
     {
       "name": "test-clang20-all-debug",
       "configurePreset": "clang20-all-debug",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
@@ -325,6 +372,7 @@
     {
       "name": "test-clang20-all-release",
       "configurePreset": "clang20-all-release",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }
@@ -332,6 +380,7 @@
     {
       "name": "test-clang20-cov-debug",
       "configurePreset": "clang20-cov-debug",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
@@ -339,6 +388,7 @@
     {
       "name": "test-gcc12-all-release",
       "configurePreset": "gcc12-all-release",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }

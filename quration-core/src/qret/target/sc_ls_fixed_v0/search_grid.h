@@ -431,6 +431,7 @@ public:
             const std::list<QSymbol>& qs,
             const std::list<Pauli>& boundaries,
             const std::list<ESymbol>& es,
+            const std::list<EHandle>& ehs,
             bool use_magic_state
     );
 

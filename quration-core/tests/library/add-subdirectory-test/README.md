@@ -1,3 +1,3 @@
 # add-subdirectory-test
 
-CMake で `add_subdirectory` をして qret ライブラリが使用可能か判定するテスト
+This test checks whether the qret library can be used through CMake `add_subdirectory`.

@@ -85,12 +85,6 @@ function(set_to_on option description)
   endif()
 endfunction(set_to_on)
 if(MSVC)
-  # Collect all binaries in a stable path on Windows.
-  set(QRET_WINDOWS_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>")
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${QRET_WINDOWS_OUTPUT_DIRECTORY}")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${QRET_WINDOWS_OUTPUT_DIRECTORY}")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${QRET_WINDOWS_OUTPUT_DIRECTORY}")
-
   foreach(option QRET_DEV_MODE QRET_MEASURE_COVERAGE QRET_USE_QULACS)
     set_to_off(${option} "in Windows.")
   endforeach(option)
@@ -163,6 +157,8 @@ if(QRET_BUILD_EXAMPLE)
   if(QRET_BUILD_ALGORITHM)
     add_subdirectory_with_runtime_output(quration-algorithm/examples
                                          "${CMAKE_BINARY_DIR}/examples")
+    add_subdirectory_with_runtime_output(quration-algorithm/benchmark_generators
+                                         "${CMAKE_BINARY_DIR}/benchmark_generators")
   endif()
 endif()
 

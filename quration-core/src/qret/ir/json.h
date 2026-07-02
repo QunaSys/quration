@@ -18,7 +18,7 @@
 #include "qret/qret_export.h"
 
 namespace qret::ir {
-inline constexpr auto IRJsonSchemaVersion = "0.1";
+inline constexpr auto IRJsonSchemaVersion = "0.2";
 
 //--------------------------------------------------//
 // Serialization

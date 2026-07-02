@@ -37,8 +37,8 @@ void StepEntanglementFactoryPairState(
             rhs.entangled_state_stock_count_free + rhs.entangled_state_stock_count_reserve();
     if ((lhs.entangled_state_generation_elapsed == option.entanglement_generation_period)
         && (rhs.entangled_state_generation_elapsed == option.entanglement_generation_period)
-        && (lhs_stock < option.maximum_entangled_state_stock)
-        && (rhs_stock < option.maximum_entangled_state_stock)) {
+        && (lhs_stock < option.entanglement_generation_maximum_stock)
+        && (rhs_stock < option.entanglement_generation_maximum_stock)) {
         lhs.entangled_state_stock_count_free += 1;
         rhs.entangled_state_stock_count_free += 1;
         lhs.entangled_state_generation_elapsed = 0;

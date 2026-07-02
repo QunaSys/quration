@@ -1,39 +1,39 @@
 \page qret QRET
 
-## 概要
+## Overview
 
-QRET ライブラリは以下のモジュールから構成される。
-各モジュールについてのドキュメントは、対応するディレクトリに含まれる `README.md` に配置している。
+The QRET library consists of the following modules.
+Documentation for each module is located in the corresponding directory's `README.md`.
 
 * `analysis/`
-  * 中間表現を解析するツールを実装する
+  * Implements tools for analyzing the intermediate representation.
 * `base/`
-  * 全てのモジュールで広く使用される、基本的なクラスと関数を実装する
+  * Implements basic classes and functions used widely across all modules.
 * `cmd/`
-  * コマンドラインで使用する各種コマンドを実装する
-  * CMake の configuration 時に `QRET_BUILD_APPLICATION` が `ON` の時にのみビルドされる
+  * Implements commands used from the command line.
+  * Built only when `QRET_BUILD_APPLICATION` is `ON` during CMake configuration.
 * `codegen/`
-  * ターゲットとなる量子コンピュータで共通して使用されるクラスを定義する
-  * ターゲットごとの実装は `target/` で行う
+  * Defines classes shared by target quantum computers.
+  * Target-specific implementations are placed under `target/`.
 * `frontend/`
-  * C++ で直観的に量子回路を定義する方法を提供する
+  * Provides an intuitive way to define quantum circuits in C++.
 * `gate/`
-  * 様々な量子回路を実装する
+  * Implements various quantum circuits.
 * `ir/`
-  * 量子回路の中間表現を定義する
+  * Defines the intermediate representation for quantum circuits.
 * `math/`
-  * 数学関数を実装する
+  * Implements mathematical functions.
 * `parser/`
-  * 各種ファイルのパーサを実装する
+  * Implements parsers for various files.
 * `runtime/`
-  * 量子回路のシミュレータ
+  * Provides quantum circuit simulators.
 * `target/`
-  * ターゲットごとに、命令や最適化パスを実装する
-    * 現在は sc_ls_fixed_v0 のみ実装している
+  * Implements instructions and optimization passes for each target.
+    * Currently, only sc_ls_fixed_v0 is implemented.
 * `transforms/`
-  * 中間表現で記述された量子回路の最適化パスを実装する
+  * Implements optimization passes for quantum circuits described in the intermediate representation.
 
-### モジュールの依存グラフ
+### Module Dependency Graph
 
 \dot
 digraph G {

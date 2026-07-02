@@ -13,7 +13,7 @@ def opt_impl(circuit: dict) -> None:
 def opt(input_file: str, circuit_name: str, output_file: str) -> None:
     with Path.open(Path(input_file), "r") as ifile:
         ir = json.load(ifile)
-    for circuit in ir["circuit_list"]:
+    for circuit in ir["function_list"]:
         if circuit["name"] == circuit_name:
             opt_impl(circuit)
     with Path.open(Path(output_file), "w") as ofile:

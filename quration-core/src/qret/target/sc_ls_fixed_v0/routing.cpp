@@ -86,17 +86,17 @@ bool Routing::RunOnMachineFunction(MachineFunction& mf) {
     }
 
     const auto& machine = *static_cast<const ScLsFixedV0TargetMachine*>(mf.GetTarget());
-    const auto machine_type = machine.machine_option.type;
+    const auto topology_type = machine.machine_option.topology_type;
     const auto& topology = machine.topology;
     const auto& option = machine.machine_option;
     const auto weight_algorithm = InstQueue::WeightAlgorithm(InstQueueWeightAlgorithm.Get());
 
-    if (machine_type == ScLsFixedV0MachineType::DistributedDim3) {
+    if (topology_type == ScLsFixedV0TopologyType::DistributedDim3) {
         throw std::runtime_error(
                 "SC_LS_FIXED_V0 machine type DistributedDim3 is currently not supported."
         );
     }
-    if (GetMachineType(*topology) == ScLsFixedV0MachineType::DistributedDim3) {
+    if (GetTopologyType(*topology) == ScLsFixedV0TopologyType::DistributedDim3) {
         LOG_ERROR("topology: {}", Json(*topology).dump());
         throw std::runtime_error(
                 "SC_LS_FIXED_V0 machine type DistributedDim3 is currently not supported."
@@ -186,7 +186,7 @@ bool Routing::RunOnMachineFunction(MachineFunction& mf) {
                 )) {
                 continue;
             }
-            if (machine_type == ScLsFixedV0MachineType::DistributedDim2
+            if (topology_type == ScLsFixedV0TopologyType::DistributedDim2
                 && (type == ScLsInstructionType::LATTICE_SURGERY_MULTINODE
                     || type == ScLsInstructionType::MOVE || type == ScLsInstructionType::CNOT)
                 && splitter.Split(

@@ -1,10 +1,11 @@
 {
     "name": "boolean",
-    "circuit_list": [
+    "entry_function": "TemporalAnd",
+    "function_list": [
         {
             "name": "TemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -92,7 +93,7 @@
         {
             "name": "UncomputeTemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

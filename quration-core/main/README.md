@@ -1,21 +1,21 @@
 \page main Main
 
-`quration-core/main/` では、 qret のバイナリを実装する。
+`quration-core/main/` implements the qret binaries.
 
 ## How to use
 
-バイナリの使用方法は `--help` オプションで確認できる。
-`./qret compile ...` や `./qret simulate ...` のように、バイナリの後にコマンドを続け、その後にコマンドに沿ったオプションを入力する。
-現在、次の 8 つのコマンドを実装している。
+Use the `--help` option to check how to use the binary.
+Run a command after the binary, such as `./qret compile ...` or `./qret simulate ...`, followed by the options for that command.
+Currently, the following eight commands are implemented.
 
-1. `asm` : ターゲットの JSON（パイプライン状態）からアセンブリを出力する
-2. `compile` : 入力ファイルをターゲットの量子コンピュータにコンパイルする
-3. `diagram` : 中間表現を可視化する
-4. `opt` : 中間表現を最適化する
-5. `parse` : 様々なフォーマットのファイルをパースし、中間表現を作成する
-6. `print` : 中間表現の命令列を理解しやすい形でプリントする
-7. `profile` : ターゲットの JSON（パイプライン状態）から統計情報を出力する
-8. `simulate` : 中間表現をシミュレータで実行する
+1. `asm` : outputs assembly from a target JSON file (pipeline state)
+2. `compile` : compiles an input file for a target quantum computer
+3. `diagram` : visualizes the intermediate representation
+4. `opt` : optimizes the intermediate representation
+5. `parse` : parses files in various formats and creates the intermediate representation
+6. `print` : prints the instruction sequence of the intermediate representation in a human-readable form
+7. `profile` : outputs statistics from a target JSON file (pipeline state)
+8. `simulate` : runs the intermediate representation with a simulator
 
 ```sh
 $ qret --help
@@ -33,10 +33,10 @@ Available commands:
   help version asm compile diagram opt parse print profile simulate
 ```
 
-## コマンド : asm
+## Command: asm
 
-`asm` コマンドは、ターゲットのパイプライン状態ファイルからアセンブリを出力する。
-`asm` コマンドの使用方法は `--help` オプションで確認できる。
+The `asm` command outputs assembly from a target pipeline state file.
+Use the `--help` option to check how to use the `asm` command.
 
 ```sh
 $ qret asm --help
@@ -58,10 +58,10 @@ qret 'asm' options:
   -o [ --output ] arg (=out.asm)        Output file
 ```
 
-## コマンド : compile
+## Command: compile
 
-`compile` コマンドは、 入力ファイルをターゲットの量子コンピュータの命令列にコンパイルする。
-`compile` コマンドの使用方法は `--help` オプションで確認できる。
+The `compile` command compiles an input file into the instruction sequence of the target quantum computer.
+Use the `--help` option to check how to use the `compile` command.
 
 ```sh
 $ qret compile --help
@@ -75,39 +75,44 @@ qret 'compile' options:
   --color                               Enable colored output.
   --pipeline FILE                       Path to a pipeline specification file.
   -i [ --input ] FILE                   Path to the input file.
-  -f [ --function ] NAME                 [source=IR] Name of the function to compile.
+  -f [ --function ] NAME                [source=IR] Name of the function to compile.
   -o [ --output ] FILE (=a.json)        Path to the output SC_LS_FIXED_V0 file.
   -s [ --source ] KIND (=IR)            Source representation: 'IR', 'OpenQASM2', or 'SC_LS_FIXED_V0'.
   -t [ --target ] KIND (=SC_LS_FIXED_V0)
                                         Target machine name.
-  --sc_ls_fixed_v0_topology FILE                  Path to the SC_LS_FIXED_V0 topology file.
-  --sc_ls_fixed_v0_machine_type TYPE (=auto)      SC_LS_FIXED_V0 machine type: 'Dim2', 'Dim3', 'DistributedDim2', or
-                                        'DistributedDim3' (currently unsupported). When 'auto' (default), the type is inferred from --sc_ls_fixed_v0_topology as the 
-                                        minimum required.
+  --sc_ls_fixed_v0_topology FILE        Path to the SC_LS_FIXED_V0 topology file.
+  --sc_ls_fixed_v0_topology_type TYPE (=auto)
+                                        SC_LS_FIXED_V0 machine type: 'Dim2', 'Dim3', 'DistributedDim2', or 
+                                        'DistributedDim3' (currently unsupported). When 'auto' (default), the type is 
+                                        inferred from --sc_ls_fixed_v0_topology as the minimum required.
   --sc_ls_fixed_v0_enable_pbc_mode      Enable Pauli Based Computing lowering mode.
-  --sc_ls_fixed_v0_use_magic_state_cultivation    Simulate magic-state factories using the cultivation method (requires 
-                                        --sc_ls_fixed_v0_magic_factory_seed_offset, --sc_ls_fixed_v0_prob_magic_state_creation).
+  --sc_ls_fixed_v0_use_magic_state_cultivation 
+                                        Simulate magic-state factories using the cultivation method (requires 
+                                        --sc_ls_fixed_v0_magic_factory_seed_offset,
+                                        --sc_ls_fixed_v0_magic_generation_success_probability).
   --sc_ls_fixed_v0_magic_factory_seed_offset arg (=0)
                                         Base seed offset for RNG initialization of each magic-state factory. Required 
                                         only if --sc_ls_fixed_v0_use_magic_state_cultivation=true.
   --sc_ls_fixed_v0_magic_generation_period arg (=15)
                                         Beats required to produce one magic state.
-  --sc_ls_fixed_v0_prob_magic_state_creation arg (=1)
+  --sc_ls_fixed_v0_magic_generation_success_probability arg (=1)
                                         Per-attempt success probability for magic-state creation. Required only if 
                                         --sc_ls_fixed_v0_use_magic_state_cultivation=true.
-  --sc_ls_fixed_v0_maximum_magic_state_stock arg (=10000)
+  --sc_ls_fixed_v0_magic_generation_maximum_stock arg (=10000)
                                         Maximum number of magic states storable in a factory.
   --sc_ls_fixed_v0_entanglement_generation_period arg (=100)
                                         Beats required to generate one entangled pair.
-  --sc_ls_fixed_v0_maximum_entangled_state_stock arg (=10)
+  --sc_ls_fixed_v0_entanglement_generation_maximum_stock arg (=10)
                                         Maximum number of entangled pairs storable in a factory.
-  --sc_ls_fixed_v0_reaction_time arg (=1)         Feed-forward latency in beats from measurement to error-corrected value.
-  --sc_ls_fixed_v0_physical_error_rate arg (=0)
+  --sc_ls_fixed_v0_reaction_time arg (=1)
+                                        Feed-forward latency in beats from measurement to error-corrected value.
+  --sc_ls_fixed_v0_logical_error_rate_base arg (=0)
                                         Physical error rate p for logical error estimation.
-  --sc_ls_fixed_v0_drop_rate arg (=0)   Drop rate Lambda for logical error estimation.
+  --sc_ls_fixed_v0_logical_error_rate_drop_rate arg (=0)
+                                        Drop rate Lambda for logical error estimation.
   --sc_ls_fixed_v0_code_cycle_time_sec arg (=0)
                                         Code cycle time in seconds (t_cycle) for execution time estimation.
-  --sc_ls_fixed_v0_allowed_failure_prob arg (=0)
+  --sc_ls_fixed_v0_allowed_failure_probability arg (=0)
                                         Allowed failure probability (eps) for logical error estimation.
   --sc_ls_fixed_v0_magic_factory_cell_count arg (=1)
                                         Number of surface code cells per magic state factory for resource estimation.
@@ -118,137 +123,151 @@ qret 'compile' options:
                                         Dump compile information to markdown
 ```
 
-非自明なオプションの説明
+Explanation of non-trivial options:
 
-* `--function` : コンパイルする関数の名前
-  * `--source IR` の場合は必須
-  * `--source OpenQASM2` の場合はエントリ回路名として任意指定
-* `--source` : 入力ファイルの種類を指定する
-  * 入力ファイルがどのような命令列かを指定する
-  * `IR` の場合: 入力ファイルが JSON ファイルで定義された中間表現であることを指定する
-  * `OpenQASM2` の場合: 入力ファイルが OpenQASM2 であることを指定する
-  * `SC_LS_FIXED_V0` の場合: 入力ファイルが SC_LS_FIXED_V0 のパイプライン状態ファイルであることを指定する
-* `--target` : コンパイル先のマシンを指定する
-  * 現在は `SC_LS_FIXED_V0` を指定する
-* `sc_ls_fixed_v0_topology` : トポロジーを指定するファイルへのパス
-* `sc_ls_fixed_v0_machine_type` : SC_LS_FIXED_V0 のどの言語でコンパイルするかを指定する
-  * `Dim2`, `Dim3`, `DistributedDim2`, `DistributedDim3`（現在未対応）
-  * 指定しない場合は、トポロジーファイルから `Dim2`, `Dim3`, `DistributedDim2`, or `DistributedDim3` のいずれかが自動で選択される。
-* `sc_ls_fixed_v0_enable_pbc_mode` : Pauli Based Computing (PBC) lowering を有効化する
-* `sc_ls_fixed_v0_use_magic_state_cultivation` : 魔法状態工場を cultivation method で実装する場合をシミュレートする
-* `sc_ls_fixed_v0_magic_factory_seed_offset` : 魔法状態工場のシードのオフセット (実際のシードはオフセットに魔法状態工場のIDを加算した値)
-  * `--sc_ls_fixed_v0_use_magic_state_cultivation=true` の時のみ有効なオプション
-* `sc_ls_fixed_v0_magic_generation_period` : 魔法状態工場が一つの魔法状態を作成するのに要するビート数
-* `sc_ls_fixed_v0_prob_magic_state_creation` : 魔法状態工場で一つの魔法状態の作成に成功する確率
-  * `--sc_ls_fixed_v0_use_magic_state_cultivation=true` の時のみ有効なオプション
-* `sc_ls_fixed_v0_maximum_magic_state_stock` : 魔法状態工場が貯蓄できる魔法状態の数
-* `sc_ls_fixed_v0_entanglement_generation_period` : 論理エンタングルメント工場が一つのエンタングルメントペアを作成するのに要するビート数
-* `sc_ls_fixed_v0_maximum_entangled_state_stock` : 論理エンタングルメント工場が貯蓄できるエンタングルメントペアの数
-* `sc_ls_fixed_v0_reaction_time` : 測定したレジスタの誤り訂正までに要するビート数
-* `sc_ls_fixed_v0_physical_error_rate` : QEC リソース推定における物理エラー率 `p`
-* `sc_ls_fixed_v0_drop_rate` : QEC リソース推定におけるドロップ率 `Lambda`
-* `sc_ls_fixed_v0_code_cycle_time_sec` : QEC リソース推定におけるコードサイクル時間 `t_cycle`（秒）
-* `sc_ls_fixed_v0_allowed_failure_prob` : QEC リソース推定における許容失敗確率 `eps`
-* `sc_ls_fixed_v0_magic_factory_cell_count` : 魔法状態工場1つあたりの表面符号セル数（リソース推定用）
-  * デフォルト値は `1`
-  * 量子ビットプレーンは常に工場1つにつき1セルを使用する（この値に関係なく）
-  * `effective_cell_count = chip_cell_count + magic_factory_count * (magic_factory_cell_count - 1)` として物理量子ビット数の推定に使用される
-  * `0` を指定するとエラーとなる
-* `sc_ls_fixed_v0_pass` : SC_LS_FIXED_V0 の機械語に実行する最適化パスを指定する
-  * 複数の最適化パスを指定する場合は `,` で区切る
-  * 例: 次のように指定すると、命令列のコンパイル時情報を取得できる
-    * `"sc_ls_fixed_v0::calc_info_without_topology,sc_ls_fixed_v0::calc_info_with_topology"`
-* `sc_ls_fixed_v0_dump_compile_info_to_json` : コンパイル時の統計情報を json 形式でダンプする
-* `sc_ls_fixed_v0_dump_compile_info_to_markdown` : コンパイル時の統計情報を markdown 形式でダンプする
+* `--function` : name of the function to compile
+  * Required when `--source IR` is used.
+  * Optional as the entry circuit name when `--source OpenQASM2` is used.
+* `--source` : specifies the type of the input file
+  * Specifies what kind of instruction sequence the input file contains.
+  * `IR`: the input file is an intermediate representation defined in a JSON file.
+  * `OpenQASM2`: the input file is OpenQASM2.
+  * `SC_LS_FIXED_V0`: the input file is an SC_LS_FIXED_V0 pipeline state file.
+* `--target` : specifies the compilation target machine
+  * Currently, specify `SC_LS_FIXED_V0`.
+* `sc_ls_fixed_v0_topology` : path to the file that specifies the topology
+* `sc_ls_fixed_v0_topology_type` : specifies which SC_LS_FIXED_V0 language to compile to
+  * `Dim2`, `Dim3`, `DistributedDim2`, `DistributedDim3` (currently unsupported)
+  * If omitted, one of `Dim2`, `Dim3`, `DistributedDim2`, or `DistributedDim3` is selected automatically from the topology file.
+* `sc_ls_fixed_v0_enable_pbc_mode` : enables Pauli Based Computing (PBC) lowering
+* `sc_ls_fixed_v0_use_magic_state_cultivation` : simulates implementing magic-state factories with the cultivation method
+* `sc_ls_fixed_v0_magic_factory_seed_offset` : seed offset for magic-state factories; the actual seed is this offset plus the magic-state factory ID
+  * Effective only when `--sc_ls_fixed_v0_use_magic_state_cultivation=true`.
+* `sc_ls_fixed_v0_magic_generation_period` : number of beats required for a magic-state factory to create one magic state
+* `sc_ls_fixed_v0_magic_generation_success_probability` : probability that a magic-state factory successfully creates one magic state
+  * Effective only when `--sc_ls_fixed_v0_use_magic_state_cultivation=true`.
+* `sc_ls_fixed_v0_magic_generation_maximum_stock` : number of magic states that a magic-state factory can store
+* `sc_ls_fixed_v0_entanglement_generation_period` : number of beats required for a logical-entanglement factory to create one entangled pair
+* `sc_ls_fixed_v0_entanglement_generation_maximum_stock` : number of entangled pairs that a logical-entanglement factory can store
+* `sc_ls_fixed_v0_reaction_time` : number of beats required until error correction of a measured register
+* `sc_ls_fixed_v0_logical_error_rate_base` : physical error rate `p` for QEC resource estimation
+* `sc_ls_fixed_v0_logical_error_rate_drop_rate` : drop rate `Lambda` for QEC resource estimation
+* `sc_ls_fixed_v0_code_cycle_time_sec` : code cycle time `t_cycle` in seconds for QEC resource estimation
+* `sc_ls_fixed_v0_allowed_failure_probability` : allowed failure probability `eps` for QEC resource estimation
+* `sc_ls_fixed_v0_pass` : specifies optimization passes to run on SC_LS_FIXED_V0 machine code
+  * Separate multiple optimization passes with `,`.
+  * Example: specify the following to obtain compile-time information for the instruction sequence:
+* `sc_ls_fixed_v0_magic_factory_cell_count` : The number of surface code cells for magic-state factory, used for resource estimation
+  * deafult to `1`. Raise error when `0`.
+  * Effective cell count is calculated as `effective_cell_count = chip_cell_count + magic_factory_count * (magic_factory_cell_count - 1)`
+  * Qubit plane always uses a single cell for each magic-factory
+* `"sc_ls_fixed_v0::calc_info_without_topology,sc_ls_fixed_v0::calc_info_with_topology"`
+* `sc_ls_fixed_v0_dump_compile_info_to_json` : dumps compile-time statistics in JSON format
+* `sc_ls_fixed_v0_dump_compile_info_to_markdown` : dumps compile-time statistics in Markdown format
 
-### 最適化パスのパラメータの指定
+### Specifying Optimization Pass Parameters
 
-qret では最適化パスのパラメータをグローバル変数で設定している。
-いくつかのグローバル変数はコマンドラインから値を指定できる。
-設定できるグローバル変数の一覧は `--help-hidden` から確認できる。
+qret sets optimization pass parameters with global variables.
+Some global variables can be specified from the command line.
+Use `--help-hidden` to check the list of configurable global variables.
 
 ```sh
 $ qret compile --help-hidden
-(中略)
+(omitted)
 
 Hidden options:
   --help-really-hidden                  Display available options including really hidden ones
-  --sc_ls_fixed_v0-find-place-algorithm arg (=0)  Find place algorithm of mapping (0: EnoughSpaceSoft, 1: EnoughSpaceHard)
+  --ir-static-condition-pruning-seed arg (=0)
+                                        Seed of StaticConditionPruningPass
+  --sc_ls_fixed_v0-find-place-algorithm arg (=0)
+                                        Find place algorithm of mapping (0: EnoughSpaceSoft, 1: EnoughSpaceHard)
   --sc_ls_fixed_v0-inst-queue-peek-size arg (=1000)
                                         Peek size of instruction queue
   --sc_ls_fixed_v0-inst-queue-weight-algorithm arg (=2)
                                         Weight algorithm of instruction queue (0: index, 1: type, 2: InvDepth)
-  --sc_ls_fixed_v0-mapping-algorithm arg (=1)     Mapping algorithm (0: Map based on topology file, 1: Auto)
-  --sc_ls_fixed_v0-partition-algorithm arg (=0)   Partition algorithm of mapping (0: Greedy, 1: Random, 2: METIS)
-  --sc_ls_fixed_v0-print-inst-metadata arg (=0)   Print metadata of instructions (beat and z coordinate).
+  --sc_ls_fixed_v0-mapping-algorithm arg (=1)
+                                        Mapping algorithm (0: Map based on topology file, 1: Auto)
+  --sc_ls_fixed_v0-partition-algorithm arg (=0)
+                                        Partition algorithm of mapping (0: Greedy, 1: Random, 2: METIS)
+  --sc_ls_fixed_v0-partition-seed arg (=314)
+                                        Random seed of mapping partition when partition algorithm is Random.
+  --sc_ls_fixed_v0-print-inst-metadata arg (=0)
+                                        Print metadata of instructions (beat and z coordinate).
+  --sc_ls_fixed_v0-route-searcher-type arg (=0)
+                                        Route searcher strategy (0: default)
   --sc_ls_fixed_v0-state-buffer-width arg (=20)   Buffer width of quantum states
-  --ir-static-condition-pruning-seed arg (=0)
-                                        Seed of StaticConditionPruningPass
+  --sc_ls_fixed_v0_dump_pbc_string arg  Dump pauli string if PBC mode is enabled
+  --sc_ls_fixed_v0_runtime_simulation_pruning_seed arg (=0)
+                                        Seed
 ```
 
-* `sc_ls_fixed_v0-find-place-algorithm` : Mapping の際に qubit の置く位置を探索するアルゴリズム
-* `sc_ls_fixed_v0-inst-queue-peek-size` : Routing の際に命令キューが読み込む命令列の長さ
-  * 読み込む命令列が長いほどより先の命令を読み込み最適な Routing が可能となる
-  * 一方、 Routing に要する時間は長くなる
-* `sc_ls_fixed_v0-inst-queue-weight-algorithm` : Routing の際の命令キューにおける重みづけアルゴリズム
-  * 複数の命令が実行可能な場合、それぞれの命令に重みに従って Routing する順序を決定する
-* `sc_ls_fixed_v0-mapping-algorithm` : Mapping のアルゴリズム
-  * `0` の場合はトポロジーファイルで指定されたように Mapping する
-  * `1` の場合はトポロジーファイルの qubit の座標情報を無視して Mapping する
-    * 魔法状態工場やエンタングルメント工場は無視しない
-* `sc_ls_fixed_v0-partition-algorithm` : Multinode SC_LS_FIXED_V0 にコンパイルする際に、 qubit をどのチップに割り当てるか選択するアルゴリズム
-  * `METIS` は未実装
+* `ir-static-condition-pruning-seed` : offset used to compute values for random instructions in the intermediate representation
+  * Used by `StaticConditionPruningPass`.
+  * Values of random instructions in the intermediate representation are determined in advance, and branch destinations are determined in advance as much as possible.
+* `sc_ls_fixed_v0-find-place-algorithm` : algorithm for finding where to place qubits during mapping
+* `sc_ls_fixed_v0-inst-queue-peek-size` : length of the instruction sequence read by the instruction queue during routing
+  * A larger value lets routing read further ahead and may produce better routing.
+  * However, routing takes longer.
+* `sc_ls_fixed_v0-inst-queue-weight-algorithm` : weighting algorithm for the instruction queue during routing
+  * When multiple instructions are executable, their weights determine the routing order.
+* `sc_ls_fixed_v0-mapping-algorithm` : mapping algorithm
+  * `0` maps according to the topology file.
+  * `1` maps while ignoring qubit coordinate information in the topology file.
+    * Magic-state factories and entanglement factories are not ignored.
+* `sc_ls_fixed_v0-partition-algorithm` : algorithm for selecting which chip each qubit is assigned to when compiling to multinode SC_LS_FIXED_V0
+  * `METIS` is not implemented.
+* `sc_ls_fixed_v0-partition-seed` : random seed used when `sc_ls_fixed_v0-partition-algorithm` is `Random`
 * `sc_ls_fixed_v0-print-inst-metadata`
-  * アセンブリに命令列のみならず、メタデータも出力する
-  * メタデータ
-    * Routing の際にいつ実行されたか
-    * Routing の際にどの z 座標で実行されたか
-* `sc_ls_fixed_v0-state-buffer-width` : Routing の際に状態バッファが保持するビート数
-  * 状態バッファはビート t からビート s までの量子コンピュータのすべての状態を保持する
-  * 幅とは `t - s + 1` のことである
-  * 幅が大きいとより多くの状態を保持するため、より広範囲にわたる探索が可能となる
-  * 一方、 Routing に要する時間は長くなる
-* `ir-static-condition-pruning-seed` : 中間表現のランダム命令の値を計算するオフセット
-  * `StaticConditionPruningPass` で使用する値
-  * 中間表現におけるランダム命令の値をあらかじめ決定し、分岐命令の分岐先を可能な限りあらかじめ決定する
+  * Outputs metadata as well as instructions in assembly.
+  * Metadata:
+    * when the instruction was executed during routing
+    * at which z coordinate the instruction was executed during routing
+* `sc_ls_fixed_v0-route-searcher-type` : routing searcher strategy
+* `sc_ls_fixed_v0-state-buffer-width` : number of beats held by the state buffer during routing
+  * The state buffer holds all states of the quantum computer from beat `t` through beat `s`.
+  * The width is `t - s + 1`.
+  * A larger width holds more states and enables a wider search.
+  * However, routing takes longer.
+* `sc_ls_fixed_v0_dump_pbc_string` : path to dump Pauli strings when PBC mode is enabled
+* `sc_ls_fixed_v0_runtime_simulation_pruning_seed` : seed used by `RuntimeSimulationPruning`
 
-### 例1: 中間表現を SC_LS_FIXED_V0 にコンパイルする
+### Example 1: Compile an Intermediate Representation to SC_LS_FIXED_V0
 
-中間表現 `quration-core/examples/data/circuit/add_cuccaro_5.json` を SC_LS_FIXED_V0 にコンパイルする場合、次のようにコマンドを入力する。
+To compile the intermediate representation `quration-core/examples/data/circuit/add_cuccaro_5.json` to SC_LS_FIXED_V0, run the following command.
 
 ```sh
 qret compile --verbose --input quration-core/examples/data/circuit/add_cuccaro_5.json --function "AddCuccaro(5)" --output quration-core/examples/data/add_cuccaro_5.json --sc_ls_fixed_v0_topology quration-core/examples/data/topology/tutorial.yaml
 ```
 
-### 例2: SC_LS_FIXED_V0 のパイプライン状態ファイルを出力し、外部ライブラリで最適化する
+### Example 2: Output an SC_LS_FIXED_V0 Pipeline State File and Optimize It with an External Library
 
-SC_LS_FIXED_V0 のパイプライン状態ファイルを出力する。
+Output an SC_LS_FIXED_V0 pipeline state file.
 
 ```sh
 qret compile --verbose --input quration-core/examples/data/circuit/add_cuccaro_5.json --function "AddCuccaro(5)" --output pipeline_state.json --sc_ls_fixed_v0_topology quration-core/examples/data/topology/tutorial.yaml --sc_ls_fixed_v0_pass "sc_ls_fixed_v0::mapping,sc_ls_fixed_v0::routing"
 ```
 
-`pipeline_state.json` を何らかの方法で最適化したとする。
-その後また `qret` で次のコマンドを実行すると、最適化した SC_LS_FIXED_V0 のパイプライン状態ファイルを再出力できる。
+Assume that `pipeline_state.json` has been optimized somehow.
+After that, run the following command with `qret` to output the optimized SC_LS_FIXED_V0 pipeline state file again.
 
 ```sh
 qret compile --verbose --input pipeline_state.json --output out2.json --source SC_LS_FIXED_V0 --target SC_LS_FIXED_V0 --sc_ls_fixed_v0_topology quration-core/examples/data/topology/tutorial.yaml --sc_ls_fixed_v0_pass "sc_ls_fixed_v0::calc_info_without_topology,sc_ls_fixed_v0::calc_info_with_topology,sc_ls_fixed_v0::dump_compile_info"
 ```
 
-### 例3: パイプラインファイルを与えてコンパイルする
+### Example 3: Compile with a Pipeline File
 
-コンパイルの入出力やパスの順番等をパイプラインファイルに定義し、それを渡すことでコンパイルすることができる。
-パイプラインファイルでパスの順番等を指定する場合、外部ライブラリのパスも含めることできる。
-`quration-core/examples/data/pipeline/qret_compile.yaml` では `My3DRouting` というパスを追加している。
+You can compile by defining compile inputs, outputs, pass order, and other settings in a pipeline file and passing that file to qret.
+When specifying pass order and related settings in a pipeline file, paths to external libraries can also be included.
+`quration-core/examples/data/pipeline/qret_compile.yaml` adds a pass named `My3DRouting`.
 
 ```sh
 qret compile --verbose --pipeline quration-core/examples/data/pipeline/qret_compile.yaml
 ```
 
-## コマンド : diagram
+## Command: diagram
 
-`diagram` コマンドは、 JSON ファイルで定義された中間表現を様々なフォーマットで可視化する。
-`diagram` コマンドの使用方法は `--help` オプションで確認できる。
+The `diagram` command visualizes the intermediate representation defined in a JSON file in various formats.
+Use the `--help` option to check how to use the `diagram` command.
 
 ```sh
 $ qret diagram --help
@@ -267,10 +286,10 @@ qret 'diagram' options:
   --display_num_calls   [CallGraph] Display how many times function is called
 ```
 
-### 例1: CFG
+### Example 1: CFG
 
-`--graph-format` で `CFG` を選択すると、回路の Control Flow Graph (CFG) を dot 言語で可視化できる。
-次のコマンドを実行すると `out.dot` を出力する。
+Selecting `CFG` with `--graph-format` visualizes the circuit's Control Flow Graph (CFG) in the DOT language.
+The following command outputs `out.dot`.
 
 ```sh
 qret diagram --verbose -i quration-core/examples/data/circuit/add_craig_5.json --function "UncomputeTemporalAnd" --graph-format CFG
@@ -278,10 +297,10 @@ qret diagram --verbose -i quration-core/examples/data/circuit/add_craig_5.json -
 
 ![](data/cfg.svg)
 
-### 例2: CallGraph
+### Example 2: CallGraph
 
-`--graph-format` で `CallGraph` を選択すると、回路の Call Graph を dot 言語で可視化できる。
-次のコマンドを実行すると `out.dot` を出力する。
+Selecting `CallGraph` with `--graph-format` visualizes the circuit's Call Graph in the DOT language.
+The following command outputs `out.dot`.
 
 ```sh
 qret diagram --verbose -i quration-core/examples/data/circuit/add_cuccaro_5.json --function "AddCuccaro(5)" --graph-format CallGraph
@@ -289,10 +308,10 @@ qret diagram --verbose -i quration-core/examples/data/circuit/add_cuccaro_5.json
 
 ![](data/call_graph.svg)
 
-### 例3: 回路図
+### Example 3: Circuit Diagram
 
-`--graph-format` で `LaTeX` を選択すると、回路図を LaTeX の quantikz パッケージを使用して可視化できる。
-次のコマンドを実行すると `out.tex` を出力する。
+Selecting `LaTeX` with `--graph-format` visualizes a circuit diagram using the LaTeX quantikz package.
+The following command outputs `out.tex`.
 
 ```sh
 qret diagram -i quration-core/examples/data/circuit/add_craig_5.json --function "TemporalAnd" --graph-format LaTeX
@@ -300,10 +319,10 @@ qret diagram -i quration-core/examples/data/circuit/add_craig_5.json --function 
 
 ![](data/latex.png)
 
-## コマンド : opt
+## Command: opt
 
-`opt` コマンドは、中間表現を最適化する。
-`opt` コマンドの使用方法は `--help` オプションで確認できる。
+The `opt` command optimizes the intermediate representation.
+Use the `--help` option to check how to use the `opt` command.
 
 ```sh
 $ qret opt --help
@@ -325,10 +344,10 @@ qret 'opt' options:
   --pass arg                            Optimization pass
 ```
 
-## コマンド : parse
+## Command: parse
 
-`parse` コマンドは、様々なフォーマットのファイルから中間表現を作成する。
-`parse` コマンドの使用方法は `--help` オプションで確認できる。
+The `parse` command creates the intermediate representation from files in various formats.
+Use the `--help` option to check how to use the `parse` command.
 
 ```sh
 $ qret parse --help
@@ -346,10 +365,10 @@ qret 'parse' options:
                                    'OpenQASM3')
 ```
 
-## コマンド : print
+## Command: print
 
-`print` コマンドは、 JSON ファイルで定義された中間表現の命令列を人が理解しやすい形でプリントする。
-`print` コマンドの使用方法は `--help` オプションで確認できる。
+The `print` command prints the instruction sequence of the intermediate representation defined in a JSON file in a human-readable form.
+Use the `--help` option to check how to use the `print` command.
 
 ```sh
 $ qret print --help
@@ -367,10 +386,10 @@ qret 'print' options:
   --print_debug_info      Print debug info
 ```
 
-## コマンド : profile
+## Command: profile
 
-`profile` コマンドは、ターゲットのパイプライン状態ファイルから統計情報を計算して出力する。
-`profile` コマンドの使用方法は `--help` オプションで確認できる。
+The `profile` command calculates and outputs statistics from a target pipeline state file.
+Use the `--help` option to check how to use the `profile` command.
 
 ```sh
 $ qret profile --help
@@ -390,9 +409,9 @@ qret 'profile' options:
                                         Output file
 ```
 
-## コマンド : simulate
+## Command: simulate
 
-`simulate` コマンドは、JSON ファイルで定義された中間表現の function をシミュレートする。
+The `simulate` command simulates a function in the intermediate representation defined in a JSON file.
 
 ```sh
 $ qret simulate --help
@@ -438,14 +457,14 @@ Examples:
                                     allowed during simulation.
 ```
 
-### 例1: Cuccaro 加算回路のシミュレーション
+### Example 1: Simulate a Cuccaro Adder Circuit
 
-幅 5 の Cuccaro の加算回路 `quration-core/examples/data/circuit/add_cuccaro_5.json` で `6+=19` の計算をシミュレートする場合を例とする。
-実行する関数の名前は `AddCuccaro(5)` であるため、 `--function "AddCuccaro(5)"` をオプションに追加する。
-`AddCuccaro(5)` は、最初の 5 qubits が加算の destination で、次の 5 qubits が加算の source である。
-destination が `6` のため、最初の 5 qubits は `01100`（文字列の最初の文字が q0）に初期化する
-source が `19` のため、次の 5 qubits は `11001` に初期化する。
-以上をまとめて、 `--init_state 0110011001` をオプションに追加する。
+This example simulates the calculation `6+=19` with the width-5 Cuccaro adder circuit `quration-core/examples/data/circuit/add_cuccaro_5.json`.
+The name of the function to run is `AddCuccaro(5)`, so add `--function "AddCuccaro(5)"`.
+In `AddCuccaro(5)`, the first 5 qubits are the addition destination, and the next 5 qubits are the addition source.
+Because the destination is `6`, initialize the first 5 qubits to `01100` (the first character in the string is q0).
+Because the source is `19`, initialize the next 5 qubits to `11001`.
+Together, add `--init_state 0110011001`.
 
 ```sh
 $ qret simulate --input quration-core/examples/data/circuit/add_cuccaro_5.json --function "AddCuccaro(5)" --state Toffoli --init_state 0110011001
@@ -484,23 +503,23 @@ $ qret simulate --input quration-core/examples/data/circuit/add_cuccaro_5.json -
   |    1 | 10011110010     | (+1.000000+0.000000i)  | 1.000000     |
 ```
 
-`final state` は量子ビットの値をプリントしている。結果は次のように分解すると解釈できる。
+`final state` prints the qubit values. The result can be interpreted as follows.
 
 * `10011110010` = `10011` + `11001` + `0`
   * `10011` : destination
-    * `25=6+19` のため、 destination は `10011` となることが期待され、正しい結果を得たことを確認できる
+    * Since `25=6+19`, the expected destination is `10011`, confirming the correct result.
   * `11001` : source
-    * source の値は変わっていないことが期待され、正しい結果を得たことを確認できる
+    * The source value is expected to remain unchanged, confirming the correct result.
   * `0` : aux
-    * Cuccaro の加算回路は幅 1 の補助量子ビットを使用する
-    * 補助量子ビットは最後に `0` であることが期待される
+    * The Cuccaro adder circuit uses one auxiliary qubit.
+    * The auxiliary qubit is expected to be `0` at the end.
 
-### 例2: Craig 加算回路のシミュレーション
+### Example 2: Simulate a Craig Adder Circuit
 
-`quration-core/examples/data/circuit/add_craig_5.json` は幅 5 の Craig の加算回路の中間表現である。
-この回路で `19+=6` を計算する。
-Craig の加算回路はシミュレートの途中で重ね合わせ状態を経由する。
-そのため、 `--max_superpositions=2` というオプションを追加し、 `ToffoliState` で許容される重ね合わせ状態の上限を 2 に増やす必要がある。
+`quration-core/examples/data/circuit/add_craig_5.json` is the intermediate representation of a width-5 Craig adder circuit.
+This circuit calculates `19+=6`.
+The Craig adder circuit passes through a superposition state during simulation.
+Therefore, add the option `--max_superpositions=2` to increase the maximum number of superposition states allowed by `ToffoliState` to 2.
 
 ```sh
 $ qret simulate --input quration-core/examples/data/circuit/add_craig_5.json --function "AddCraig(5)" --state Toffoli --init_state 1100101100 --max_superpositions 2
@@ -541,9 +560,9 @@ $ qret simulate --input quration-core/examples/data/circuit/add_craig_5.json --f
 
 * `10011011000000` = `10011` + `01100` + `0000`
   * `10011` : destination
-    * `25=19+6` のため、 destination は `10011` となることが期待され、正しい結果を得たことを確認できる
+    * Since `25=19+6`, the expected destination is `10011`, confirming the correct result.
   * `01100` : source
-    * source の値は変わっていないことが期待され、正しい結果を得たことを確認できる
+    * The source value is expected to remain unchanged, confirming the correct result.
   * `0000` : aux
-    * 幅 4 の Craig の加算回路は幅 4 の補助量子ビットを使用する
-    * 補助量子ビットは最後に `0000` であることが期待される
+    * The width-4 Craig adder circuit uses four auxiliary qubits.
+    * The auxiliary qubits are expected to be `0000` at the end.

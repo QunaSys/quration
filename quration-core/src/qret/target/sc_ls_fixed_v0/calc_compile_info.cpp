@@ -73,12 +73,14 @@ DepGraph::DepGraph(const MachineFunction& mf) {
     graph_ = DiGraph();
     auto q2id = std::map<QSymbol, DiGraph::IdType>();
     auto c2id = std::map<CSymbol, DiGraph::IdType>();
+    auto m2id = std::map<MSymbol, DiGraph::IdType>();
+    auto e2id = std::map<ESymbol, DiGraph::IdType>();
     for (CSymbol::IdType i = 0; i < NumReservedCSymbols; ++i) {
         c2id[CSymbol{i}] = std::numeric_limits<DiGraph::IdType>::max();
     }
     auto measurement_c = std::unordered_set<CSymbol>{};
 
-    auto add_edge = [&q2id, &c2id, &measurement_c, &target, this](
+    auto add_edge = [&q2id, &c2id, &m2id, &e2id, &measurement_c, &target, this](
                             const DiGraph::IdType id,
                             const ScLsInstructionBase& inst
                     ) {
@@ -104,6 +106,24 @@ DepGraph::DepGraph(const MachineFunction& mf) {
                 q2id.erase(src);
                 q2id[dst] = id;
             }
+        }
+
+        // Check mtarget.
+        for (const auto& m : inst.MTarget()) {
+            if (m2id.contains(m)) {
+                const auto old = m2id.at(m);
+                graph_.AddEdge(old, id);
+            }
+            m2id[m] = id;
+        }
+
+        // Check etarget.
+        for (const auto& e : inst.ETarget()) {
+            if (e2id.contains(e)) {
+                const auto old = e2id.at(e);
+                graph_.AddEdge(old, id);
+            }
+            e2id[e] = id;
         }
 
         // Check condition.
@@ -188,8 +208,11 @@ public:
         for (auto&& [_, state] : mf_state_) {
             StepMagicFactoryState(option, state);
         }
-        for (auto&& [_, state] : ef_state_) {
-            StepEntanglementFactoryState(option, state);
+        for (auto&& [e1, e2] : ef_pair_) {
+            if (e2.Id() < e1.Id()) {
+                continue;
+            }
+            StepEntanglementFactoryPairState(option, ef_state_.at(e1), ef_state_.at(e2));
         }
     }
 
@@ -306,16 +329,23 @@ public:
         }
         return false;
     }
-    bool IsEntanglementAvailable(EHandle eh) const {
-        if (eh_es_.contains(eh)) {
+    bool IsEntanglementAvailable(ESymbol e, EHandle eh) const {
+        const auto e_itr = ef_state_.find(e);
+        if (e_itr == ef_state_.end()) {
+            throw std::runtime_error(
+                    fmt::format(
+                            "Compile info calculation error: Cannot use not allocated "
+                            "entanglement factory ({}).",
+                            e.ToString()
+                    )
+            );
+        }
+        if (e_itr->second.IsReserved(eh)) {
             return true;
         }
-        for (const auto& [_, state] : ef_state_) {
-            if (state.IsAvailable()) {
-                return true;
-            }
-        }
-        return false;
+
+        const auto pair = ef_pair_.at(e);
+        return e_itr->second.IsAvailable() && ef_state_.at(pair).IsAvailable();
     }
 
     bool TryUseTarget(Beat b, const ScLsInstructionBase* inst) {
@@ -328,9 +358,14 @@ public:
             return false;
         }
         if (inst->UseEntanglement()) {
-            const auto eh = inst->EHTarget().front();
-            if (!IsEntanglementAvailable(eh)) {
-                return false;
+            auto e_itr = inst->ETarget().begin();
+            auto eh_itr = inst->EHTarget().begin();
+            while (e_itr != inst->ETarget().end() && eh_itr != inst->EHTarget().end()) {
+                if (!IsEntanglementAvailable(*e_itr, *eh_itr)) {
+                    return false;
+                }
+                e_itr++;
+                eh_itr++;
             }
         }
 
@@ -358,8 +393,13 @@ public:
             UseMagic();
         }
         if (inst->UseEntanglement()) {
-            const auto eh = inst->EHTarget().front();
-            UseEntanglementAvailable(eh);
+            auto e_itr = inst->ETarget().begin();
+            auto eh_itr = inst->EHTarget().begin();
+            while (e_itr != inst->ETarget().end() && eh_itr != inst->EHTarget().end()) {
+                UseEntanglement(*e_itr, *eh_itr);
+                e_itr++;
+                eh_itr++;
+            }
         }
 
         return true;
@@ -378,29 +418,54 @@ private:
 
         throw std::runtime_error("Compile info calculation error: Cannot use empty magic factory.");
     }
-    void UseEntanglementAvailable(EHandle eh) {
-        // Handle is already created.
-        if (eh_es_.contains(eh)) {
-            const auto [e1, e2] = eh_es_.at(eh);
-            ef_state_.at(e1).UseHandle(eh);
-            ef_state_.at(e2).UseHandle(eh);
+    static void StepEntanglementFactoryPairState(
+            const ScLsFixedV0MachineOption& option,
+            EntanglementFactoryState& lhs,
+            EntanglementFactoryState& rhs
+    ) {
+        const auto lhs_stock =
+                lhs.entangled_state_stock_count_free + lhs.entangled_state_stock_count_reserve();
+        const auto rhs_stock =
+                rhs.entangled_state_stock_count_free + rhs.entangled_state_stock_count_reserve();
+        if ((lhs.entangled_state_generation_elapsed == option.entanglement_generation_period)
+            && (rhs.entangled_state_generation_elapsed == option.entanglement_generation_period)
+            && (lhs_stock < option.entanglement_generation_maximum_stock)
+            && (rhs_stock < option.entanglement_generation_maximum_stock)) {
+            lhs.entangled_state_stock_count_free += 1;
+            rhs.entangled_state_stock_count_free += 1;
+            lhs.entangled_state_generation_elapsed = 0;
+            rhs.entangled_state_generation_elapsed = 0;
+        }
+        if (lhs.entangled_state_generation_elapsed < option.entanglement_generation_period) {
+            lhs.entangled_state_generation_elapsed += 1;
+        }
+        if (rhs.entangled_state_generation_elapsed < option.entanglement_generation_period) {
+            rhs.entangled_state_generation_elapsed += 1;
+        }
+    }
+    void UseEntanglement(ESymbol e, EHandle eh) {
+        auto& state = ef_state_.at(e);
+        if (state.IsReserved(eh)) {
+            state.UseHandle(eh);
             return;
         }
 
-        // Use entanglement pair and create entanglement handle.
-        for (auto&& [e1, state] : ef_state_) {
-            if (state.IsAvailable()) {
-                state.AddHandle(eh);
-                const auto e2 = ef_pair_.at(e1);
-                ef_state_.at(e2).AddHandle(eh);
-                eh_es_[eh] = {e1, e2};
-                return;
-            }
+        if (!state.IsAvailable()) {
+            throw std::runtime_error(
+                    "Compile info calculation error: Cannot use empty entanglement factory."
+            );
         }
 
-        throw std::runtime_error(
-                "Compile info calculation error: Cannot use empty entanglement factory."
-        );
+        const auto pair = ef_pair_.at(e);
+        auto& pair_state = ef_state_.at(pair);
+        if (!pair_state.IsAvailable()) {
+            throw std::runtime_error(
+                    "Compile info calculation error: Cannot use empty entanglement factory pair."
+            );
+        }
+
+        state.entangled_state_stock_count_free -= 1;
+        pair_state.AddHandle(eh);
     }
 
     std::unordered_map<QSymbol, Beat> q_;
@@ -408,7 +473,6 @@ private:
     std::unordered_map<MSymbol, MagicFactoryState> mf_state_;
     std::unordered_map<ESymbol, EntanglementFactoryState> ef_state_;
     std::unordered_map<ESymbol, ESymbol> ef_pair_;
-    std::unordered_map<EHandle, std::pair<ESymbol, ESymbol>> eh_es_;
 };
 
 Beat CalcRuntimeWithoutTopology(MachineFunction& mf) {
@@ -549,14 +613,14 @@ TimeSeries::TimeSeries(const MachineFunction& mf) {
 
         auto& chip_info = beat2chip_[beat];
         if (beat == 0) {
-            auto space = std::int32_t{0};
+            auto space = std::uint32_t{0};
             for (const auto& grid : *target.topology) {
                 space += grid.GetMaxX() * grid.GetMaxY() * grid.GetZSize();
                 for (const auto& plane : grid) {
-                    space -= plane.NumBanned();
+                    space -= static_cast<std::uint32_t>(plane.NumBanned());
                 }
             }
-            chip_info.space = static_cast<std::uint32_t>(space);
+            chip_info.space = space;
         } else {
             chip_info = beat2chip_[beat - 1];
             chip_info.used_ancilla_count = 0;
@@ -572,7 +636,7 @@ TimeSeries::TimeSeries(const MachineFunction& mf) {
             } else if (inst->Type() == ScLsInstructionType::DEALLOCATE) {
                 chip_info.q_symb--;
             }
-            chip_info.used_ancilla_count += inst->CountAncillae();
+            chip_info.used_ancilla_count += static_cast<std::uint32_t>(inst->CountAncillae());
         }
     }
 }
@@ -624,8 +688,8 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
         }
     }
 
-    // runtime_estimation_magic_state_consumption_count
-    compile_info.runtime_estimation_magic_state_consumption_count =
+    // execution_time_estimation_magic_state_consumption_count
+    compile_info.execution_time_estimation_magic_state_consumption_count =
             compile_info.magic_state_consumption_count
             * target.machine_option.magic_generation_period;
 
@@ -637,16 +701,16 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
         throw std::logic_error("Entanglement consumption count must be even.");
     }
     compile_info.entanglement_consumption_count /= 2;
-    // runtime_estimation_entanglement_consumption_count
-    compile_info.runtime_estimation_entanglement_consumption_count =
+    // execution_time_estimation_entanglement_consumption_count
+    compile_info.execution_time_estimation_entanglement_consumption_count =
             compile_info.entanglement_consumption_count
             * target.machine_option.entanglement_generation_period;
 
     // dependency graph of instruction
     auto graph = DepGraph(mf);
 
-    // runtime_without_topology
-    compile_info.runtime_without_topology = CalcRuntimeWithoutTopology(mf);
+    // execution_time_without_topology
+    compile_info.execution_time_without_topology = CalcRuntimeWithoutTopology(mf);
 
     // gate_depth
     for (const auto& bb : mf) {
@@ -666,8 +730,8 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
     }
     compile_info.magic_state_consumption_depth = graph.CalcHeaviest();
 
-    // runtime_estimation_magic_state_consumption_depth
-    compile_info.runtime_estimation_magic_state_consumption_depth =
+    // execution_time_estimation_magic_state_consumption_depth
+    compile_info.execution_time_estimation_magic_state_consumption_depth =
             compile_info.magic_state_consumption_depth
             * target.machine_option.magic_generation_period;
 
@@ -680,13 +744,13 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
     }
     compile_info.entanglement_consumption_depth = graph.CalcHeaviest();
 
-    // runtime_estimation_entanglement_consumption_depth
-    compile_info.runtime_estimation_entanglement_consumption_depth =
+    // execution_time_estimation_entanglement_consumption_depth
+    compile_info.execution_time_estimation_entanglement_consumption_depth =
             compile_info.entanglement_consumption_depth
             * target.machine_option.entanglement_generation_period;
 
-    // measurement_feedback_count, runtime_estimation_measurement_feedback_count
-    compile_info.measurement_feedback_count = [&mf]() {
+    // reaction_count, execution_time_estimation_from_reaction_count
+    compile_info.reaction_count = [&mf]() {
         auto feedback = std::set<CSymbol>();
         for (const auto& bb : mf) {
             for (const auto& minst : bb) {
@@ -698,10 +762,10 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
         }
         return feedback.size();
     }();
-    compile_info.runtime_estimation_measurement_feedback_count =
-            compile_info.measurement_feedback_count * target.machine_option.reaction_time;
+    compile_info.execution_time_estimation_from_reaction_count =
+            compile_info.reaction_count * target.machine_option.reaction_time;
 
-    // measurement_feedback_depth
+    // reaction_depth
     {
         graph.SetAllLength(0);
 
@@ -738,11 +802,11 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
             }
         }
     }
-    compile_info.measurement_feedback_depth = graph.CalcLongest();
+    compile_info.reaction_depth = graph.CalcLongest();
 
-    // runtime_estimation_measurement_feedback_depth
-    compile_info.runtime_estimation_measurement_feedback_depth =
-            compile_info.measurement_feedback_depth * target.machine_option.reaction_time;
+    // execution_time_estimation_from_reaction_depth
+    compile_info.execution_time_estimation_from_reaction_depth =
+            compile_info.reaction_depth * target.machine_option.reaction_time;
 
     return false;
 }
@@ -760,14 +824,14 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
 
     const auto time_series = TimeSeries(mf);
 
-    // runtime
-    compile_info.runtime = time_series.GetRuntime();
+    // execution_time
+    compile_info.execution_time = time_series.GetRuntime();
 
-    if (compile_info.runtime == 0) {
+    if (compile_info.execution_time == 0) {
         return false;
     }
 
-    // gate_throughput, measurement_feedback_rate, magic_state_consumption_rate,
+    // gate_throughput, reaction_rate, magic_state_consumption_rate,
     // entanglement_consumption_rate
     struct FeedbackInfo {
         Beat beat;
@@ -777,17 +841,17 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
     for (std::uint64_t i = 0; i < NumReservedCSymbols; ++i) {
         feedback_info.emplace(CSymbol{i}, FeedbackInfo{.beat = 0, .counted = false});
     }
-    compile_info.gate_throughput.resize(compile_info.runtime, 0);
-    compile_info.measurement_feedback_rate.resize(compile_info.runtime, 0);
-    compile_info.magic_state_consumption_rate.resize(compile_info.runtime, 0);
-    compile_info.entanglement_consumption_rate.resize(compile_info.runtime, 0);
-    for (auto beat = Beat{0}; beat < compile_info.runtime; ++beat) {
+    compile_info.gate_throughput.resize(compile_info.execution_time, 0);
+    compile_info.reaction_rate.resize(compile_info.execution_time, 0);
+    compile_info.magic_state_consumption_rate.resize(compile_info.execution_time, 0);
+    compile_info.entanglement_consumption_rate.resize(compile_info.execution_time, 0);
+    for (auto beat = Beat{0}; beat < compile_info.execution_time; ++beat) {
         const auto& insts = time_series.GetInstructions(beat);
 
         // gate_throughput
         compile_info.gate_throughput[beat] = insts.size();
 
-        // measurement_feedback_rate
+        // reaction_rate
         for (const auto& inst : insts) {
             for (const auto& c : inst->CCreate()) {
                 if (feedback_info.contains(c)) {
@@ -816,7 +880,7 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
 
                 auto& info = feedback_info.at(c);
                 if (!info.counted) {
-                    compile_info.measurement_feedback_rate[info.beat]++;
+                    compile_info.reaction_rate[info.beat]++;
                     info.counted = true;
                 }
             }
@@ -838,11 +902,11 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
 
     // chip_cell_algorithmic_qubit, chip_cell_algorithmic_qubit_ratio, chip_cell_active_qubit_area,
     // chip_cell_active_qubit_area_ratio
-    compile_info.chip_cell_algorithmic_qubit.resize(compile_info.runtime);
-    compile_info.chip_cell_algorithmic_qubit_ratio.resize(compile_info.runtime);
-    compile_info.chip_cell_active_qubit_area.resize(compile_info.runtime);
-    compile_info.chip_cell_active_qubit_area_ratio.resize(compile_info.runtime);
-    for (auto beat = Beat{0}; beat < compile_info.runtime; ++beat) {
+    compile_info.chip_cell_algorithmic_qubit.resize(compile_info.execution_time);
+    compile_info.chip_cell_algorithmic_qubit_ratio.resize(compile_info.execution_time);
+    compile_info.chip_cell_active_qubit_area.resize(compile_info.execution_time);
+    compile_info.chip_cell_active_qubit_area_ratio.resize(compile_info.execution_time);
+    for (auto beat = Beat{0}; beat < compile_info.execution_time; ++beat) {
         compile_info.chip_cell_algorithmic_qubit[beat] =
                 time_series.GetChipInfo(beat).ChipCellAlgorithmicQubit();
         compile_info.chip_cell_algorithmic_qubit_ratio[beat] =
@@ -936,14 +1000,14 @@ bool CompileInfoWithQecResourceEstimation::RunOnMachineFunction(MachineFunction&
 
     try {
         compile_info.code_distance = EstimateMinimumCodeDistance(
-                option.physical_error_rate,
-                option.drop_rate,
-                option.allowed_failure_prob,
+                option.logical_error_rate_base,
+                option.logical_error_rate_drop_rate,
+                option.allowed_failure_probability,
                 compile_info.qubit_volume
         );
         compile_info.execution_time_sec = EstimateExecutionTimeSec(
                 compile_info.code_distance,
-                compile_info.runtime,
+                compile_info.execution_time,
                 option.code_cycle_time_sec
         );
         if (option.magic_factory_cell_count == 0) {
@@ -951,7 +1015,7 @@ bool CompileInfoWithQecResourceEstimation::RunOnMachineFunction(MachineFunction&
         }
         const auto effective_cell_count = compile_info.chip_cell_count
                 + compile_info.magic_factory_count * (option.magic_factory_cell_count - 1);
-        compile_info.num_physical_qubits = EstimatePhysicalQubitCount(
+        compile_info.physical_qubit_count = EstimatePhysicalQubitCount(
                 compile_info.code_distance,
                 effective_cell_count
         );
@@ -973,12 +1037,12 @@ bool InitCompileInfo::RunOnMachineFunction(MachineFunction& mf) {
     compile_info.use_magic_state_cultivation = target.machine_option.use_magic_state_cultivation;
     compile_info.magic_factory_seed_offset = target.machine_option.magic_factory_seed_offset;
     compile_info.magic_generation_period = target.machine_option.magic_generation_period;
-    compile_info.prob_magic_state_creation = target.machine_option.prob_magic_state_creation;
-    compile_info.maximum_magic_state_stock = target.machine_option.maximum_magic_state_stock;
+    compile_info.magic_generation_success_probability = target.machine_option.magic_generation_success_probability;
+    compile_info.magic_generation_maximum_stock = target.machine_option.magic_generation_maximum_stock;
     compile_info.entanglement_generation_period =
             target.machine_option.entanglement_generation_period;
-    compile_info.maximum_entangled_state_stock =
-            target.machine_option.maximum_entangled_state_stock;
+    compile_info.entanglement_generation_maximum_stock =
+            target.machine_option.entanglement_generation_maximum_stock;
     compile_info.reaction_time = target.machine_option.reaction_time;
     compile_info.topology = target.topology;
 

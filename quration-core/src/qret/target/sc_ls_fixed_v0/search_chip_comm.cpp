@@ -566,7 +566,7 @@ std::int32_t SplitMultinodeInst::FindChipWithMostMagicStates(
         // Count the number of magic states in chip z.
         auto tmp_magic_states = std::uint32_t{0};
         for (const auto magic_factory : state.GetMagicFactoryList(z)) {
-            tmp_magic_states += state.GetState(magic_factory).magic_state_count;
+            tmp_magic_states += static_cast<std::uint32_t>(state.GetState(magic_factory).magic_state_count);
         }
         if (tmp_magic_states > max_magic_states) {
             max_magic_states = tmp_magic_states;

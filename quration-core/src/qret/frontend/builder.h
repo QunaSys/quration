@@ -15,6 +15,7 @@
 #include <variant>
 
 #include "qret/frontend/argument.h"
+#include "qret/frontend/control_flow.h"
 #include "qret/ir/basic_block.h"
 #include "qret/ir/context.h"
 #include "qret/ir/function.h"
@@ -26,17 +27,6 @@ namespace qret::frontend {
 // Forward declarations
 class QRET_EXPORT Circuit;
 class QRET_EXPORT CircuitGenerator;
-namespace control_flow {
-QRET_EXPORT void If(const Register&);
-QRET_EXPORT void If(const Register&, std::string);
-QRET_EXPORT void Else(const Register&);
-QRET_EXPORT void EndIf(const Register&);
-QRET_EXPORT void Switch(const Registers&);
-QRET_EXPORT void Switch(const Registers&, std::string);
-QRET_EXPORT void Case(const Registers&, std::uint64_t);
-QRET_EXPORT void Default(const Registers&);
-QRET_EXPORT void EndSwitch(const Registers&);
-}  // namespace control_flow
 
 struct BranchContext {
     std::variant<Register, Registers> cond;

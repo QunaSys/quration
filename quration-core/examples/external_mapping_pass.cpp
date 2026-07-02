@@ -126,11 +126,11 @@ void Mapping() {
     const auto target = sc_ls_fixed_v0::ScLsFixedV0TargetMachine(
             topology,
             sc_ls_fixed_v0::ScLsFixedV0MachineOption{
-                    .type = sc_ls_fixed_v0::ScLsFixedV0MachineType::DistributedDim2,
+                    .topology_type = sc_ls_fixed_v0::ScLsFixedV0TopologyType::DistributedDim2,
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 10,
+                    .magic_generation_maximum_stock = 10,
                     .entanglement_generation_period = 100,
-                    .maximum_entangled_state_stock = 20,
+                    .entanglement_generation_maximum_stock = 20,
                     .reaction_time = 15,
             }
     );

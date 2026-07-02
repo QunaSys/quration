@@ -243,7 +243,7 @@ def render_header(
 ) -> None:
     st.markdown('<div class="main-title">Computational Process Visualizer</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="main-subtitle">命令実行の時系列・依存関係・空間占有を同時に追跡します。</div>',
+        '<div class="main-subtitle">Track instruction timelines, dependencies, and spatial occupancy together.</div>',
         unsafe_allow_html=True,
     )
 
@@ -257,7 +257,7 @@ def render_header(
 
 def render_timeline_panel(df: pd.DataFrame, current_beat: int, *, compact: bool = False) -> None:
     if len(df) == 0:
-        st.info("条件に一致する命令がありません。")
+        st.info("No instructions match the current filters.")
         return
 
     beat_counts = (
@@ -324,7 +324,7 @@ def render_instructions_panel(
     compact: bool = False,
 ) -> None:
     if len(df) == 0:
-        st.info("表示対象がありません。")
+        st.info("There is nothing to display.")
         return
 
     cols = ["index", "beat", "state", "type", "latency", "qtarget", "ccreate", "cdepend", "condition", "raw"]
@@ -1269,10 +1269,10 @@ def build_playback_html(payload: dict) -> str:
 def render_empty_state() -> None:
     st.markdown('<div class="main-title">Computational Process Visualizer</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="main-subtitle">右サイドバーから pipeline state JSON をアップロードしてください。</div>',
+        '<div class="main-subtitle">Upload a pipeline state JSON from the right sidebar.</div>',
         unsafe_allow_html=True,
     )
-    st.info("SC_LS_FIXED_V0 の `compile` 出力 JSON を入力に使います。")
+    st.info("Use the JSON output from `compile` for SC_LS_FIXED_V0 as input.")
 
 
 def main() -> None:
@@ -1300,12 +1300,12 @@ def main() -> None:
         st.error(f"Failed to parse json: {ex}")
         return
 
-    if ftqc.machine_type.lower() != "dim2" or ftqc.topology_count > 1:
+    if ftqc.topology_type.lower() != "dim2" or ftqc.topology_count > 1:
         st.error(
             "visualize_computational_process.py currently supports only Dim2 single-chip JSON."
         )
         st.caption(
-            f"Detected machine_type={ftqc.machine_type}, topology_count={ftqc.topology_count}. "
+            f"Detected topology_type={ftqc.topology_type}, topology_count={ftqc.topology_count}. "
             "Dim3 / DistributedDim2 / DistributedDim3 are intentionally unsupported."
         )
         return
@@ -1323,7 +1323,7 @@ def main() -> None:
     mode = st.sidebar.radio(
         "Mode",
         options=["Single", "Unified", "Playback"],
-        help="Single: 1画面だけ描画して高速化 / Unified: 4画面同時 / Playback: 2D+3D連動アニメ",
+        help="Single: render only one view for faster interaction / Unified: show four views together / Playback: linked 2D+3D animation",
     )
 
     begin_beat, end_inclusive = st.sidebar.slider(
