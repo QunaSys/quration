@@ -208,8 +208,11 @@ public:
         for (auto&& [_, state] : mf_state_) {
             StepMagicFactoryState(option, state);
         }
-        for (auto&& [_, state] : ef_state_) {
-            StepEntanglementFactoryState(option, state);
+        for (auto&& [e1, e2] : ef_pair_) {
+            if (e2.Id() < e1.Id()) {
+                continue;
+            }
+            StepEntanglementFactoryPairState(option, ef_state_.at(e1), ef_state_.at(e2));
         }
     }
 
@@ -326,16 +329,23 @@ public:
         }
         return false;
     }
-    bool IsEntanglementAvailable(EHandle eh) const {
-        if (eh_es_.contains(eh)) {
+    bool IsEntanglementAvailable(ESymbol e, EHandle eh) const {
+        const auto e_itr = ef_state_.find(e);
+        if (e_itr == ef_state_.end()) {
+            throw std::runtime_error(
+                    fmt::format(
+                            "Compile info calculation error: Cannot use not allocated "
+                            "entanglement factory ({}).",
+                            e.ToString()
+                    )
+            );
+        }
+        if (e_itr->second.IsReserved(eh)) {
             return true;
         }
-        for (const auto& [_, state] : ef_state_) {
-            if (state.IsAvailable()) {
-                return true;
-            }
-        }
-        return false;
+
+        const auto pair = ef_pair_.at(e);
+        return e_itr->second.IsAvailable() && ef_state_.at(pair).IsAvailable();
     }
 
     bool TryUseTarget(Beat b, const ScLsInstructionBase* inst) {
@@ -348,9 +358,14 @@ public:
             return false;
         }
         if (inst->UseEntanglement()) {
-            const auto eh = inst->EHTarget().front();
-            if (!IsEntanglementAvailable(eh)) {
-                return false;
+            auto e_itr = inst->ETarget().begin();
+            auto eh_itr = inst->EHTarget().begin();
+            while (e_itr != inst->ETarget().end() && eh_itr != inst->EHTarget().end()) {
+                if (!IsEntanglementAvailable(*e_itr, *eh_itr)) {
+                    return false;
+                }
+                e_itr++;
+                eh_itr++;
             }
         }
 
@@ -378,8 +393,13 @@ public:
             UseMagic();
         }
         if (inst->UseEntanglement()) {
-            const auto eh = inst->EHTarget().front();
-            UseEntanglementAvailable(eh);
+            auto e_itr = inst->ETarget().begin();
+            auto eh_itr = inst->EHTarget().begin();
+            while (e_itr != inst->ETarget().end() && eh_itr != inst->EHTarget().end()) {
+                UseEntanglement(*e_itr, *eh_itr);
+                e_itr++;
+                eh_itr++;
+            }
         }
 
         return true;
@@ -398,29 +418,54 @@ private:
 
         throw std::runtime_error("Compile info calculation error: Cannot use empty magic factory.");
     }
-    void UseEntanglementAvailable(EHandle eh) {
-        // Handle is already created.
-        if (eh_es_.contains(eh)) {
-            const auto [e1, e2] = eh_es_.at(eh);
-            ef_state_.at(e1).UseHandle(eh);
-            ef_state_.at(e2).UseHandle(eh);
+    static void StepEntanglementFactoryPairState(
+            const ScLsFixedV0MachineOption& option,
+            EntanglementFactoryState& lhs,
+            EntanglementFactoryState& rhs
+    ) {
+        const auto lhs_stock =
+                lhs.entangled_state_stock_count_free + lhs.entangled_state_stock_count_reserve();
+        const auto rhs_stock =
+                rhs.entangled_state_stock_count_free + rhs.entangled_state_stock_count_reserve();
+        if ((lhs.entangled_state_generation_elapsed == option.entanglement_generation_period)
+            && (rhs.entangled_state_generation_elapsed == option.entanglement_generation_period)
+            && (lhs_stock < option.entanglement_generation_maximum_stock)
+            && (rhs_stock < option.entanglement_generation_maximum_stock)) {
+            lhs.entangled_state_stock_count_free += 1;
+            rhs.entangled_state_stock_count_free += 1;
+            lhs.entangled_state_generation_elapsed = 0;
+            rhs.entangled_state_generation_elapsed = 0;
+        }
+        if (lhs.entangled_state_generation_elapsed < option.entanglement_generation_period) {
+            lhs.entangled_state_generation_elapsed += 1;
+        }
+        if (rhs.entangled_state_generation_elapsed < option.entanglement_generation_period) {
+            rhs.entangled_state_generation_elapsed += 1;
+        }
+    }
+    void UseEntanglement(ESymbol e, EHandle eh) {
+        auto& state = ef_state_.at(e);
+        if (state.IsReserved(eh)) {
+            state.UseHandle(eh);
             return;
         }
 
-        // Use entanglement pair and create entanglement handle.
-        for (auto&& [e1, state] : ef_state_) {
-            if (state.IsAvailable()) {
-                state.AddHandle(eh);
-                const auto e2 = ef_pair_.at(e1);
-                ef_state_.at(e2).AddHandle(eh);
-                eh_es_[eh] = {e1, e2};
-                return;
-            }
+        if (!state.IsAvailable()) {
+            throw std::runtime_error(
+                    "Compile info calculation error: Cannot use empty entanglement factory."
+            );
         }
 
-        throw std::runtime_error(
-                "Compile info calculation error: Cannot use empty entanglement factory."
-        );
+        const auto pair = ef_pair_.at(e);
+        auto& pair_state = ef_state_.at(pair);
+        if (!pair_state.IsAvailable()) {
+            throw std::runtime_error(
+                    "Compile info calculation error: Cannot use empty entanglement factory pair."
+            );
+        }
+
+        state.entangled_state_stock_count_free -= 1;
+        pair_state.AddHandle(eh);
     }
 
     std::unordered_map<QSymbol, Beat> q_;
@@ -428,7 +473,6 @@ private:
     std::unordered_map<MSymbol, MagicFactoryState> mf_state_;
     std::unordered_map<ESymbol, EntanglementFactoryState> ef_state_;
     std::unordered_map<ESymbol, ESymbol> ef_pair_;
-    std::unordered_map<EHandle, std::pair<ESymbol, ESymbol>> eh_es_;
 };
 
 Beat CalcRuntimeWithoutTopology(MachineFunction& mf) {
