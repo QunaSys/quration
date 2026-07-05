@@ -10,9 +10,17 @@
 #include "qret/codegen/machine_function_pass.h"
 #include "qret/qret_export.h"
 #include "qret/target/sc_ls_fixed_v0/beat.h"
+#include "qret/target/sc_ls_fixed_v0/inst_queue.h"
 #include "qret/target/sc_ls_fixed_v0/sc_ls_fixed_v0_target_machine.h"
 
 namespace qret::sc_ls_fixed_v0 {
+struct QRET_EXPORT RoutingInstQueueOptions {
+    InstQueue::WeightAlgorithm weight_algorithm;
+    Beat peek_size;
+};
+
+QRET_EXPORT RoutingInstQueueOptions GetRoutingInstQueueOptions();
+
 struct QRET_EXPORT Routing : public MachineFunctionPass {
     static inline char ID = 0;
     Routing()
