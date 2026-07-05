@@ -6,6 +6,8 @@
 #ifndef QRET_TARGET_SC_LS_FIXED_V0_ROUTING_H
 #define QRET_TARGET_SC_LS_FIXED_V0_ROUTING_H
 
+#include <cstdint>
+
 #include "qret/codegen/machine_function.h"
 #include "qret/codegen/machine_function_pass.h"
 #include "qret/qret_export.h"
@@ -20,6 +22,11 @@ struct QRET_EXPORT RoutingInstQueueOptions {
 };
 
 QRET_EXPORT RoutingInstQueueOptions GetRoutingInstQueueOptions();
+QRET_EXPORT bool SkipAllocate(
+        std::int64_t initial_weight,
+        std::int64_t allocate_weight,
+        InstQueue::WeightAlgorithm algorithm
+);
 
 struct QRET_EXPORT Routing : public MachineFunctionPass {
     static inline char ID = 0;

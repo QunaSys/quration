@@ -83,14 +83,13 @@ ScLsFixedV0CompileInfo CompileAndCalculateInfo(
 }
 }  // namespace
 
-TEST(CompileInfo, RuntimeFieldsAreCalculatedForAddCraig) {
+TEST(CompileInfo, RuntimeWithoutTopologyDoesNotExceedRoutedRuntimeForAddCraig) {
     const auto info = CompileAndCalculateInfo(
             "quration-core/tests/data/circuit/add_craig_5.json",
             "AddCraig(5)"
     );
 
-    EXPECT_GT(info.execution_time_without_topology, 0);
-    EXPECT_GT(info.execution_time, 0);
+    EXPECT_LE(info.execution_time_without_topology, info.execution_time);
 }
 
 TEST(CompileInfo, WithTopologyDoesNotClampRuntimeWithoutTopology) {
@@ -120,12 +119,11 @@ TEST(CompileInfo, WithTopologyDoesNotClampRuntimeWithoutTopology) {
     EXPECT_LT(info.execution_time, info.execution_time_without_topology);
 }
 
-TEST(CompileInfo, RuntimeFieldsAreCalculatedForAddCuccaro) {
+TEST(CompileInfo, RuntimeWithoutTopologyDoesNotExceedRoutedRuntimeForAddCuccaro) {
     const auto info = CompileAndCalculateInfo(
             "quration-core/tests/data/circuit/add_cuccaro_5.json",
             "AddCuccaro(5)"
     );
 
-    EXPECT_GT(info.execution_time_without_topology, 0);
-    EXPECT_GT(info.execution_time, 0);
+    EXPECT_LE(info.execution_time_without_topology, info.execution_time);
 }

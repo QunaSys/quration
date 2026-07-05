@@ -508,10 +508,22 @@ Beat CalcRuntimeWithoutTopology(MachineFunction& mf) {
             queue.Peek(inst_queue_peek_size);
         }
 
+        const auto lightest_weight_of_inst_at_beat = queue.NumRunnables() == 0
+                ? std::numeric_limits<std::int64_t>::max()
+                : queue.GetNode(*queue.begin()).weight;
+
         ScLsInstructionBase* run_instruction = nullptr;
         for (auto* base_inst : queue) {
             // Check if base_inst is runnable or note.
             // If runnable, update state, set run_instruction and break this loop.
+            if (base_inst->Type() == ScLsInstructionType::ALLOCATE
+                && SkipAllocate(
+                        lightest_weight_of_inst_at_beat,
+                        queue.GetNode(base_inst).weight,
+                        inst_queue_options.weight_algorithm
+                )) {
+                continue;
+            }
 
             if (!state.IsConditionSatisfied(current_beat, base_inst->Condition())) {
                 continue;
