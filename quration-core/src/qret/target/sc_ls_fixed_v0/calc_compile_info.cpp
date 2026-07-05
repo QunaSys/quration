@@ -8,6 +8,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <limits>
@@ -511,12 +512,18 @@ Beat CalcRuntimeWithoutTopology(MachineFunction& mf) {
         const auto lightest_weight_of_inst_at_beat = queue.NumRunnables() == 0
                 ? std::numeric_limits<std::int64_t>::max()
                 : queue.GetNode(*queue.begin()).weight;
+        const auto has_entanglement_runnable_at_beat = std::any_of(
+                queue.begin(),
+                queue.end(),
+                [](const auto* inst) { return inst->UseEntanglement(); }
+        );
 
         ScLsInstructionBase* run_instruction = nullptr;
         for (auto* base_inst : queue) {
             // Check if base_inst is runnable or note.
             // If runnable, update state, set run_instruction and break this loop.
             if (base_inst->Type() == ScLsInstructionType::ALLOCATE
+                && !has_entanglement_runnable_at_beat
                 && SkipAllocate(
                         lightest_weight_of_inst_at_beat,
                         queue.GetNode(base_inst).weight,

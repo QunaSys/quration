@@ -33,12 +33,14 @@ void PrepareCircuit(ir::Function& circuit) {
     ir::IgnoreGlobalPhase().RunOnFunction(circuit);
 }
 
-ScLsFixedV0TargetMachine CreateTargetMachine() {
-    auto topology =
-            Topology::FromYAML(LoadFile("quration-core/examples/data/topology/tutorial.yaml"));
+ScLsFixedV0TargetMachine CreateTargetMachine(
+        const std::string& topology_path = "quration-core/examples/data/topology/tutorial.yaml"
+) {
+    auto topology = Topology::FromYAML(LoadFile(topology_path));
     return ScLsFixedV0TargetMachine(
             topology,
             ScLsFixedV0MachineOption{
+                    .topology_type = GetTopologyType(*topology),
                     .magic_generation_period = 15,
                     .magic_generation_maximum_stock = 10000,
                     .entanglement_generation_period = 100,
@@ -69,9 +71,10 @@ void PrepareRoutedMachineFunction(
 
 ScLsFixedV0CompileInfo CompileAndCalculateInfo(
         const std::string& circuit_path,
-        const std::string& function_name
+        const std::string& function_name,
+        const std::string& topology_path = "quration-core/examples/data/topology/tutorial.yaml"
 ) {
-    const auto target = CreateTargetMachine();
+    const auto target = CreateTargetMachine(topology_path);
     auto mf = MachineFunction(&target);
     auto context = ir::IRContext();
     PrepareRoutedMachineFunction(mf, context, circuit_path, function_name);
@@ -125,5 +128,16 @@ TEST(CompileInfo, RuntimeWithoutTopologyDoesNotExceedRoutedRuntimeForAddCuccaro)
             "AddCuccaro(5)"
     );
 
+    EXPECT_LE(info.execution_time_without_topology, info.execution_time);
+}
+
+TEST(CompileInfo, RuntimeWithoutTopologyDoesNotTimeoutForDistributedAddCuccaro) {
+    const auto info = CompileAndCalculateInfo(
+            "quration-core/tests/data/circuit/add_cuccaro_5.json",
+            "AddCuccaro(5)",
+            "quration-core/tests/data/topology/distribute.yaml"
+    );
+
+    EXPECT_GT(info.entanglement_factory_count, 0);
     EXPECT_LE(info.execution_time_without_topology, info.execution_time);
 }
