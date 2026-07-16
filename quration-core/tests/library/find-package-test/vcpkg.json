@@ -1,7 +1,7 @@
 {
   "name": "qret",
   "version": "1.0.0",
-  "builtin-baseline": "96b5ced82828ecaf67e6010a892c98d3e96ed1c2",
+  "builtin-baseline": "44819aa2a6c10e56065e2b0330e7d6c89d1d2574",
   "dependencies": [
     "boost-dynamic-bitset",
     "boost-multiprecision",
@@ -15,11 +15,5 @@
     "pcg",
     "pegtl",
     "yaml-cpp"
-  ],
-  "overrides": [
-    {
-      "name": "fmt",
-      "version": "9.1.0#1"
-    }
   ]
 }
