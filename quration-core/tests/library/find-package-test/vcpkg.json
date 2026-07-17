@@ -1,7 +1,7 @@
 {
   "name": "qret",
   "version": "1.0.0",
-  "builtin-baseline": "44819aa2a6c10e56065e2b0330e7d6c89d1d2574",
+  "builtin-baseline": "c3867e714dd3a51c272826eea77267876517ed99",
   "dependencies": [
     "boost-dynamic-bitset",
     "boost-multiprecision",
