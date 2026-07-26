@@ -213,7 +213,7 @@ struct QRET_EXPORT CompileInfoWithQecResourceEstimation : public MachineFunction
     static double EstimateExecutionTimeSec(std::uint64_t d, std::uint64_t runtime, double t_cycle);
     /**
      * @brief Estimate number of physical qubits.
-     * @details physical_qubit_count = chip_cell_count * d^2 * 2.
+     * @details physical_qubit_count = 2 * (d + 1)^2 * chip_cell_count.
      *
      * @param d Code distance.
      * @param chip_cell_count Number of cells in the chip.

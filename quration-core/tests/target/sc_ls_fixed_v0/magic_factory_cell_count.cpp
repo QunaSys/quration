@@ -21,7 +21,7 @@ TEST(MagicFactoryCellCount, DefaultValueIsOne) {
 }
 
 // effective_cell_count = chip_cell_count + magic_factory_count *
-// (magic_factory_cell_count - 1) num_physical_qubits  = 2 * d^2 *
+// (magic_factory_cell_count - 1) num_physical_qubits = 2 * (d + 1)^2 *
 // effective_cell_count
 
 TEST(MagicFactoryCellCount, CellCountOneGivesChipCellCountUnchanged) {
@@ -37,7 +37,7 @@ TEST(MagicFactoryCellCount, CellCountOneGivesChipCellCountUnchanged) {
 
     const auto qubits =
             CompileInfoWithQecResourceEstimation::EstimatePhysicalQubitCount(d, effective);
-    EXPECT_EQ(qubits, 2 * d * d * chip_cell_count);
+    EXPECT_EQ(qubits, 2 * (d + 1) * (d + 1) * chip_cell_count);
 }
 
 TEST(MagicFactoryCellCount, PhysicalQubitCountFormula) {
@@ -49,7 +49,7 @@ TEST(MagicFactoryCellCount, PhysicalQubitCountFormula) {
         const auto effective = chip_cell_count + (magic_factory_count * (cell_count - 1));
         const auto qubits =
                 CompileInfoWithQecResourceEstimation::EstimatePhysicalQubitCount(d, effective);
-        EXPECT_EQ(qubits, 2 * d * d * effective) << "cell_count=" << cell_count;
+        EXPECT_EQ(qubits, 2 * (d + 1) * (d + 1) * effective) << "cell_count=" << cell_count;
     }
 }
 

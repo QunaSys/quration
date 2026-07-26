@@ -990,7 +990,7 @@ std::uint64_t CompileInfoWithQecResourceEstimation::EstimatePhysicalQubitCount(
         std::uint64_t d,
         std::uint64_t chip_cell_count
 ) {
-    return d * d * chip_cell_count * 2;
+    return 2 * (d + 1) * (d + 1) * chip_cell_count;
 }
 
 bool CompileInfoWithQecResourceEstimation::RunOnMachineFunction(MachineFunction& mf) {
