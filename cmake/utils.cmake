@@ -31,7 +31,7 @@ function(add_subdirectory_with_runtime_output directory runtime_output)
 endfunction()
 
 function(qret_copy_runtime_dependencies target)
-  if(MSVC AND CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+  if(MSVC)
     add_custom_command(
       TARGET ${target}
       POST_BUILD
