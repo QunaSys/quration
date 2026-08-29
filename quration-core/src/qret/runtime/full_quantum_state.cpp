@@ -8,14 +8,17 @@
 #include <Eigen/Dense>
 #include <algorithm>
 #include <cassert>
+#include <bit>
 #include <cmath>
 #include <complex>
 #include <memory>
 #include <numbers>
 #include <random>
+#include <stdexcept>
 #include <vector>
 
 #include "qret/base/log.h"
+#include "qret/math/pauli.h"
 #include "qret/runtime/quantum_state.h"
 #ifdef USE_QULACS
 #pragma clang diagnostic push
@@ -28,6 +31,7 @@
 #pragma clang diagnostic ignored "-Winconsistent-missing-override"
 #include <cppsim/gate.hpp>
 #include <cppsim/gate_factory.hpp>
+#include <cppsim/gate_merge.hpp>
 #include <cppsim/state.hpp>
 #pragma clang diagnostic pop
 #endif
@@ -60,6 +64,10 @@ struct FullQuantumState::Impl {
 
     // Gate
     virtual bool Measure(std::uint32_t id) = 0;
+    virtual bool MeasurePauliProduct(
+            const std::vector<std::uint32_t>& qs,
+            const std::vector<math::Pauli>& ps
+    ) = 0;
     virtual void X(std::uint32_t id) = 0;
     virtual void Y(std::uint32_t id) = 0;
     virtual void Z(std::uint32_t id) = 0;
@@ -123,6 +131,10 @@ struct FullQuantumState::QRETFullQuantumState : public FullQuantumState::Impl {
     // --- Gate Operations ---
 
     bool Measure(std::uint32_t id) override;
+    bool MeasurePauliProduct(
+            const std::vector<std::uint32_t>& qs,
+            const std::vector<math::Pauli>& ps
+    ) override;
     void X(std::uint32_t id) override;
     void Y(std::uint32_t id) override;
     void Z(std::uint32_t id) override;
@@ -153,6 +165,50 @@ private:
         return static_cast<Eigen::Index>(
                 static_cast<std::uint64_t>(idx) ^ (std::uint64_t{1} << id)
         );
+    }
+
+    [[nodiscard]] std::pair<Eigen::Index, Data> ApplyPauliProductToBasis(
+            Eigen::Index idx,
+            const std::vector<std::uint32_t>& qs,
+            const std::vector<math::Pauli>& ps
+    ) const {
+        auto target = idx;
+        auto phase = Data{1.0, 0.0};
+        for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+            const auto q = qs[i];
+            switch (ps[i]) {
+                case math::Pauli::X:
+                    target = Flip(target, q);
+                    break;
+                case math::Pauli::Y:
+                    phase *= Is1(target, q) ? -Imag : Imag;
+                    target = Flip(target, q);
+                    break;
+                case math::Pauli::Z:
+                    if (Is1(target, q)) {
+                        phase *= -1.0;
+                    }
+                    break;
+                case math::Pauli::I:
+                    break;
+                default:
+                    throw std::logic_error("unknown Pauli in Pauli product measurement");
+            }
+        }
+        return {target, phase};
+    }
+
+    void ApplyPauliProduct(
+            ConstStateRef in,
+            StateRef out,
+            const std::vector<std::uint32_t>& qs,
+            const std::vector<math::Pauli>& ps
+    ) const {
+        out.setZero();
+        for (Eigen::Index idx = 0; idx < in.size(); ++idx) {
+            const auto [target, phase] = ApplyPauliProductToBasis(idx, qs, ps);
+            out[target] += phase * in[idx];
+        }
     }
 
     // C++20 Constants
@@ -307,6 +363,42 @@ bool FullQuantumState::QRETFullQuantumState::Measure(std::uint32_t id) {
         }
     }
     return result_one;
+}
+
+bool FullQuantumState::QRETFullQuantumState::MeasurePauliProduct(
+        const std::vector<std::uint32_t>& qs,
+        const std::vector<math::Pauli>& ps
+) {
+    std::uniform_real_distribution<> dist(0.0, 1.0);
+
+    ApplyPauliProduct(data_, compute_, qs, ps);
+    const auto expectation = std::clamp(std::real(data_.dot(compute_)), -1.0, 1.0);
+    const auto prob_plus = (1.0 + expectation) / 2.0;
+    const auto prob_minus = (1.0 - expectation) / 2.0;
+
+    const bool result_minus = [&]() {
+        if (prob_plus < 1e-10) {
+            return true;
+        }
+        if (prob_minus < 1e-10) {
+            return false;
+        }
+        return dist(engine_) > prob_plus;
+    }();
+
+    const auto eigen_sign = result_minus ? -1.0 : 1.0;
+    const auto normalize = 1.0 / std::sqrt(2.0 * (1.0 + eigen_sign * expectation));
+    data_ = (data_ + eigen_sign * compute_) * normalize;
+
+    if (save_operation_matrix_) {
+        for (Eigen::Index j = 0; j < operation_matrix_.cols(); ++j) {
+            const auto old_col = Eigen::VectorXcd(operation_matrix_.col(j));
+            ApplyPauliProduct(old_col, compute_, qs, ps);
+            operation_matrix_.col(j) = (old_col + eigen_sign * compute_) * normalize;
+        }
+    }
+
+    return result_minus;
 }
 
 void FullQuantumState::QRETFullQuantumState::X(std::uint32_t id) {
@@ -573,6 +665,126 @@ struct FullQuantumState::QulacsFullQuantumState : public FullQuantumState::Impl 
         const auto result = state->get_classical_value(0);
         return result == UINT{1};
     }
+    bool MeasurePauliProduct(
+            const std::vector<std::uint32_t>& qs,
+            const std::vector<math::Pauli>& ps
+    ) override {
+        auto target_index_list = std::vector<UINT>{};
+        auto pauli_id_list = std::vector<UINT>{};
+        target_index_list.reserve(qs.size());
+        pauli_id_list.reserve(ps.size());
+
+        for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+            target_index_list.emplace_back(static_cast<UINT>(qs[i]));
+            switch (ps[i]) {
+                case math::Pauli::I:
+                    pauli_id_list.emplace_back(UINT{0});
+                    break;
+                case math::Pauli::X:
+                    pauli_id_list.emplace_back(UINT{1});
+                    break;
+                case math::Pauli::Y:
+                    pauli_id_list.emplace_back(UINT{2});
+                    break;
+                case math::Pauli::Z:
+                    pauli_id_list.emplace_back(UINT{3});
+                    break;
+                default:
+                    throw std::logic_error("unknown Pauli in Pauli product measurement");
+            }
+        }
+
+        constexpr auto classical_register_address = UINT{0};
+        // Qulacs v0.6.2 does not expose MultiQubitPauliMeasurement, so build
+        // the equivalent instrument from P+ and P- projectors.
+        auto flip_mask = std::uint64_t{0};
+        auto phase_mask = std::uint64_t{0};
+        auto rot90_count = std::uint32_t{0};
+        for (auto i = std::size_t{0}; i < pauli_id_list.size(); ++i) {
+            const auto bit = std::uint64_t{1} << i;
+            switch (pauli_id_list[i]) {
+                case UINT{1}:
+                    flip_mask ^= bit;
+                    break;
+                case UINT{2}:
+                    flip_mask ^= bit;
+                    phase_mask ^= bit;
+                    ++rot90_count;
+                    break;
+                case UINT{3}:
+                    phase_mask ^= bit;
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        const auto dim = std::uint64_t{1} << pauli_id_list.size();
+        const auto make_projector = [&](double eigen_sign) {
+            auto matrix = SparseComplexMatrix(
+                    static_cast<Eigen::Index>(dim),
+                    static_cast<Eigen::Index>(dim)
+            );
+            auto triplets = std::vector<Eigen::Triplet<CPPCTYPE>>{};
+            triplets.reserve(static_cast<std::size_t>(dim) * 2);
+
+            for (auto row = std::uint64_t{0}; row < dim; ++row) {
+                const auto col = row ^ flip_mask;
+                const auto parity = std::popcount(row & phase_mask) % 2;
+                const auto sign = parity == 0 ? 1.0 : -1.0;
+                auto phase = CPPCTYPE{1.0, 0.0};
+                switch (rot90_count % 4) {
+                    case 0:
+                        phase = CPPCTYPE{1.0, 0.0};
+                        break;
+                    case 1:
+                        phase = CPPCTYPE{0.0, -1.0};
+                        break;
+                    case 2:
+                        phase = CPPCTYPE{-1.0, 0.0};
+                        break;
+                    case 3:
+                        phase = CPPCTYPE{0.0, 1.0};
+                        break;
+                    default:
+                        throw std::logic_error("unreachable Pauli phase");
+                }
+                phase *= sign;
+
+                const auto row_index = static_cast<Eigen::Index>(row);
+                triplets.emplace_back(row_index, row_index, CPPCTYPE{0.5, 0.0});
+                triplets.emplace_back(
+                        row_index,
+                        static_cast<Eigen::Index>(col),
+                        CPPCTYPE{0.5 * eigen_sign, 0.0} * phase
+                );
+            }
+
+            matrix.setFromTriplets(triplets.begin(), triplets.end());
+            return matrix;
+        };
+
+        auto projector_gates = std::vector<std::unique_ptr<QuantumGateBase>>{};
+        projector_gates.reserve(2);
+        projector_gates.emplace_back(gate::SparseMatrix(target_index_list, make_projector(1.0)));
+        projector_gates.emplace_back(gate::SparseMatrix(target_index_list, make_projector(-1.0)));
+
+        auto gate_list = std::vector<QuantumGateBase*>{};
+        gate_list.reserve(projector_gates.size());
+        for (const auto& projector_gate : projector_gates) {
+            gate_list.emplace_back(projector_gate.get());
+        }
+        auto gate = std::unique_ptr<QuantumGateBase>(
+                gate::Instrument(gate_list, classical_register_address)
+        );
+        // Qulacs Instrument copies its gates, so release the local originals now.
+        projector_gates.clear();
+
+        gate->set_seed(static_cast<std::int32_t>(engine()));
+        gate->update_quantum_state(state.get());
+        const auto result = state->get_classical_value(classical_register_address);
+        return result == UINT{1};
+    }
     void X(std::uint32_t id) override {
         std::unique_ptr<QuantumGateBase>(gate::X(id))->update_quantum_state(state.get());
     }
@@ -704,6 +916,19 @@ FullQuantumState::~FullQuantumState() = default;
 void FullQuantumState::Measure(std::uint64_t q, std::uint64_t r) {
     const auto q32 = static_cast<std::uint32_t>(q);
     const auto result = impl_->Measure(q32);
+    QuantumState::SaveMeasuredResult(r, result);
+}
+void FullQuantumState::MeasurePauliProduct(
+        const std::vector<std::uint64_t>& qs,
+        const std::vector<math::Pauli>& ps,
+        std::uint64_t r
+) {
+    auto qs32 = std::vector<std::uint32_t>{};
+    qs32.reserve(qs.size());
+    for (const auto q : qs) {
+        qs32.emplace_back(static_cast<std::uint32_t>(q));
+    }
+    const auto result = impl_->MeasurePauliProduct(qs32, ps);
     QuantumState::SaveMeasuredResult(r, result);
 }
 void FullQuantumState::X(std::uint64_t q) {

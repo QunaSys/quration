@@ -20,6 +20,8 @@ namespace qret::ir {
 Opcode Opcode::FromString(std::string_view opcode) {
     if (opcode == "Measurement") {
         return Table::Measurement;
+    } else if (opcode == "PauliProductMeasurement") {
+        return Table::PauliProductMeasurement;
     } else if (opcode == "I") {
         return Table::I;
     } else if (opcode == "X") {
@@ -87,6 +89,9 @@ void Opcode::Print(std::ostream& out) const {
     switch (x_) {
         case Table::Measurement:
             out << "Measurement";
+            return;
+        case Table::PauliProductMeasurement:
+            out << "PauliProductMeasurement";
             return;
         case Table::I:
             out << 'I';

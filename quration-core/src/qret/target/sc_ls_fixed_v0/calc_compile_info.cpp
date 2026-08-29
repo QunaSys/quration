@@ -8,6 +8,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
+#include <algorithm>
 #include <cmath>
 #include <fstream>
 #include <limits>
@@ -64,6 +65,21 @@ static Opt<std::string> DumpCompileInfoToMarkdown(
         "Dump compile information to markdown",
         OptionHidden::NotHidden
 );
+
+void LogRuntimeConsistencyErrorIfReady(const ScLsFixedV0CompileInfo& compile_info) {
+    if (compile_info.execution_time == 0 || compile_info.execution_time_without_topology == 0) {
+        return;
+    }
+    if (compile_info.execution_time_without_topology <= compile_info.execution_time) {
+        return;
+    }
+
+    LOG_ERROR(
+            "execution_time_without_topology ({}) is greater than execution_time ({}).",
+            compile_info.execution_time_without_topology,
+            compile_info.execution_time
+    );
+}
 }  // namespace
 
 DepGraph::DepGraph(const MachineFunction& mf) {
@@ -476,27 +492,45 @@ private:
 };
 
 Beat CalcRuntimeWithoutTopology(MachineFunction& mf) {
-    static constexpr auto InstQueuePeekSize = 2000;
-
     const auto& machine = *static_cast<const ScLsFixedV0TargetMachine*>(mf.GetTarget());
     const auto& option = machine.machine_option;
+    const auto inst_queue_options = GetRoutingInstQueueOptions();
+    const auto inst_queue_peek_size = inst_queue_options.peek_size;
 
     auto state = StateWithoutTopology{};
-    auto queue = InstQueue(option, mf, InstQueue::WeightAlgorithm::InvDepth);
-    queue.Peek(InstQueuePeekSize);
+    auto queue = InstQueue(option, mf, inst_queue_options.weight_algorithm);
+    queue.Peek(2 * inst_queue_peek_size);
     auto current_beat = Beat{0};
     auto runtime = Beat{0};
     auto idle_beats = Beat{0};
     while (!queue.Empty()) {
         // Peek instructions if needed.
-        if (!queue.IsPeekFinished() && queue.NumInsts() < InstQueuePeekSize) {
-            queue.Peek(InstQueuePeekSize);
+        if (!queue.IsPeekFinished() && queue.NumInsts() < inst_queue_peek_size) {
+            queue.Peek(inst_queue_peek_size);
         }
+
+        const auto lightest_weight_of_inst_at_beat = queue.NumRunnables() == 0
+                ? std::numeric_limits<std::int64_t>::max()
+                : queue.GetNode(*queue.begin()).weight;
+        const auto has_entanglement_runnable_at_beat = std::any_of(
+                queue.begin(),
+                queue.end(),
+                [](const auto* inst) { return inst->UseEntanglement(); }
+        );
 
         ScLsInstructionBase* run_instruction = nullptr;
         for (auto* base_inst : queue) {
             // Check if base_inst is runnable or note.
             // If runnable, update state, set run_instruction and break this loop.
+            if (base_inst->Type() == ScLsInstructionType::ALLOCATE
+                && !has_entanglement_runnable_at_beat
+                && SkipAllocate(
+                        lightest_weight_of_inst_at_beat,
+                        queue.GetNode(base_inst).weight,
+                        inst_queue_options.weight_algorithm
+                )) {
+                continue;
+            }
 
             if (!state.IsConditionSatisfied(current_beat, base_inst->Condition())) {
                 continue;
@@ -711,6 +745,7 @@ bool CompileInfoWithoutTopology::RunOnMachineFunction(MachineFunction& mf) {
 
     // execution_time_without_topology
     compile_info.execution_time_without_topology = CalcRuntimeWithoutTopology(mf);
+    LogRuntimeConsistencyErrorIfReady(compile_info);
 
     // gate_depth
     for (const auto& bb : mf) {
@@ -826,6 +861,7 @@ bool CompileInfoWithTopology::RunOnMachineFunction(MachineFunction& mf) {
 
     // execution_time
     compile_info.execution_time = time_series.GetRuntime();
+    LogRuntimeConsistencyErrorIfReady(compile_info);
 
     if (compile_info.execution_time == 0) {
         return false;
@@ -990,7 +1026,7 @@ std::uint64_t CompileInfoWithQecResourceEstimation::EstimatePhysicalQubitCount(
         std::uint64_t d,
         std::uint64_t chip_cell_count
 ) {
-    return d * d * chip_cell_count * 2;
+    return 2 * (d + 1) * (d + 1) * chip_cell_count;
 }
 
 bool CompileInfoWithQecResourceEstimation::RunOnMachineFunction(MachineFunction& mf) {

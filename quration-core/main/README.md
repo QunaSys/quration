@@ -205,11 +205,13 @@ Hidden options:
   * Used by `StaticConditionPruningPass`.
   * Values of random instructions in the intermediate representation are determined in advance, and branch destinations are determined in advance as much as possible.
 * `sc_ls_fixed_v0-find-place-algorithm` : algorithm for finding where to place qubits during mapping
-* `sc_ls_fixed_v0-inst-queue-peek-size` : length of the instruction sequence read by the instruction queue during routing
-  * A larger value lets routing read further ahead and may produce better routing.
-  * However, routing takes longer.
-* `sc_ls_fixed_v0-inst-queue-weight-algorithm` : weighting algorithm for the instruction queue during routing
-  * When multiple instructions are executable, their weights determine the routing order.
+* `sc_ls_fixed_v0-inst-queue-peek-size` : length of the instruction sequence read by the
+  instruction queue during routing and topology-free runtime estimation
+  * A larger value lets the scheduler read further ahead and may produce better routing or estimates.
+  * However, routing and topology-free runtime estimation take longer.
+* `sc_ls_fixed_v0-inst-queue-weight-algorithm` : weighting algorithm for the instruction queue
+  during routing and topology-free runtime estimation
+  * When multiple instructions are executable, their weights determine the scheduling order.
 * `sc_ls_fixed_v0-mapping-algorithm` : mapping algorithm
   * `0` maps according to the topology file.
   * `1` maps while ignoring qubit coordinate information in the topology file.

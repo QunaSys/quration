@@ -7,9 +7,12 @@
 #ifndef QRET_FRONTEND_INTRINSIC_H
 #define QRET_FRONTEND_INTRINSIC_H
 
+#include <vector>
+
 #include "qret/base/portable_function.h"
 #include "qret/frontend/argument.h"
 #include "qret/ir/instructions.h"
+#include "qret/math/pauli.h"
 #include "qret/qret_export.h"
 
 namespace qret::frontend {
@@ -30,6 +33,9 @@ namespace gate {
  * @return ir::MeasurementInst* the inserted instruction
  */
 QRET_EXPORT ir::MeasurementInst* Measure(const Qubit& q, const Register& r);
+
+QRET_EXPORT ir::PauliProductMeasurementInst*
+PauliProductMeasure(const Qubits& qs, const std::vector<math::Pauli>& ps, const Register& r);
 
 //--------------------------------------------------//
 // Unary qubit gate

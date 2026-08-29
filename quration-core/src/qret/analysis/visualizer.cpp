@@ -253,6 +253,15 @@ std::string GenLaTeX(const ir::Function& func) {
                 const auto* i = Cast<ir::MeasurementInst>(&inst);
                 drawer.Measure(i->GetQubit().id, i->GetRegister().id);
             }
+            if (opcode == ir::Opcode::Table::PauliProductMeasurement) {
+                const auto* i = Cast<ir::PauliProductMeasurementInst>(&inst);
+                auto qs = std::vector<std::size_t>{};
+                qs.reserve(i->GetQubits().size());
+                for (const auto q : i->GetQubits()) {
+                    qs.emplace_back(q.id);
+                }
+                drawer.PauliProductMeasure(qs, i->GetPaulis(), i->GetRegister().id);
+            }
             if (opcode == ir::Opcode::Table::I) {
                 const auto* i = Cast<ir::UnaryInst>(&inst);
                 drawer.I(i->GetQubit().id);
@@ -445,6 +454,15 @@ std::string GenComputeGraph(const ir::Function& func) {
             if (const auto* i = DynCast<ir::MeasurementInst>(&inst)) {
                 const auto id = graph.AddInstruction("measure", {{"target", ArgKind::Qubit, 1}});
                 update_qubit(i->GetQubit().id, {id, 0, 0});
+            } else if (const auto* i = DynCast<ir::PauliProductMeasurementInst>(&inst)) {
+                const auto& qs = i->GetQubits();
+                const auto id = graph.AddInstruction(
+                        "measure_product",
+                        {{"target", ArgKind::Qubit, qs.size()}}
+                );
+                for (const auto arg_id : std::views::iota(std::size_t{0}, qs.size())) {
+                    update_qubit(qs[arg_id].id, {id, 0, arg_id});
+                }
             } else if (const auto* i = DynCast<ir::UnaryInst>(&inst)) {
                 const auto label = [&]() -> std::string_view {
                     const auto opcode = i->GetOpcode().GetCode();

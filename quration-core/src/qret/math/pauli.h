@@ -21,11 +21,16 @@
 
 #include <boost/dynamic_bitset.hpp>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <fmt/ostream.h>
 
 #include <cstddef>
 #include <cstdint>
 #include <list>
+#include <optional>
+#include <ostream>
+#include <stdexcept>
 #include <string>
+#include <string_view>
 #include <variant>
 
 #include "qret/qret_export.h"
@@ -35,7 +40,49 @@ namespace qret::math {
  * @brief Enum class representing Pauli operators.
  *
  */
-enum class QRET_EXPORT Pauli : std::uint8_t { I, X, Y, Z };
+enum class QRET_EXPORT Pauli : std::uint8_t { I = 0, X = 1, Y = 2, Z = 3 };
+/**
+ * @brief Converts a Pauli operator to a char.
+ *
+ * @param p Pauli operator enum value.
+ * @return char Character representation of the Pauli operator.
+ */
+char QRET_EXPORT ToChar(Pauli p);
+/**
+ * @brief Converts a char to a Pauli operator.
+ *
+ * @param c Character representation of the Pauli operator.
+ * @return Pauli Pauli operator enum value.
+ */
+Pauli QRET_EXPORT PauliFromChar(char c);
+/**
+ * @brief Converts a char to a Pauli operator if possible.
+ *
+ * @param c Character representation of the Pauli operator.
+ * @return Pauli operator enum value, or std::nullopt if invalid.
+ */
+std::optional<Pauli> QRET_EXPORT TryPauliFromChar(char c);
+/**
+ * @brief Converts a Pauli operator to its stable integer representation.
+ *
+ * @param p Pauli operator enum value.
+ * @return int Integer representation of the Pauli operator.
+ */
+int QRET_EXPORT ToInt(Pauli p);
+/**
+ * @brief Converts an integer to a Pauli operator.
+ *
+ * @param value Integer representation of the Pauli operator.
+ * @return Pauli Pauli operator enum value.
+ */
+Pauli QRET_EXPORT PauliFromInt(int value);
+/**
+ * @brief Converts an integer to a Pauli operator if possible.
+ *
+ * @param value Integer representation of the Pauli operator.
+ * @return Pauli operator enum value, or std::nullopt if invalid.
+ */
+std::optional<Pauli> QRET_EXPORT TryPauliFromInt(int value);
 /**
  * @brief Converts a Pauli operator to a string.
  *
@@ -50,6 +97,10 @@ std::string QRET_EXPORT ToString(Pauli p);
  * @return Pauli Pauli operator enum value.
  */
 Pauli QRET_EXPORT PauliFromString(const std::string& str);
+/**
+ * @brief Prints a Pauli operator.
+ */
+QRET_EXPORT std::ostream& operator<<(std::ostream& out, Pauli p);
 
 /**
  * @brief Class representing a Pauli string.
@@ -152,40 +203,46 @@ public:
         return zs_;
     }
 
-    [[nodiscard]] char operator[](const std::size_t index) const {
+    [[nodiscard]] Pauli Get(std::size_t index) const {
         if (xs_[index] && zs_[index]) {
-            return 'Y';
+            return Pauli::Y;
         }
         if (xs_[index]) {
-            return 'X';
+            return Pauli::X;
         }
         if (zs_[index]) {
-            return 'Z';
+            return Pauli::Z;
         }
-        return 'I';
+        return Pauli::I;
     }
-    void Set(const std::size_t index, char p) {
+    void Set(std::size_t index, Pauli p) {
         switch (p) {
-            case 'x':
-            case 'X':
+            case Pauli::I:
+                xs_[index] = false;
+                zs_[index] = false;
+                break;
+            case Pauli::X:
                 xs_[index] = true;
                 zs_[index] = false;
                 break;
-            case 'z':
-            case 'Z':
-                xs_[index] = false;
+            case Pauli::Y:
+                xs_[index] = true;
                 zs_[index] = true;
                 break;
-            case 'y':
-            case 'Y':
-                xs_[index] = true;
+            case Pauli::Z:
+                xs_[index] = false;
                 zs_[index] = true;
                 break;
             default:
-                xs_[index] = false;
-                zs_[index] = false;
-                break;
+                throw std::logic_error("unknown Pauli");
         }
+    }
+
+    [[nodiscard]] char operator[](const std::size_t index) const {
+        return ToChar(Get(index));
+    }
+    void Set(const std::size_t index, char p) {
+        Set(index, TryPauliFromChar(p).value_or(Pauli::I));
     }
 
 private:
@@ -482,5 +539,11 @@ private:
     List ls_;
 };
 }  // namespace qret::math
+
+/**
+ * @brief Formatter specialization of qret::math::Pauli inherited from fmt::ostream_formatter.
+ */
+template <>
+struct fmt::formatter<qret::math::Pauli> : fmt::ostream_formatter {};
 
 #endif  // QRET_BASE_PAULI_H

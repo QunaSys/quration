@@ -91,6 +91,7 @@ add_qret_test(runtime toffoli_state)
 
 # target
 add_qret_test(target/sc_ls_fixed_v0 asm_printer)
+add_qret_test(target/sc_ls_fixed_v0 calc_compile_info)
 add_qret_test(target/sc_ls_fixed_v0 calc_compile_info_qec)
 add_qret_test(target/sc_ls_fixed_v0 magic_factory_cell_count)
 add_qret_test(target/sc_ls_fixed_v0 geometry)

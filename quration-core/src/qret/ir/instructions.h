@@ -13,6 +13,7 @@
 #include "qret/ir/basic_block.h"
 #include "qret/ir/instruction.h"
 #include "qret/ir/value.h"
+#include "qret/math/pauli.h"
 #include "qret/qret_export.h"
 
 namespace qret::ir {
@@ -38,7 +39,7 @@ public:
     template <DerivedFromInstruction From>
 #endif
     [[nodiscard]] static bool ClassOf(const From* from) {
-        return from->GetOpcode().IsMeasurement();
+        return from->GetOpcode() == Opcode::Table::Measurement;
     }
 
 private:
@@ -48,6 +49,59 @@ private:
         , r_{r} {}
 
     Qubit q_;
+    Register r_;
+};
+class QRET_EXPORT PauliProductMeasurementInst : public Instruction {
+public:
+    static PauliProductMeasurementInst* Create(
+            const std::vector<Qubit>& qs,
+            const std::vector<math::Pauli>& ps,
+            const Register& r,
+            Instruction* insert_before
+    );
+    static PauliProductMeasurementInst* Create(
+            const std::vector<Qubit>& qs,
+            const std::vector<math::Pauli>& ps,
+            const Register& r,
+            BasicBlock* insert_at_end
+    );
+
+    const std::vector<Qubit>& GetQubits() const {
+        return qs_;
+    }
+    const std::vector<math::Pauli>& GetPaulis() const {
+        return ps_;
+    }
+    const Register& GetRegister() const {
+        return r_;
+    }
+    Opcode GetOpcode() const {
+        return Instruction::GetOpcode();
+    }
+    void Print(std::ostream& out) const override;
+
+#if defined(_MSC_VER)
+    template <typename From>
+#else
+    template <DerivedFromInstruction From>
+#endif
+    [[nodiscard]] static bool ClassOf(const From* from) {
+        return from->GetOpcode() == Opcode::Table::PauliProductMeasurement;
+    }
+
+private:
+    PauliProductMeasurementInst(
+            const std::vector<Qubit>& qs,
+            const std::vector<math::Pauli>& ps,
+            const Register& r
+    )
+        : Instruction(Opcode::Table::PauliProductMeasurement)
+        , qs_{qs}
+        , ps_{ps}
+        , r_{r} {}
+
+    std::vector<Qubit> qs_;
+    std::vector<math::Pauli> ps_;
     Register r_;
 };
 class QRET_EXPORT UnaryInst : public Instruction {
