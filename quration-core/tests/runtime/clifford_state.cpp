@@ -6,10 +6,27 @@
 
 #include "qret/frontend/circuit_generator.h"
 #include "qret/frontend/intrinsic.h"
+#include "qret/math/pauli.h"
 #include "qret/runtime/simulator.h"
 
 using namespace qret;
 using namespace qret::runtime;
+
+namespace {
+using qret::math::Pauli;
+
+void ExpectRepeatedProductMeasurementMatchesFinalZParity(CliffordState& state) {
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 0);
+    const auto parity_is_minus = state.ReadRegister(0);
+
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 1);
+    EXPECT_EQ(parity_is_minus, state.ReadRegister(1));
+
+    state.Measure(0, 2);
+    state.Measure(1, 3);
+    EXPECT_EQ(parity_is_minus, state.ReadRegister(2) != state.ReadRegister(3));
+}
+}  // namespace
 
 TEST(CliffordState, OneQubit) {
     std::mt19937_64 mt(std::random_device{}());
@@ -59,6 +76,53 @@ TEST(CliffordState, TwoQubits) {
     state.Measure(0, 4);
     state.Measure(1, 5);
     EXPECT_NE(state.ReadRegister(4), state.ReadRegister(5));
+}
+TEST(CliffordState, PauliProductMeasurement) {
+    auto state = CliffordState(12345, 2);
+
+    state.H(0);
+    state.CX(1, 0);
+
+    state.MeasurePauliProduct({0, 1}, {math::Pauli::Z, math::Pauli::Z}, 0);
+    EXPECT_FALSE(state.ReadRegister(0));
+
+    state.MeasurePauliProduct({0, 1}, {math::Pauli::X, math::Pauli::X}, 1);
+    EXPECT_FALSE(state.ReadRegister(1));
+}
+TEST(CliffordState, PauliProductMeasurementDeterministicMinusEigenstate) {
+    auto state = CliffordState(12345, 3);
+    state.X(1);
+
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 0);
+    EXPECT_TRUE(state.ReadRegister(0));
+
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 1);
+    EXPECT_TRUE(state.ReadRegister(1));
+    EXPECT_NEAR(0.0, state.Calc1Prob(0), state.Eps);
+    EXPECT_NEAR(1.0, state.Calc1Prob(1), state.Eps);
+}
+TEST(CliffordState, PauliProductMeasurementSupportsYAndIdentity) {
+    auto y_z_state = CliffordState(12345, 2);
+    y_z_state.H(0);
+    y_z_state.S(0);
+    y_z_state.X(1);
+    y_z_state.MeasurePauliProduct({0, 1}, {Pauli::Y, Pauli::Z}, 0);
+    EXPECT_TRUE(y_z_state.ReadRegister(0));
+
+    auto identity_state = CliffordState(12345, 3);
+    identity_state.X(0);
+    identity_state.X(1);
+    identity_state.X(2);
+    identity_state.MeasurePauliProduct({0, 1, 2}, {Pauli::Z, Pauli::I, Pauli::Z}, 0);
+    EXPECT_FALSE(identity_state.ReadRegister(0));
+}
+TEST(CliffordState, PauliProductMeasurementCollapseIsRepeatable) {
+    for (auto seed = std::uint64_t{0}; seed < 16; ++seed) {
+        auto state = CliffordState(seed, 2);
+        state.H(0);
+        state.H(1);
+        ExpectRepeatedProductMeasurementMatchesFinalZParity(state);
+    }
 }
 TEST(CliffordState, ThreeQubits) {
     std::mt19937_64 mt(std::random_device{}());

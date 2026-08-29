@@ -12,6 +12,7 @@
 #include "qret/frontend/circuit.h"  // DO NOT DELETE.
 #include "qret/ir/instructions.h"
 #include "qret/ir/value.h"
+#include "qret/math/pauli.h"
 
 namespace qret::frontend::gate {
 namespace {
@@ -39,9 +40,9 @@ std::vector<ir::Register> GetRVec(const Registers& rs) {
 }
 }  // namespace
 
-using ir::MeasurementInst, ir::UnaryInst, ir::ParametrizedRotationInst, ir::BinaryInst,
-        ir::TernaryInst, ir::MultiControlInst, ir::GlobalPhaseInst, ir::CallCFInst,
-        ir::DiscreteDistInst;
+using ir::MeasurementInst, ir::PauliProductMeasurementInst, ir::UnaryInst,
+        ir::ParametrizedRotationInst, ir::BinaryInst, ir::TernaryInst, ir::MultiControlInst,
+        ir::GlobalPhaseInst, ir::CallCFInst, ir::DiscreteDistInst;
 
 //--------------------------------------------------//
 // Measurement
@@ -50,6 +51,12 @@ using ir::MeasurementInst, ir::UnaryInst, ir::ParametrizedRotationInst, ir::Bina
 MeasurementInst* Measure(const Qubit& q, const Register& r) {
     auto* bb = q.GetBuilder()->GetInsertionPoint();
     return MeasurementInst::Create(GetQ(q), GetR(r), bb);
+}
+
+PauliProductMeasurementInst*
+PauliProductMeasure(const Qubits& qs, const std::vector<math::Pauli>& ps, const Register& r) {
+    auto* bb = qs.GetBuilder()->GetInsertionPoint();
+    return PauliProductMeasurementInst::Create(GetQVec(qs), ps, GetR(r), bb);
 }
 
 //--------------------------------------------------//

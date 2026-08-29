@@ -29,6 +29,7 @@ QRET_EXPORT void to_json(Json& j, const Function& func);
 QRET_EXPORT void to_json(Json& j, const BasicBlock& bb);
 QRET_EXPORT void to_json(Json& j, const Instruction& inst);
 QRET_EXPORT void to_json(Json& j, const MeasurementInst& inst);
+QRET_EXPORT void to_json(Json& j, const PauliProductMeasurementInst& inst);
 QRET_EXPORT void to_json(Json& j, const UnaryInst& inst);
 QRET_EXPORT void to_json(Json& j, const ParametrizedRotationInst& inst);
 QRET_EXPORT void to_json(Json& j, const BinaryInst& inst);

@@ -31,6 +31,7 @@
 #include "qret/ir/instructions.h"
 #include "qret/ir/metadata.h"
 #include "qret/ir/value.h"
+#include "qret/math/pauli.h"
 #include "qret/version.h"
 
 namespace qret::ir {
@@ -106,6 +107,8 @@ void to_json(Json& j, const Instruction& inst) {
     // FIXME: currently ignore parent_
     if (const auto* i = DynCast<MeasurementInst>(&inst)) {
         to_json(j, *i);
+    } else if (const auto* i = DynCast<PauliProductMeasurementInst>(&inst)) {
+        to_json(j, *i);
     } else if (const auto* i = DynCast<UnaryInst>(&inst)) {
         to_json(j, *i);
     } else if (const auto* i = DynCast<BinaryInst>(&inst)) {
@@ -150,6 +153,18 @@ void to_json(Json& j, const Instruction& inst) {
 void to_json(Json& j, const MeasurementInst& inst) {
     to_json(j, inst.GetOpcode());
     j["q"] = inst.GetQubit().id;
+    j["r"] = inst.GetRegister().id;
+}
+void to_json(Json& j, const PauliProductMeasurementInst& inst) {
+    to_json(j, inst.GetOpcode());
+    j["qs"] = Json::array();
+    for (const auto q : inst.GetQubits()) {
+        j["qs"].emplace_back(q.id);
+    }
+    j["ps"] = Json::array();
+    for (const auto p : inst.GetPaulis()) {
+        j["ps"].emplace_back(math::ToString(p));
+    }
     j["r"] = inst.GetRegister().id;
 }
 void to_json(Json& j, const UnaryInst& inst) {
@@ -868,12 +883,30 @@ void InsertInst(const Json& j, BasicBlock* parent, const BBMap& bmap, const Func
     from_json(j, opcode);
     const auto code = opcode.GetCode();
 
-    if (opcode.IsMeasurement()) {
+    if (code == Opcode::Table::Measurement) {
         const auto q = Qubit{j.at("q").get<std::uint64_t>()};
         const auto r = Register{j.at("r").get<std::uint64_t>()};
         ValidateQubitRange(q, *func, function_name, bb_name, "Measurement", "q");
         ValidateRegisterRange(r, *func, function_name, bb_name, "Measurement", "r");
         MeasurementInst::Create(q, r, parent);
+    } else if (code == Opcode::Table::PauliProductMeasurement) {
+        auto qs = std::vector<Qubit>{};
+        qs.reserve(j.at("qs").size());
+        for (const auto& q_json : j.at("qs")) {
+            auto q = Qubit{q_json.get<std::uint64_t>()};
+            ValidateQubitRange(q, *func, function_name, bb_name, "PauliProductMeasurement", "qs");
+            qs.emplace_back(q);
+        }
+
+        auto ps = std::vector<math::Pauli>{};
+        ps.reserve(j.at("ps").size());
+        for (const auto& p_json : j.at("ps")) {
+            ps.emplace_back(math::PauliFromString(p_json.get<std::string>()));
+        }
+
+        const auto r = Register{j.at("r").get<std::uint64_t>()};
+        ValidateRegisterRange(r, *func, function_name, bb_name, "PauliProductMeasurement", "r");
+        PauliProductMeasurementInst::Create(qs, ps, r, parent);
     } else if (opcode.IsUnary()) {
         const auto q = Qubit{j.at("q").get<std::uint64_t>()};
         ValidateQubitRange(q, *func, function_name, bb_name, "Unary", "q");
