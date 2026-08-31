@@ -340,7 +340,9 @@ jobs:
               --num_trotter_steps 1 \
               --out _smoke_outputs/create_trotter.json
           fi
-          run_bin create_uncompute_qrom
+          run_bin create_uncompute_qrom \
+            --input quration-algorithm/benchmark_generators/data/sample_qrom.json \
+            --output _smoke_outputs/create_uncompute_qrom.json
           run_bin generate_quration_core_test_circuits _smoke_outputs/generated_circuits
           run_bin qpe
           run_bin shor
