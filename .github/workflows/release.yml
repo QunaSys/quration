@@ -245,8 +245,10 @@ jobs:
           # Copy runtime resources used by installed example binaries.
           mkdir -p "$package_root/quration-core/examples"
           mkdir -p "$package_root/quration-algorithm/examples"
+          mkdir -p "$package_root/quration-algorithm/benchmark_generators"
           cp -R "$PWD/quration-core/examples/data" "$package_root/quration-core/examples/"
           cp -R "$PWD/quration-core/examples/external-pass" "$package_root/quration-core/examples/"
+          cp -R "$PWD/quration-algorithm/benchmark_generators/data" "$package_root/quration-algorithm/benchmark_generators/"
           if [ -d "$PWD/quration-algorithm/examples/data" ]; then
             cp -R "$PWD/quration-algorithm/examples/data" "$package_root/quration-algorithm/examples/"
           fi
@@ -307,6 +309,12 @@ jobs:
             --out _smoke_outputs/core_trotter.json
 
           QRET_EXAMPLE_SMOKE=1 run_bin compile_adder_to_distributed_chip
+          run_bin create_add_craig \
+            --input quration-algorithm/benchmark_generators/data/sample_add.json \
+            --output _smoke_outputs/create_add_craig.json
+          run_bin create_add_cuccaro \
+            --input quration-algorithm/benchmark_generators/data/sample_add.json \
+            --output _smoke_outputs/create_add_cuccaro.json
           run_bin create_multi_controlled_mod_bi_mul_imm \
             --mod 15 \
             --imm 2 \
