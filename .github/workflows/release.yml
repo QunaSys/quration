@@ -247,7 +247,9 @@ jobs:
           mkdir -p "$package_root/quration-algorithm/examples"
           cp -R "$PWD/quration-core/examples/data" "$package_root/quration-core/examples/"
           cp -R "$PWD/quration-core/examples/external-pass" "$package_root/quration-core/examples/"
-          cp -R "$PWD/quration-algorithm/examples/data" "$package_root/quration-algorithm/examples/"
+          if [ -d "$PWD/quration-algorithm/examples/data" ]; then
+            cp -R "$PWD/quration-algorithm/examples/data" "$package_root/quration-algorithm/examples/"
+          fi
 
           mkdir -p "$package_root/licenses/qret"
           mkdir -p "$package_root/licenses/examples"
@@ -319,21 +321,23 @@ jobs:
             --coprime 2 \
             --depth 4 \
             --out _smoke_outputs/create_period_finding.json
-          run_bin create_prepare \
-            --file quration-algorithm/examples/data/sample_prepare.json \
-            --out _smoke_outputs/create_prepare.json
-          run_bin create_qpe \
-            --file quration-algorithm/examples/data/sample_qpe.json \
-            --out _smoke_outputs/create_qpe.json
           run_bin create_qrom
-          run_bin create_select \
-            --file quration-algorithm/examples/data/sample_select.json \
-            --out _smoke_outputs/create_select.json
-          run_bin create_trotter \
-            --file quration-algorithm/examples/data/1d_ising_hamiltonian.json \
-            --time 0.1 \
-            --num_trotter_steps 1 \
-            --out _smoke_outputs/create_trotter.json
+          if [ -d quration-algorithm/examples/data ]; then
+            run_bin create_prepare \
+              --file quration-algorithm/examples/data/sample_prepare.json \
+              --out _smoke_outputs/create_prepare.json
+            run_bin create_qpe \
+              --file quration-algorithm/examples/data/sample_qpe.json \
+              --out _smoke_outputs/create_qpe.json
+            run_bin create_select \
+              --file quration-algorithm/examples/data/sample_select.json \
+              --out _smoke_outputs/create_select.json
+            run_bin create_trotter \
+              --file quration-algorithm/examples/data/1d_ising_hamiltonian.json \
+              --time 0.1 \
+              --num_trotter_steps 1 \
+              --out _smoke_outputs/create_trotter.json
+          fi
           run_bin create_uncompute_qrom
           run_bin generate_quration_core_test_circuits _smoke_outputs/generated_circuits
           run_bin qpe
