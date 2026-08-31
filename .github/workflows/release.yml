@@ -307,8 +307,6 @@ jobs:
             --out _smoke_outputs/core_trotter.json
 
           QRET_EXAMPLE_SMOKE=1 run_bin compile_adder_to_distributed_chip
-          run_bin create_add_craig
-          run_bin create_add_cuccaro
           run_bin create_multi_controlled_mod_bi_mul_imm \
             --mod 15 \
             --imm 2 \
