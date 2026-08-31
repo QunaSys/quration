@@ -32,7 +32,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-15-intel
           - macos-latest
           - windows-latest
           - ubuntu-latest
@@ -94,9 +93,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-15-intel
-            asset_suffix: macos-15-intel
-            archive_ext: tar.gz
           - os: macos-latest
             asset_suffix: macos-latest
             archive_ext: tar.gz
