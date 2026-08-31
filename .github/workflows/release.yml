@@ -321,7 +321,9 @@ jobs:
           run_bin create_period_finding \
             --input quration-algorithm/benchmark_generators/data/sample_period_finding.json \
             --output _smoke_outputs/create_period_finding.json
-          run_bin create_qrom
+          run_bin create_qrom \
+            --input quration-algorithm/benchmark_generators/data/sample_qrom.json \
+            --output _smoke_outputs/create_qrom.json
           if [ -d quration-algorithm/examples/data ]; then
             run_bin create_prepare \
               --file quration-algorithm/examples/data/sample_prepare.json \
