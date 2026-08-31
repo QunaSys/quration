@@ -316,11 +316,8 @@ jobs:
             --input quration-algorithm/benchmark_generators/data/sample_add.json \
             --output _smoke_outputs/create_add_cuccaro.json
           run_bin create_multi_controlled_mod_bi_mul_imm \
-            --mod 15 \
-            --imm 2 \
-            --c 1 \
-            --n 4 \
-            --out _smoke_outputs/create_multi_controlled_mod_bi_mul_imm.json
+            --input quration-algorithm/benchmark_generators/data/sample_modular_bimultiply.json \
+            --output _smoke_outputs/create_multi_controlled_mod_bi_mul_imm.json
           run_bin create_period_finding \
             --mod 15 \
             --coprime 2 \
