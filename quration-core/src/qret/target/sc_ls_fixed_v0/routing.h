@@ -6,13 +6,28 @@
 #ifndef QRET_TARGET_SC_LS_FIXED_V0_ROUTING_H
 #define QRET_TARGET_SC_LS_FIXED_V0_ROUTING_H
 
+#include <cstdint>
+
 #include "qret/codegen/machine_function.h"
 #include "qret/codegen/machine_function_pass.h"
 #include "qret/qret_export.h"
 #include "qret/target/sc_ls_fixed_v0/beat.h"
+#include "qret/target/sc_ls_fixed_v0/inst_queue.h"
 #include "qret/target/sc_ls_fixed_v0/sc_ls_fixed_v0_target_machine.h"
 
 namespace qret::sc_ls_fixed_v0 {
+struct QRET_EXPORT RoutingInstQueueOptions {
+    InstQueue::WeightAlgorithm weight_algorithm;
+    Beat peek_size;
+};
+
+QRET_EXPORT RoutingInstQueueOptions GetRoutingInstQueueOptions();
+QRET_EXPORT bool SkipAllocate(
+        std::int64_t initial_weight,
+        std::int64_t allocate_weight,
+        InstQueue::WeightAlgorithm algorithm
+);
+
 struct QRET_EXPORT Routing : public MachineFunctionPass {
     static inline char ID = 0;
     Routing()
@@ -27,7 +42,7 @@ inline Beat AllowedMaxIdleBeats(
         Beat relax_offset = 10
 ) {
     const auto expected = option.use_magic_state_cultivation
-            ? 1.0 / std::max(0.001, option.prob_magic_state_creation)
+            ? 1.0 / std::max(0.001, option.magic_generation_success_probability)
             : 1.0;
     const auto mul = std::max(Beat{1}, static_cast<Beat>(std::ceil(expected)));
     const auto mx = std::max(

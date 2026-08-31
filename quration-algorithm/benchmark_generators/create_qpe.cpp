@@ -1,0 +1,142 @@
+#include <boost/program_options.hpp>
+#include <nlohmann/json.hpp>
+
+#include <cerrno>
+#include <cstddef>
+#include <cstdint>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
+#include "qret/algorithm/phase_estimation/qpe.h"
+#include "qret/frontend/builder.h"
+#include "qret/ir/context.h"
+#include "qret/ir/json.h"
+#include "qret/math/integer.h"
+#include "qret/math/lcu_helper.h"
+#include "qret/math/pauli.h"
+#include "qret/transforms/ipo/inliner.h"
+
+struct QPEParams {
+    std::vector<qret::frontend::gate::PauliArray> pauli_strings;
+    std::vector<double> lcu_coefficients;
+    std::size_t hadamard_size;
+    std::size_t system_size;
+    std::size_t sub_bit_precision;
+    QPEParams() = default;
+};
+
+void from_json(const nlohmann::json& j, QPEParams& p) {
+    p.hadamard_size = j.at("hadamard_size").get<std::size_t>();
+    p.system_size = j.at("system_size").get<std::size_t>();
+    p.sub_bit_precision = j.at("sub_bit_precision").get<std::size_t>();
+    p.lcu_coefficients = j.at("lcu_coefficients").get<std::vector<double>>();
+
+    p.pauli_strings.clear();
+    const auto& pauli_strings_json = j.at("pauli_strings");
+    p.pauli_strings.reserve(pauli_strings_json.size());
+
+    for (const auto& pauli_array_json : pauli_strings_json) {
+        auto current_array = qret::frontend::gate::PauliArray();
+        for (const auto& pauli_string_json : pauli_array_json) {
+            auto pauli_string = std::vector<qret::math::Pauli>();
+            for (const auto& pauli_json : pauli_string_json) {
+                const auto s = pauli_json.get<std::string>();
+                auto pauli = qret::math::PauliFromString(s);
+                pauli_string.emplace_back(pauli);
+            }
+            current_array.emplace_back(pauli_string);
+        }
+        p.pauli_strings.emplace_back(current_array);
+    }
+}
+
+QPEParams LoadQPEJson(const std::string& path) {
+    auto ifs = std::ifstream(path.data());
+    if (!ifs.good()) {
+        throw std::runtime_error("Could not open file: " + path);
+    }
+    nlohmann::json j;
+    ifs >> j;
+    return j.get<QPEParams>();
+};
+
+int main(std::int32_t argc, const char* const* const argv) {
+    namespace po = boost::program_options;
+    po::options_description desc(
+            "Create QPE circuit from JSON file\n\n"
+            "Input JSON fields:\n"
+            "  pauli_strings: SELECT Pauli data, grouped by term and Pauli string.\n"
+            "  lcu_coefficients: Coefficients used to build the PREPARE table.\n"
+            "  system_size: Number of system qubits.\n"
+            "  hadamard_size: Number of phase-estimation control qubits.\n"
+            "  sub_bit_precision: Bit precision used for reversible sampling."
+    );
+    desc.add_options()
+        ("help", "Print usage instructions")
+        ("input", po::value<std::string>()->required(), "Input JSON file")
+        ("output", po::value<std::string>()->required(), "Path to the output file")
+        ("inline", "Option to enable inline expansion");
+
+    po::variables_map vm;
+    try {
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        if (vm.count("help") > 0) {
+            std::cout << desc << std::endl;
+            return 0;
+        }
+        po::notify(vm);
+    } catch (const po::error& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+        std::cerr << desc << std::endl;
+        return 1;
+    }
+
+    std::string input_file;
+    if (vm.count("input") > 0) {
+        input_file = vm["input"].as<std::string>();
+    }
+    const auto params = LoadQPEJson(input_file);
+    const auto size = qret::math::BitSizeI(params.lcu_coefficients.size() - 1);
+    const auto alias_sampling = qret::math::PreprocessLCUCoefficientsForReversibleSampling(
+            params.lcu_coefficients,
+            params.sub_bit_precision
+    );
+
+    qret::ir::IRContext context;
+    auto* module = qret::ir::Module::Create("QPEModule", context);
+    auto builder = qret::frontend::CircuitBuilder(module);
+    auto gen = qret::frontend::gate::PhaseEstimationGen(
+            &builder,
+            params.pauli_strings,
+            alias_sampling,
+            params.hadamard_size,
+            params.system_size,
+            size,
+            params.sub_bit_precision
+    );
+    auto* circuit = gen.Generate();
+    auto* ir_circuit = circuit->GetIR();
+
+    // Inline expansion
+    if (vm.count("inline") > 0) {
+        qret::ir::RecursiveInlinerPass().RunOnFunction(*ir_circuit);
+    }
+
+    std::string output_file;
+    if (vm.count("output") > 0) {
+        output_file = vm["output"].as<std::string>();
+    }
+    std::ofstream ofs(output_file);
+    if (!ofs) {
+        std::cerr << "Failed to open output file: " << output_file << std::endl;
+        return 1;
+    }
+    auto module_json = qret::Json(*module);
+    ofs << module_json;
+    ofs.close();
+
+    return 0;
+}

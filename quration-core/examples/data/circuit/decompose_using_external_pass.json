@@ -1,10 +1,11 @@
 {
     "name": "SampleModule",
-    "circuit_list": [
+    "entry_function": "SampleCircuit",
+    "function_list": [
         {
             "name": "SampleCircuit",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

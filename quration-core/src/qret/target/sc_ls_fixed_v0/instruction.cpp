@@ -417,7 +417,7 @@ std::unique_ptr<Hadamard> Hadamard::FromJson(const Json& j) {
     ret->SetMetadata(j);
     return ret;
 }
-Coord3D Rotate::Ancilla(const Coord3D& coord, std::uint32_t dir) {
+Coord3D Rotate::GetAncilla(const Coord3D& coord, std::uint32_t dir) {
     if (dir == 0) {
         return coord + Coord2D::Right();
     } else if (dir == 1) {

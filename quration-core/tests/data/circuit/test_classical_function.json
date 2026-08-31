@@ -1,16 +1,17 @@
 {
     "metadata": {
         "format": "IR",
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "qret_version": "0.7.1",
         "created_at": "2026-02-20T03:34:43"
     },
     "name": "classical_function",
-    "circuit_list": [
+    "entry_function": "TestClassicalFunction__000000000__",
+    "function_list": [
         {
             "name": "TestClassicalFunction__000000000__",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -114,7 +115,7 @@
         {
             "name": "MultiControlledQROMImm__000000000__",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1214,7 +1215,7 @@
         {
             "name": "UnaryIterBegin(0,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1323,7 +1324,7 @@
         {
             "name": "TemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1418,7 +1419,7 @@
         {
             "name": "UncomputeTemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1509,7 +1510,7 @@
         {
             "name": "ApplyCXToEachIfImm(53,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1554,7 +1555,7 @@
         {
             "name": "UnaryIterStep(0,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1584,7 +1585,7 @@
         {
             "name": "ApplyCXToEachIfImm(7,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1624,7 +1625,7 @@
         {
             "name": "UnaryIterStep(1,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1684,7 +1685,7 @@
         {
             "name": "ApplyCXToEachIfImm(25,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1724,7 +1725,7 @@
         {
             "name": "UnaryIterStep(2,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1754,7 +1755,7 @@
         {
             "name": "ApplyCXToEachIfImm(43,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1799,7 +1800,7 @@
         {
             "name": "UnaryIterStep(3,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1889,7 +1890,7 @@
         {
             "name": "ApplyCXToEachIfImm(61,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1939,7 +1940,7 @@
         {
             "name": "UnaryIterStep(4,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1969,7 +1970,7 @@
         {
             "name": "ApplyCXToEachIfImm(15,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2014,7 +2015,7 @@
         {
             "name": "UnaryIterStep(5,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2074,7 +2075,7 @@
         {
             "name": "ApplyCXToEachIfImm(33,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2109,7 +2110,7 @@
         {
             "name": "UnaryIterStep(6,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2139,7 +2140,7 @@
         {
             "name": "ApplyCXToEachIfImm(51,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2184,7 +2185,7 @@
         {
             "name": "UnaryIterStep(7,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2312,7 +2313,7 @@
         {
             "name": "ApplyCXToEachIfImm(5,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2347,7 +2348,7 @@
         {
             "name": "UnaryIterStep(8,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2377,7 +2378,7 @@
         {
             "name": "ApplyCXToEachIfImm(23,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2422,7 +2423,7 @@
         {
             "name": "UnaryIterStep(9,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2482,7 +2483,7 @@
         {
             "name": "ApplyCXToEachIfImm(41,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2522,7 +2523,7 @@
         {
             "name": "UnaryIterStep(10,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2552,7 +2553,7 @@
         {
             "name": "ApplyCXToEachIfImm(59,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2602,7 +2603,7 @@
         {
             "name": "UnaryIterStep(11,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2692,7 +2693,7 @@
         {
             "name": "ApplyCXToEachIfImm(13,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2732,7 +2733,7 @@
         {
             "name": "UnaryIterStep(12,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2762,7 +2763,7 @@
         {
             "name": "ApplyCXToEachIfImm(31,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2812,7 +2813,7 @@
         {
             "name": "UnaryIterStep(13,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2872,7 +2873,7 @@
         {
             "name": "ApplyCXToEachIfImm(49,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2912,7 +2913,7 @@
         {
             "name": "UnaryIterStep(14,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2942,7 +2943,7 @@
         {
             "name": "ApplyCXToEachIfImm(3,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2977,7 +2978,7 @@
         {
             "name": "UnaryIterStep(15,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3102,7 +3103,7 @@
         {
             "name": "ApplyCXToEachIfImm(21,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3142,7 +3143,7 @@
         {
             "name": "UnaryIterStep(16,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3172,7 +3173,7 @@
         {
             "name": "ApplyCXToEachIfImm(39,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3217,7 +3218,7 @@
         {
             "name": "UnaryIterStep(17,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3277,7 +3278,7 @@
         {
             "name": "ApplyCXToEachIfImm(57,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3322,7 +3323,7 @@
         {
             "name": "UnaryIterStep(18,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3352,7 +3353,7 @@
         {
             "name": "ApplyCXToEachIfImm(11,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3392,7 +3393,7 @@
         {
             "name": "UnaryIterStep(19,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3482,7 +3483,7 @@
         {
             "name": "ApplyCXToEachIfImm(29,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3527,7 +3528,7 @@
         {
             "name": "UnaryIterStep(20,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3557,7 +3558,7 @@
         {
             "name": "ApplyCXToEachIfImm(47,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3607,7 +3608,7 @@
         {
             "name": "UnaryIterStep(21,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3667,7 +3668,7 @@
         {
             "name": "ApplyCXToEachIfImm(1,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3697,7 +3698,7 @@
         {
             "name": "UnaryIterStep(22,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3727,7 +3728,7 @@
         {
             "name": "ApplyCXToEachIfImm(19,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3767,7 +3768,7 @@
         {
             "name": "UnaryIterStep(23,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3887,7 +3888,7 @@
         {
             "name": "ApplyCXToEachIfImm(37,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3927,7 +3928,7 @@
         {
             "name": "UnaryIterStep(24,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3957,7 +3958,7 @@
         {
             "name": "ApplyCXToEachIfImm(55,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4007,7 +4008,7 @@
         {
             "name": "UnaryIterStep(25,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4067,7 +4068,7 @@
         {
             "name": "ApplyCXToEachIfImm(9,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4102,7 +4103,7 @@
         {
             "name": "UnaryIterStep(26,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4132,7 +4133,7 @@
         {
             "name": "ApplyCXToEachIfImm(27,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4177,7 +4178,7 @@
         {
             "name": "UnaryIterStep(27,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4267,7 +4268,7 @@
         {
             "name": "ApplyCXToEachIfImm(45,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4312,7 +4313,7 @@
         {
             "name": "UnaryIterStep(28,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4342,7 +4343,7 @@
         {
             "name": "ApplyCXToEachIfImm(63,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4397,7 +4398,7 @@
         {
             "name": "UnaryIterStep(29,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4457,7 +4458,7 @@
         {
             "name": "ApplyCXToEachIfImm(17,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4492,7 +4493,7 @@
         {
             "name": "UnaryIterStep(30,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4522,7 +4523,7 @@
         {
             "name": "ApplyCXToEachIfImm(35,6)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4562,7 +4563,7 @@
         {
             "name": "UnaryIterEnd(31,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4631,7 +4632,7 @@
         {
             "name": "UncomputeQROMImm__000000000__",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -29552,7 +29553,7 @@
         {
             "name": "MultiControlledQROMImm(0,4,2,16)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30085,7 +30086,7 @@
         {
             "name": "UnaryIterBegin(0,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30175,7 +30176,7 @@
         {
             "name": "ApplyCXToEachIf(2)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30285,7 +30286,7 @@
         {
             "name": "UnaryIterStep(0,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30315,7 +30316,7 @@
         {
             "name": "UnaryIterStep(1,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30375,7 +30376,7 @@
         {
             "name": "UnaryIterStep(2,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30405,7 +30406,7 @@
         {
             "name": "UnaryIterStep(3,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30503,7 +30504,7 @@
         {
             "name": "UnaryIterStep(4,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30533,7 +30534,7 @@
         {
             "name": "UnaryIterStep(5,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30593,7 +30594,7 @@
         {
             "name": "UnaryIterStep(6,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30623,7 +30624,7 @@
         {
             "name": "UnaryIterStep(7,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30718,7 +30719,7 @@
         {
             "name": "UnaryIterStep(8,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30748,7 +30749,7 @@
         {
             "name": "UnaryIterStep(9,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30808,7 +30809,7 @@
         {
             "name": "UnaryIterStep(10,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30838,7 +30839,7 @@
         {
             "name": "UnaryIterStep(11,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30928,7 +30929,7 @@
         {
             "name": "UnaryIterStep(12,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -30958,7 +30959,7 @@
         {
             "name": "UnaryIterStep(13,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -31018,7 +31019,7 @@
         {
             "name": "UnaryIterStep(14,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -31048,7 +31049,7 @@
         {
             "name": "UnaryIterEnd(15,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

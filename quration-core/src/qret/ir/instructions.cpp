@@ -7,6 +7,7 @@
 
 #include <limits>
 #include <stdexcept>
+#include <unordered_set>
 #include <utility>
 
 #include "qret/ir/basic_block.h"
@@ -14,6 +15,30 @@
 #include "qret/ir/value.h"
 
 namespace qret::ir {
+namespace {
+void ValidatePauliProductMeasurementArgs(
+        const std::vector<Qubit>& qs,
+        const std::vector<math::Pauli>& ps
+) {
+    if (qs.empty()) {
+        throw std::invalid_argument("PauliProductMeasurement requires at least one qubit.");
+    }
+    if (qs.size() != ps.size()) {
+        throw std::invalid_argument("PauliProductMeasurement qubit and Pauli counts differ.");
+    }
+
+    auto seen = std::unordered_set<std::uint64_t>{};
+    for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+        if (!seen.emplace(qs[i].id).second) {
+            throw std::invalid_argument("PauliProductMeasurement has duplicate qubits.");
+        }
+        if (ps[i] == math::Pauli::I) {
+            throw std::invalid_argument("PauliProductMeasurement does not accept identity Pauli.");
+        }
+    }
+}
+}  // namespace
+
 MeasurementInst*
 MeasurementInst::Create(const Qubit& q, const Register& r, Instruction* insert_before) {
     if (insert_before == nullptr) {
@@ -40,6 +65,52 @@ void MeasurementInst::Print(std::ostream& out) const {
     GetOpcode().Print(out);
     out << " ";
     GetQubit().PrintAsOperand(out);
+    out << " ";
+    GetRegister().PrintAsOperand(out);
+}
+PauliProductMeasurementInst* PauliProductMeasurementInst::Create(
+        const std::vector<Qubit>& qs,
+        const std::vector<math::Pauli>& ps,
+        const Register& r,
+        Instruction* insert_before
+) {
+    if (insert_before == nullptr) {
+        return nullptr;
+    }
+    ValidatePauliProductMeasurementArgs(qs, ps);
+
+    auto inst = std::unique_ptr<PauliProductMeasurementInst>(
+            new PauliProductMeasurementInst(qs, ps, r)
+    );
+    auto* ret = inst.get();
+    InsertBefore(std::move(inst), insert_before);
+    return ret;
+}
+PauliProductMeasurementInst* PauliProductMeasurementInst::Create(
+        const std::vector<Qubit>& qs,
+        const std::vector<math::Pauli>& ps,
+        const Register& r,
+        BasicBlock* insert_at_end
+) {
+    if (insert_at_end == nullptr) {
+        return nullptr;
+    }
+    ValidatePauliProductMeasurementArgs(qs, ps);
+
+    auto inst = std::unique_ptr<PauliProductMeasurementInst>(
+            new PauliProductMeasurementInst(qs, ps, r)
+    );
+    auto* ret = inst.get();
+    InsertAtEnd(std::move(inst), insert_at_end);
+    return ret;
+}
+void PauliProductMeasurementInst::Print(std::ostream& out) const {
+    GetOpcode().Print(out);
+    for (auto i = std::size_t{0}; i < qs_.size(); ++i) {
+        out << " ";
+        qs_[i].PrintAsOperand(out);
+        out << " " << ps_[i];
+    }
     out << " ";
     GetRegister().PrintAsOperand(out);
 }

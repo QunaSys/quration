@@ -1,16 +1,17 @@
 {
     "metadata": {
         "format": "IR",
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "qret_version": "0.7.1",
         "created_at": "2026-02-20T03:34:43"
     },
     "name": "functor_pivot_flip",
-    "circuit_list": [
+    "entry_function": "PivotFlipUsingControlledFunctor(6,5)",
+    "function_list": [
         {
             "name": "PivotFlipUsingControlledFunctor(6,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -170,7 +171,7 @@
         {
             "name": "AddGeneral(7,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -415,7 +416,7 @@
         {
             "name": "MultiControlledInc(1,7,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -617,7 +618,7 @@
         {
             "name": "Add(4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -843,7 +844,7 @@
         {
             "name": "__adjoint__Add(4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1069,7 +1070,7 @@
         {
             "name": "MCMX(5,4,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1221,7 +1222,7 @@
         {
             "name": "MCMX(1,8,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1311,7 +1312,7 @@
         {
             "name": "__adjoint__MultiControlledInc(1,7,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1513,7 +1514,7 @@
         {
             "name": "__adjoint__MCMX(1,8,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1603,7 +1604,7 @@
         {
             "name": "__adjoint__MCMX(5,4,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1755,7 +1756,7 @@
         {
             "name": "MultiControlledInc(1,3,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -1925,7 +1926,7 @@
         {
             "name": "Add(2)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2027,7 +2028,7 @@
         {
             "name": "__adjoint__Add(2)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2129,7 +2130,7 @@
         {
             "name": "MCMX(3,2,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2213,7 +2214,7 @@
         {
             "name": "MCMX(1,4,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2283,7 +2284,7 @@
         {
             "name": "__adjoint__AddGeneral(7,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2528,7 +2529,7 @@
         {
             "name": "__adjoint__MultiControlledInc(1,3,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2698,7 +2699,7 @@
         {
             "name": "__adjoint__MCMX(1,4,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2768,7 +2769,7 @@
         {
             "name": "__adjoint__MCMX(3,2,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -2852,7 +2853,7 @@
         {
             "name": "AddGeneral(6,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3094,7 +3095,7 @@
         {
             "name": "MultiControlledInc(1,6,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3190,7 +3191,7 @@
         {
             "name": "MultiControlledInc(2,5,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3380,7 +3381,7 @@
         {
             "name": "Add(3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3544,7 +3545,7 @@
         {
             "name": "__adjoint__Add(3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3708,7 +3709,7 @@
         {
             "name": "MCMX(5,3,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3850,7 +3851,7 @@
         {
             "name": "MCMX(2,6,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -3956,7 +3957,7 @@
         {
             "name": "MCMX(1,1,9)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4059,7 +4060,7 @@
         {
             "name": "__adjoint__MultiControlledInc(1,6,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4155,7 +4156,7 @@
         {
             "name": "__adjoint__MCMX(1,1,9)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4258,7 +4259,7 @@
         {
             "name": "__adjoint__MultiControlledInc(2,5,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4448,7 +4449,7 @@
         {
             "name": "__adjoint__MCMX(2,6,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4554,7 +4555,7 @@
         {
             "name": "__adjoint__MCMX(5,3,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4696,7 +4697,7 @@
         {
             "name": "MultiControlledInc(1,2,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4784,7 +4785,7 @@
         {
             "name": "MultiControlledInc(2,1,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4857,7 +4858,7 @@
         {
             "name": "MCMX(2,1,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4921,7 +4922,7 @@
         {
             "name": "MCMX(1,1,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -4992,7 +4993,7 @@
         {
             "name": "BiFlip(6,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5060,7 +5061,7 @@
         {
             "name": "__adjoint__AddGeneral(6,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5302,7 +5303,7 @@
         {
             "name": "__adjoint__MultiControlledInc(1,2,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5390,7 +5391,7 @@
         {
             "name": "__adjoint__MCMX(1,1,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5461,7 +5462,7 @@
         {
             "name": "__adjoint__MultiControlledInc(2,1,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5534,7 +5535,7 @@
         {
             "name": "__adjoint__MCMX(2,1,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5598,7 +5599,7 @@
         {
             "name": "__controlled__BiFlip(6,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5674,7 +5675,7 @@
         {
             "name": "__controlled____adjoint__AddGeneral(6,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -5968,7 +5969,7 @@
         {
             "name": "__controlled____adjoint__MultiControlledInc(1,2,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6027,7 +6028,7 @@
         {
             "name": "__controlled____adjoint__MCMX(1,1,5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6060,7 +6061,7 @@
         {
             "name": "__controlled____adjoint__MultiControlledInc(2,1,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6103,7 +6104,7 @@
         {
             "name": "__controlled____adjoint__MCMX(2,1,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6139,7 +6140,7 @@
         {
             "name": "__controlled__MultiControlledInc(1,6,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6206,7 +6207,7 @@
         {
             "name": "__controlled__MultiControlledInc(2,5,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6373,7 +6374,7 @@
         {
             "name": "__controlled____adjoint__Add(3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6573,7 +6574,7 @@
         {
             "name": "__controlled__MCMX(5,3,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6732,7 +6733,7 @@
         {
             "name": "__controlled__Add(3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -6932,7 +6933,7 @@
         {
             "name": "__controlled__MCMX(2,6,3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -7028,7 +7029,7 @@
         {
             "name": "__controlled__MCMX(1,1,9)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

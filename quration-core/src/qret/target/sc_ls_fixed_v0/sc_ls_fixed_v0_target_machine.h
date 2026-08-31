@@ -23,51 +23,51 @@ namespace qret::sc_ls_fixed_v0 {
 /**
  * @brief Machine type.
  */
-enum class ScLsFixedV0MachineType : std::uint8_t {
+enum class ScLsFixedV0TopologyType : std::uint8_t {
     Dim2,
     Dim3,
     DistributedDim2,
     DistributedDim3,  // Currently unsupported.
 };
 
-static inline std::string ToString(ScLsFixedV0MachineType type) {
+static inline std::string ToString(ScLsFixedV0TopologyType type) {
     switch (type) {
-        case ScLsFixedV0MachineType::Dim2:
+        case ScLsFixedV0TopologyType::Dim2:
             return "Dim2";
-        case ScLsFixedV0MachineType::Dim3:
+        case ScLsFixedV0TopologyType::Dim3:
             return "Dim3";
-        case ScLsFixedV0MachineType::DistributedDim2:
+        case ScLsFixedV0TopologyType::DistributedDim2:
             return "DistributedDim2";
-        case ScLsFixedV0MachineType::DistributedDim3:
+        case ScLsFixedV0TopologyType::DistributedDim3:
             return "DistributedDim3";
         default:
             break;
     }
-    throw std::runtime_error("unknown ScLsFixedV0MachineType");
+    throw std::runtime_error("unknown ScLsFixedV0TopologyType");
 }
 
-static inline ScLsFixedV0MachineType ScLsFixedV0MachineTypeFromString(const std::string& str) {
+static inline ScLsFixedV0TopologyType ScLsFixedV0TopologyTypeFromString(const std::string& str) {
     if (str == "Dim2") {
-        return ScLsFixedV0MachineType::Dim2;
+        return ScLsFixedV0TopologyType::Dim2;
     }
     if (str == "Dim3") {
-        return ScLsFixedV0MachineType::Dim3;
+        return ScLsFixedV0TopologyType::Dim3;
     }
     if (str == "DistributedDim2") {
-        return ScLsFixedV0MachineType::DistributedDim2;
+        return ScLsFixedV0TopologyType::DistributedDim2;
     }
     if (str == "DistributedDim3") {
-        return ScLsFixedV0MachineType::DistributedDim3;
+        return ScLsFixedV0TopologyType::DistributedDim3;
     }
-    throw std::runtime_error(fmt::format("{} is not ScLsFixedV0MachineType.", str));
+    throw std::runtime_error(fmt::format("{} is not ScLsFixedV0TopologyType.", str));
 }
 
 static inline bool
-IsCompatible(ScLsFixedV0MachineType candidate, ScLsFixedV0MachineType requirement) {
-    using ScLsFixedV0MachineType::Dim2;
-    using ScLsFixedV0MachineType::Dim3;
-    using ScLsFixedV0MachineType::DistributedDim2;
-    using ScLsFixedV0MachineType::DistributedDim3;
+IsCompatible(ScLsFixedV0TopologyType candidate, ScLsFixedV0TopologyType requirement) {
+    using ScLsFixedV0TopologyType::Dim2;
+    using ScLsFixedV0TopologyType::Dim3;
+    using ScLsFixedV0TopologyType::DistributedDim2;
+    using ScLsFixedV0TopologyType::DistributedDim3;
     switch (requirement) {
         case Dim2:
             return candidate == Dim2 || candidate == DistributedDim2 || candidate == Dim3
@@ -83,86 +83,98 @@ IsCompatible(ScLsFixedV0MachineType candidate, ScLsFixedV0MachineType requiremen
     }
 }
 
-inline ScLsFixedV0MachineType GetMachineType(const Topology& topology) {
+inline ScLsFixedV0TopologyType GetTopologyType(const Topology& topology) {
     if (topology.NumGrids() >= 2) {
         for (const auto& grid : topology) {
             if (!grid.IsPlane()) {
-                return ScLsFixedV0MachineType::DistributedDim3;
+                return ScLsFixedV0TopologyType::DistributedDim3;
             }
         }
-        return ScLsFixedV0MachineType::DistributedDim2;
+        return ScLsFixedV0TopologyType::DistributedDim2;
     }
 
     const auto& grid = topology.GetGridByIndex(0);
-    return grid.IsPlane() ? ScLsFixedV0MachineType::Dim2 : ScLsFixedV0MachineType::Dim3;
+    return grid.IsPlane() ? ScLsFixedV0TopologyType::Dim2 : ScLsFixedV0TopologyType::Dim3;
 }
 
 /**
  * @brief Machine option.
  */
 struct QRET_EXPORT ScLsFixedV0MachineOption {
-    ScLsFixedV0MachineType type = ScLsFixedV0MachineType::Dim2;  //!< Type of backend machine.
+    ScLsFixedV0TopologyType topology_type =
+            ScLsFixedV0TopologyType::Dim2;  //!< Type of backend machine.
     bool enable_pbc_mode = false;  //!< Enable Pauli Based Computing lowering mode.
     bool use_magic_state_cultivation =
             false;  // If true, magic state factories are simulated using the cultivation method.
     std::uint64_t magic_factory_seed_offset = 0;
     std::uint64_t magic_generation_period = 0;  //!< Beats to generate a magic state
-    double prob_magic_state_creation = 1.0;  //!< Success probability of creating a magic state.
-    std::uint64_t maximum_magic_state_stock =
+    double magic_generation_success_probability =
+            1.0;  //!< Success probability of creating a magic state.
+    std::uint64_t magic_generation_maximum_stock =
             0;  //!< The number of magic states that can be stored in a magic state factory
     std::uint64_t entanglement_generation_period = 0;  //!< Beats to generate a logical entanglement
-    std::uint64_t maximum_entangled_state_stock =
+    std::uint64_t entanglement_generation_maximum_stock =
             0;  //!< The number of entanglement states that can be stored in an entanglement state
                 //!< factory
     std::uint64_t reaction_time =
             0;  //!< Beats it takes for the measured value to be error-corrected
-    double physical_error_rate = 0.0;  //!< Physical error rate (p)
-    double drop_rate = 0.0;  //!< Drop rate (Lambda)
+    double logical_error_rate_base = 0.0;  //!< Physical error rate (p)
+    double logical_error_rate_drop_rate = 0.0;  //!< Drop rate (Lambda)
     double code_cycle_time_sec = 0.0;  //!< Code cycle time in seconds (t_cycle)
-    double allowed_failure_prob = 0.0;  //!< Allowed failure probability (eps)
+    double allowed_failure_probability = 0.0;  //!< Allowed failure probability (eps)
+    std::uint64_t magic_factory_cell_count =
+            1;  //!< Number of surface code cells per magic state factory for resource estimation.
+                //!< Qubit plane always uses 1 cell per factory regardless of this value.
 };
 
 inline void to_json(Json& j, const ScLsFixedV0MachineOption& option) {
-    j["type"] = ToString(option.type);
+    j["topology_type"] = ToString(option.topology_type);
     j["enable_pbc_mode"] = option.enable_pbc_mode;
     j["use_magic_state_cultivation"] = option.use_magic_state_cultivation;
     j["magic_factory_seed_offset"] = option.magic_factory_seed_offset;
     j["magic_generation_period"] = option.magic_generation_period;
-    j["prob_magic_state_creation"] = option.prob_magic_state_creation;
-    j["maximum_magic_state_stock"] = option.maximum_magic_state_stock;
+    j["magic_generation_success_probability"] = option.magic_generation_success_probability;
+    j["magic_generation_maximum_stock"] = option.magic_generation_maximum_stock;
     j["entanglement_generation_period"] = option.entanglement_generation_period;
-    j["maximum_entangled_state_stock"] = option.maximum_entangled_state_stock;
+    j["entanglement_generation_maximum_stock"] = option.entanglement_generation_maximum_stock;
     j["reaction_time"] = option.reaction_time;
-    j["physical_error_rate"] = option.physical_error_rate;
-    j["drop_rate"] = option.drop_rate;
+    j["logical_error_rate_base"] = option.logical_error_rate_base;
+    j["logical_error_rate_drop_rate"] = option.logical_error_rate_drop_rate;
     j["code_cycle_time_sec"] = option.code_cycle_time_sec;
-    j["allowed_failure_prob"] = option.allowed_failure_prob;
+    j["allowed_failure_probability"] = option.allowed_failure_probability;
+    j["magic_factory_cell_count"] = option.magic_factory_cell_count;
 }
 
 inline void from_json(const Json& j, ScLsFixedV0MachineOption& option) {
-    option.type = ScLsFixedV0MachineTypeFromString(j.at("type").get<std::string>());
+    option.topology_type =
+            ScLsFixedV0TopologyTypeFromString(j.at("topology_type").get<std::string>());
     if (j.contains("enable_pbc_mode")) {
         j.at("enable_pbc_mode").get_to(option.enable_pbc_mode);
     }
     j.at("use_magic_state_cultivation").get_to(option.use_magic_state_cultivation);
     j.at("magic_factory_seed_offset").get_to(option.magic_factory_seed_offset);
     j.at("magic_generation_period").get_to(option.magic_generation_period);
-    j.at("prob_magic_state_creation").get_to(option.prob_magic_state_creation);
-    j.at("maximum_magic_state_stock").get_to(option.maximum_magic_state_stock);
+    j.at("magic_generation_success_probability")
+            .get_to(option.magic_generation_success_probability);
+    j.at("magic_generation_maximum_stock").get_to(option.magic_generation_maximum_stock);
     j.at("entanglement_generation_period").get_to(option.entanglement_generation_period);
-    j.at("maximum_entangled_state_stock").get_to(option.maximum_entangled_state_stock);
+    j.at("entanglement_generation_maximum_stock")
+            .get_to(option.entanglement_generation_maximum_stock);
     j.at("reaction_time").get_to(option.reaction_time);
-    if (j.contains("physical_error_rate")) {
-        j.at("physical_error_rate").get_to(option.physical_error_rate);
+    if (j.contains("logical_error_rate_base")) {
+        j.at("logical_error_rate_base").get_to(option.logical_error_rate_base);
     }
-    if (j.contains("drop_rate")) {
-        j.at("drop_rate").get_to(option.drop_rate);
+    if (j.contains("logical_error_rate_drop_rate")) {
+        j.at("logical_error_rate_drop_rate").get_to(option.logical_error_rate_drop_rate);
     }
     if (j.contains("code_cycle_time_sec")) {
         j.at("code_cycle_time_sec").get_to(option.code_cycle_time_sec);
     }
-    if (j.contains("allowed_failure_prob")) {
-        j.at("allowed_failure_prob").get_to(option.allowed_failure_prob);
+    if (j.contains("allowed_failure_probability")) {
+        j.at("allowed_failure_probability").get_to(option.allowed_failure_probability);
+    }
+    if (j.contains("magic_factory_cell_count")) {
+        j.at("magic_factory_cell_count").get_to(option.magic_factory_cell_count);
     }
 }
 

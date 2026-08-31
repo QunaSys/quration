@@ -7,6 +7,7 @@
 #include <numbers>
 #include <vector>
 
+#include "qret/math/pauli.h"
 #include "qret/runtime/quantum_state.h"
 
 using namespace qret;
@@ -38,6 +39,53 @@ protected:
         return ptr[(col * dim) + row];
     }
 };
+
+namespace {
+using qret::math::Pauli;
+
+void ExpectPauliProductMeasurementEdgeCases(std::uint64_t seed, bool use_qulacs) {
+    auto minus_state = FullQuantumState(seed, 3, use_qulacs, false);
+    minus_state.X(1);
+    minus_state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 0);
+    EXPECT_TRUE(minus_state.ReadRegister(0));
+    minus_state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 1);
+    EXPECT_TRUE(minus_state.ReadRegister(1));
+    EXPECT_NEAR(0.0, minus_state.Calc1Prob(0), QuantumState::Eps);
+    EXPECT_NEAR(1.0, minus_state.Calc1Prob(1), QuantumState::Eps);
+
+    auto y_z_state = FullQuantumState(seed, 2, use_qulacs, false);
+    y_z_state.H(0);
+    y_z_state.S(0);
+    y_z_state.X(1);
+    y_z_state.MeasurePauliProduct({0, 1}, {Pauli::Y, Pauli::Z}, 0);
+    EXPECT_TRUE(y_z_state.ReadRegister(0));
+
+    auto identity_state = FullQuantumState(seed, 3, use_qulacs, false);
+    identity_state.X(0);
+    identity_state.X(1);
+    identity_state.X(2);
+    identity_state.MeasurePauliProduct({0, 1, 2}, {Pauli::Z, Pauli::I, Pauli::Z}, 0);
+    EXPECT_FALSE(identity_state.ReadRegister(0));
+
+    for (auto repeat_seed = std::uint64_t{0}; repeat_seed < 16; ++repeat_seed) {
+        auto collapse_state = FullQuantumState(repeat_seed, 2, use_qulacs, false);
+        collapse_state.H(0);
+        collapse_state.H(1);
+        collapse_state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 0);
+        const auto parity_is_minus = collapse_state.ReadRegister(0);
+
+        collapse_state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 1);
+        EXPECT_EQ(parity_is_minus, collapse_state.ReadRegister(1));
+
+        collapse_state.Measure(0, 2);
+        collapse_state.Measure(1, 3);
+        EXPECT_EQ(
+                parity_is_minus,
+                collapse_state.ReadRegister(2) != collapse_state.ReadRegister(3)
+        );
+    }
+}
+}  // namespace
 
 TEST_F(FullQuantumStateTest, InitializationState) {
     // 1 qubit, save_operation_matrix = false
@@ -97,6 +145,81 @@ TEST_F(FullQuantumStateTest, EntanglementBellState) {
 
     // Should be correlated
     EXPECT_EQ(r0, r1);
+}
+
+TEST_F(FullQuantumStateTest, PauliProductMeasurement) {
+    auto state = FullQuantumState(seed_, 2, false, false);
+
+    state.H(0);
+    state.CX(1, 0);
+
+    state.MeasurePauliProduct({0, 1}, {math::Pauli::Z, math::Pauli::Z}, 0);
+    EXPECT_FALSE(state.ReadRegister(0));
+
+    state.MeasurePauliProduct({0, 1}, {math::Pauli::X, math::Pauli::X}, 1);
+    EXPECT_FALSE(state.ReadRegister(1));
+
+    auto y_state = FullQuantumState(seed_, 1, false, false);
+    y_state.H(0);
+    y_state.S(0);
+    y_state.MeasurePauliProduct({0}, {math::Pauli::Y}, 0);
+    EXPECT_FALSE(y_state.ReadRegister(0));
+}
+
+TEST_F(FullQuantumStateTest, PauliProductMeasurementEdgeCases) {
+    ExpectPauliProductMeasurementEdgeCases(seed_, false);
+}
+
+TEST_F(FullQuantumStateTest, PauliProductMeasurementUpdatesOperationMatrix) {
+    auto state = FullQuantumState(seed_, 2, false, true);
+    state.H(0);
+    state.H(1);
+
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 0);
+    const auto parity_is_minus = state.ReadRegister(0);
+
+    const auto* mat = state.GetOperationMatrix();
+    ASSERT_NE(mat, nullptr);
+    for (auto col = std::size_t{0}; col < 4; ++col) {
+        for (auto row = std::size_t{0}; row < 4; ++row) {
+            const auto row_parity_is_minus =
+                    ((row & 0b01U) != 0U) != ((row & 0b10U) != 0U);
+            if (row_parity_is_minus != parity_is_minus) {
+                EXPECT_TRUE(IsClose(GetMatrixElement(mat, 4, row, col), 0.0));
+            }
+        }
+    }
+}
+
+TEST_F(FullQuantumStateTest, QulacsPauliProductMeasurement) {
+    if (!runtime::CanUseQulacs()) {
+        GTEST_SKIP() << "Qulacs is not available in this build.";
+    }
+
+    auto state = FullQuantumState(seed_, 2, true, false);
+
+    state.H(0);
+    state.CX(1, 0);
+
+    state.MeasurePauliProduct({0, 1}, {math::Pauli::Z, math::Pauli::Z}, 0);
+    EXPECT_FALSE(state.ReadRegister(0));
+
+    state.MeasurePauliProduct({0, 1}, {math::Pauli::X, math::Pauli::X}, 1);
+    EXPECT_FALSE(state.ReadRegister(1));
+
+    auto y_state = FullQuantumState(seed_, 1, true, false);
+    y_state.H(0);
+    y_state.S(0);
+    y_state.MeasurePauliProduct({0}, {math::Pauli::Y}, 0);
+    EXPECT_FALSE(y_state.ReadRegister(0));
+}
+
+TEST_F(FullQuantumStateTest, QulacsPauliProductMeasurementEdgeCases) {
+    if (!runtime::CanUseQulacs()) {
+        GTEST_SKIP() << "Qulacs is not available in this build.";
+    }
+
+    ExpectPauliProductMeasurementEdgeCases(seed_, true);
 }
 
 TEST_F(FullQuantumStateTest, OperationMatrixIdentity) {

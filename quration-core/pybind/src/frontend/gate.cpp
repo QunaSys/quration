@@ -17,6 +17,7 @@ void BindIntrinsicGate(nb::module_& m) {
     m
             // Measurement gates
             .DEFINE_INTRINSIC("measure", Measure)
+            .DEFINE_INTRINSIC("pauli_product_measure", PauliProductMeasure)
             // Unary gates
             .DEFINE_INTRINSIC("i", I)
             .DEFINE_INTRINSIC("x", X)

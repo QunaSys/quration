@@ -55,6 +55,24 @@ static Opt<std::int32_t> RouteSearcherType(
 );
 }  // namespace
 
+RoutingInstQueueOptions GetRoutingInstQueueOptions() {
+    const auto weight_algorithm = InstQueueWeightAlgorithm.Get();
+    if (weight_algorithm < 0 || weight_algorithm > 2) {
+        throw std::runtime_error(
+                "InstQueueWeightAlgorithm must be 0, 1, or 2 (0: index, 1: type, 2: InvDepth)."
+        );
+    }
+    const auto peek_size = InstQueuePeekSize.Get();
+    if (peek_size <= 1) {
+        throw std::runtime_error("InstQueuePeekSize must be larger than 1.");
+    }
+
+    return RoutingInstQueueOptions{
+            .weight_algorithm = InstQueue::WeightAlgorithm(weight_algorithm),
+            .peek_size = peek_size,
+    };
+}
+
 bool SkipAllocate(
         const std::int64_t initial_weight,
         const std::int64_t allocate_weight,
@@ -70,14 +88,7 @@ bool SkipAllocate(
     return initial_weight + 1 < allocate_weight;
 }
 bool Routing::RunOnMachineFunction(MachineFunction& mf) {
-    if (InstQueueWeightAlgorithm > 2) {
-        throw std::runtime_error(
-                "InstQueueWeightAlgorithm must be 0, 1, or 2 (0: index, 1: type, 2: InvDepth)."
-        );
-    }
-    if (InstQueuePeekSize <= 1) {
-        throw std::runtime_error("InstQueuePeekSize must be larger than 1.");
-    }
+    const auto inst_queue_options = GetRoutingInstQueueOptions();
     if (StateBufferWidth <= 5) {
         throw std::runtime_error("StateBufferWidth must be larger than 5.");
     }
@@ -86,17 +97,18 @@ bool Routing::RunOnMachineFunction(MachineFunction& mf) {
     }
 
     const auto& machine = *static_cast<const ScLsFixedV0TargetMachine*>(mf.GetTarget());
-    const auto machine_type = machine.machine_option.type;
+    const auto topology_type = machine.machine_option.topology_type;
     const auto& topology = machine.topology;
     const auto& option = machine.machine_option;
-    const auto weight_algorithm = InstQueue::WeightAlgorithm(InstQueueWeightAlgorithm.Get());
+    const auto weight_algorithm = inst_queue_options.weight_algorithm;
+    const auto inst_queue_peek_size = inst_queue_options.peek_size;
 
-    if (machine_type == ScLsFixedV0MachineType::DistributedDim3) {
+    if (topology_type == ScLsFixedV0TopologyType::DistributedDim3) {
         throw std::runtime_error(
                 "SC_LS_FIXED_V0 machine type DistributedDim3 is currently not supported."
         );
     }
-    if (GetMachineType(*topology) == ScLsFixedV0MachineType::DistributedDim3) {
+    if (GetTopologyType(*topology) == ScLsFixedV0TopologyType::DistributedDim3) {
         LOG_ERROR("topology: {}", Json(*topology).dump());
         throw std::runtime_error(
                 "SC_LS_FIXED_V0 machine type DistributedDim3 is currently not supported."
@@ -149,7 +161,7 @@ bool Routing::RunOnMachineFunction(MachineFunction& mf) {
     auto idle_beats = Beat{0};
 
     // Peek instructions.
-    queue.Peek(2 * InstQueuePeekSize);
+    queue.Peek(2 * inst_queue_peek_size);
     if (!queue.Empty() && queue.NumRunnables() > 0) {
         lightest_weight_of_inst_at_beat = queue.GetNode(*queue.begin()).weight;
     }
@@ -163,9 +175,9 @@ bool Routing::RunOnMachineFunction(MachineFunction& mf) {
         }
 
         // Peek instructions if needed.
-        if (!queue.IsPeekFinished() && queue.NumInsts() < InstQueuePeekSize) {
+        if (!queue.IsPeekFinished() && queue.NumInsts() < inst_queue_peek_size) {
             LOG_DEBUG("Peek instruction at beat: {}", current_beat);
-            queue.Peek(InstQueuePeekSize);
+            queue.Peek(inst_queue_peek_size);
         }
 
         lightest_weight_of_inst_at_beat = queue.NumRunnables() == 0
@@ -186,7 +198,7 @@ bool Routing::RunOnMachineFunction(MachineFunction& mf) {
                 )) {
                 continue;
             }
-            if (machine_type == ScLsFixedV0MachineType::DistributedDim2
+            if (topology_type == ScLsFixedV0TopologyType::DistributedDim2
                 && (type == ScLsInstructionType::LATTICE_SURGERY_MULTINODE
                     || type == ScLsInstructionType::MOVE || type == ScLsInstructionType::CNOT)
                 && splitter.Split(

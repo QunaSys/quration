@@ -133,7 +133,7 @@ TEST(QretMainProfile, JsonAndMarkdownFromScLsFixedV0PipelineState) {
             std::vector<const char*>{BinName, "profile", input.c_str(), json_output.c_str()};
     EXPECT_EQ(0, qret::cmd::QretMain(argv_json.size(), argv_json.data()));
     EXPECT_TRUE(std::filesystem::exists(json_file));
-    EXPECT_NE(std::string::npos, ReadFile(json_file).find("\"runtime\""));
+    EXPECT_NE(std::string::npos, ReadFile(json_file).find("\"execution_time\""));
 
     const auto markdown_output = markdown_file.string();
     auto argv_markdown = std::vector<const char*>{
@@ -147,6 +147,26 @@ TEST(QretMainProfile, JsonAndMarkdownFromScLsFixedV0PipelineState) {
     EXPECT_EQ(0, qret::cmd::QretMain(argv_markdown.size(), argv_markdown.data()));
     EXPECT_TRUE(std::filesystem::exists(markdown_file));
     EXPECT_NE(std::string::npos, ReadFile(markdown_file).find("Compile information"));
+}
+TEST(QretMainCompile, MagicFactoryCellCount) {
+    const auto output = MakeTempPath(".magic_factory_cell_count.json");
+    const auto output_str = output.string();
+    auto argv = std::vector<const char*>{
+            BinName,
+            "compile",
+            "--input",
+            "quration-core/tests/data/circuit/add_cuccaro_3.json",
+            "--function",
+            "AddCuccaro(3)",
+            "--output",
+            output_str.c_str(),
+            "--sc_ls_fixed_v0_topology",
+            "quration-core/tests/data/topology/plane.yaml",
+            "--sc_ls_fixed_v0_magic_factory_cell_count",
+            "4",
+    };
+    EXPECT_EQ(0, qret::cmd::QretMain(argv.size(), argv.data()));
+    EXPECT_TRUE(std::filesystem::exists(output));
 }
 TEST(QretMainCompile, OpenQASM2Source) {
     if (!qret::openqasm2::CanParseOpenQASM2()) {

@@ -10,6 +10,7 @@
 #include <stdexcept>
 
 #include "qret/base/type.h"
+#include "qret/math/pauli.h"
 #include "qret/qret_export.h"
 #include "qret/runtime/quantum_state.h"
 
@@ -37,6 +38,11 @@ public:
         , states_(1, {1.0, State(num_qubits, 0)}) {}
 
     void Measure(std::uint64_t q, std::uint64_t r) override;
+    void MeasurePauliProduct(
+            const std::vector<std::uint64_t>& qs,
+            const std::vector<math::Pauli>& ps,
+            std::uint64_t r
+    ) override;
     void X(std::uint64_t q) override;
     void Y(std::uint64_t q) override;
     void Z(std::uint64_t q) override;

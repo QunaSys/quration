@@ -3,8 +3,14 @@ name: python-tests
 on:
   push:
     branches: [main, py_wheel*]
+  pull_request:
   release:
     types: [published]
+
+env:
+  # CMake version the pinned vcpkg 2026.03.18 registry expects
+  SKBUILD_MINIMUM_VERSION: "0.8"
+  SKBUILD_CMAKE_VERSION: ">=3.31.10"
 
 jobs:
   newsynth:
@@ -13,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-15-intel
           - macos-latest
           - windows-latest
           - ubuntu-latest
@@ -77,7 +82,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-15-intel
           - macos-latest
           - windows-latest
           - ubuntu-latest
@@ -127,20 +131,13 @@ jobs:
         run: |
           mkdir -p "${{ github.workspace }}/.vcpkg"
           echo "VCPKG_ROOT=${{ github.workspace }}/.vcpkg" >> "$GITHUB_ENV"
-          git clone https://github.com/microsoft/vcpkg.git "${{ github.workspace }}/.vcpkg"
+          git clone --branch 2026.03.18 https://github.com/microsoft/vcpkg.git "${{ github.workspace }}/.vcpkg"
           ls "${{ github.workspace }}/.vcpkg"
 
-      # - name: Install libyaml-cpp (Linux)
-      #   if: runner.os == 'Linux'
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y build-essential gcc g++ libyaml-cpp0.8 libyaml-cpp-dev
-
-      # - name: Set compiler env (Linux)
-      #   if: runner.os == 'Linux'
-      #   run: |
-      #     echo "CC=gcc" >> "$GITHUB_ENV"
-      #     echo "CXX=g++" >> "$GITHUB_ENV"
+      - name: Use fmt 12 overlay (macos-latest)
+        if: matrix.os == 'macos-latest'
+        run: echo "VCPKG_OVERLAY_PORTS=${{ github.workspace }}/.vcpkg/ports/fmt" >> "$GITHUB_ENV"
+        shell: bash
 
       - name: Install libyaml-cpp (macOS)
         if: runner.os == 'macOS'
@@ -185,7 +182,7 @@ jobs:
           CIBW_CONFIG_SETTINGS: ${{ matrix.build-target == 'cp312-abi3' && 'wheel.py-api=cp312' || 'wheel.py-api=' }}
           CIBW_BEFORE_ALL_LINUX: |
             dnf install -y git gcc gcc-c++ make zip unzip tar curl perl
-            git clone https://github.com/microsoft/vcpkg.git /project/.vcpkg
+            git clone --branch 2026.03.18 https://github.com/microsoft/vcpkg.git /project/.vcpkg
             /project/.vcpkg/bootstrap-vcpkg.sh -disableMetrics
           CIBW_ENVIRONMENT_LINUX: >-
             VCPKG_ROOT=/project/.vcpkg
@@ -201,6 +198,16 @@ jobs:
         run: |
           python -m pip install --upgrade pip build pytest coverage wheel numpy
           python -m build --wheel -Cwheel.py-api=${{ matrix.build-target == 'cp312-abi3' && 'cp312' || '' }}
+        shell: bash
+
+      - name: Repair wheel with delvewheel (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          python -m pip install delvewheel
+          wheel_file=$(ls dist/*.whl)
+          python -m delvewheel repair --add-path "$SKBUILD_BUILD_DIR/vcpkg_installed/x64-windows/bin;$SKBUILD_BUILD_DIR/vcpkg_installed/x64-windows/debug/bin" -w dist_repaired "$wheel_file"
+          rm -f "$wheel_file"
+          cp dist_repaired/*.whl dist/
         shell: bash
 
       - name: Embed newsynth binary and LICENSE files into wheel
@@ -309,7 +316,7 @@ jobs:
         run: |
           mkdir -p "${{ github.workspace }}/.vcpkg"
           echo "VCPKG_ROOT=${{ github.workspace }}/.vcpkg" >> "$GITHUB_ENV"
-          git clone https://github.com/microsoft/vcpkg.git "${{ github.workspace }}/.vcpkg"
+          git clone --branch 2026.03.18 https://github.com/microsoft/vcpkg.git "${{ github.workspace }}/.vcpkg"
           ls "${{ github.workspace }}/.vcpkg"
 
       - name: Install libyaml-cpp (Linux)
@@ -357,7 +364,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-15-intel
           - macos-latest
           - windows-latest
           - ubuntu-latest
@@ -406,7 +412,6 @@ jobs:
       fail-fast: false
       matrix:
         os:
-          - macos-15-intel
           - macos-latest
           - windows-latest
           - ubuntu-latest
@@ -449,8 +454,13 @@ jobs:
         run: |
           mkdir -p "${{ github.workspace }}/.vcpkg"
           echo "VCPKG_ROOT=${{ github.workspace }}/.vcpkg" >> "$GITHUB_ENV"
-          git clone https://github.com/microsoft/vcpkg.git "${{ github.workspace }}/.vcpkg"
+          git clone --branch 2026.03.18 https://github.com/microsoft/vcpkg.git "${{ github.workspace }}/.vcpkg"
           ls "${{ github.workspace }}/.vcpkg"
+
+      - name: Use fmt 12 overlay (macos-latest)
+        if: matrix.os == 'macos-latest'
+        run: echo "VCPKG_OVERLAY_PORTS=${{ github.workspace }}/.vcpkg/ports/fmt" >> "$GITHUB_ENV"
+        shell: bash
 
       - name: Install libyaml-cpp (Linux)
         if: runner.os == 'Linux'
@@ -494,7 +504,21 @@ jobs:
           SKBUILD_CMAKE_DEFINE: "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake;QRET_BUILD_PYTHON=ON"
         run: |
           python -m pip install --upgrade pip pytest coverage numpy
-          python -m pip install -vvv dist/*.tar.gz
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            # vcpkg spawns its own CMake subprocess to detect the compiler; on Windows
+            # that subprocess can't import the "cmake" package from pip's throwaway
+            # isolated build venv, so install the build backend explicitly and build
+            # without isolation instead.
+            python -m pip install "cmake>=3.31.10" "scikit-build-core>=0.8" "nanobind>=2.0.0" delvewheel wheel
+            python -m pip wheel --no-build-isolation --no-deps -w dist/built dist/*.tar.gz
+            # The extension links dynamically against vcpkg-built DLLs (fmt, yaml-cpp,
+            # boost); Windows has no rpath equivalent, so repair the wheel with
+            # delvewheel to bundle them before installing it.
+            python -m delvewheel repair --add-path "$SKBUILD_BUILD_DIR/vcpkg_installed/x64-windows/bin;$SKBUILD_BUILD_DIR/vcpkg_installed/x64-windows/debug/bin" -w dist/repaired dist/built/*.whl
+            python -m pip install dist/repaired/*.whl
+          else
+            python -m pip install -vvv dist/*.tar.gz
+          fi
         shell: bash
 
       - name: Run tests
@@ -511,20 +535,29 @@ jobs:
           name: pyqret
           pattern: pyqret-*
 
-  release:
-    if: github.event_name == 'release'
+  release-pyqret:
+    name: 🕊️ Release pyqret to PyPI
     needs: [merge]
+    if: github.event_name == 'release'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - name: Download merged artifact
-        uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v4
         with:
           name: pyqret
-          path: dist
 
-      - name: Upload artifact to release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: dist/*
+      - name: Install Twine
+        run: python -m pip install twine==6.1.0 packaging==24.2
+
+      - name: Release to PyPI
+        run: |
+          COUNTER=0
+          for f in *; do
+            echo "Checking $f"
+            if ! python -m twine check $f; then
+              COUNTER=$((COUNTER + 1))
+            fi
+          done
+          [[ $COUNTER = 0 ]] && python -m twine upload *
+        env:
+          TWINE_USERNAME: "__token__"
+          TWINE_PASSWORD: ${{ secrets.TWINE_API_TOKEN }}

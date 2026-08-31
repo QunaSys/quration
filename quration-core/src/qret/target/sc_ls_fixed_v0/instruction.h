@@ -82,9 +82,9 @@ std::ostream& operator<<(std::ostream&, ScLsInstructionType);
 ScLsInstructionType ScLsInstructionTypeFromString(const std::string&);
 
 static inline const std::
-        unordered_map<ScLsFixedV0MachineType, std::unordered_set<ScLsInstructionType>>
+        unordered_map<ScLsFixedV0TopologyType, std::unordered_set<ScLsInstructionType>>
                 SupportedInstructionType = {
-                        {ScLsFixedV0MachineType::Dim2,
+                        {ScLsFixedV0TopologyType::Dim2,
                          {
                                  ScLsInstructionType::ALLOCATE,
                                  ScLsInstructionType::ALLOCATE_MAGIC_FACTORY,
@@ -106,7 +106,7 @@ static inline const std::
                                  ScLsInstructionType::PROBABILITY_HINT,
                                  ScLsInstructionType::AWAIT_CORRECTION,
                          }},
-                        {ScLsFixedV0MachineType::Dim3,
+                        {ScLsFixedV0TopologyType::Dim3,
                          {
                                  ScLsInstructionType::ALLOCATE,
                                  ScLsInstructionType::ALLOCATE_MAGIC_FACTORY,
@@ -131,7 +131,7 @@ static inline const std::
                                  ScLsInstructionType::PROBABILITY_HINT,
                                  ScLsInstructionType::AWAIT_CORRECTION,
                          }},
-                        {ScLsFixedV0MachineType::DistributedDim2,
+                        {ScLsFixedV0TopologyType::DistributedDim2,
                          {
                                  ScLsInstructionType::ALLOCATE,
                                  ScLsInstructionType::ALLOCATE_MAGIC_FACTORY,
@@ -994,7 +994,7 @@ public:
     New(QSymbol qubit, std::uint32_t dir, const std::list<CSymbol>& condition) {
         return std::unique_ptr<Rotate>(new Rotate(qubit, dir, condition));
     }
-    static Coord3D Ancilla(const Coord3D& coord, std::uint32_t dir);
+    static Coord3D GetAncilla(const Coord3D& coord, std::uint32_t dir);
 
     [[nodiscard]] QSymbol Qubit() const {
         return QTarget().front();

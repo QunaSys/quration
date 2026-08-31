@@ -1,27 +1,28 @@
 \page qret_ir IR module
 
-QRET ライブラリにおける、量子回路の中間表現を実装する。
-中間表現の設計や命令セットについては「量子回路の中間表現」」を参照すること。
+Implements the intermediate representation for quantum circuits in the QRET library.
+For the design of the intermediate representation and the instruction set, see "Intermediate Representation for Quantum Circuits".
 
-## コードマップ
+## Code map
 
 * `qret/ir/basic_block.h`
-  * `qret::ir::BasicBlock` : 基本ブロッククラス
-    * 基本ブロックは命令リストで function に属する
-    * 基本ブロックに含まれる命令は分岐せず連続して実行する
-    * well formed な基本ブロックの命令リストの末尾は terminator 命令である
-    * well formed な基本ブロックの命令リストの途中に terminator 命令は含まれない
+  * `qret::ir::BasicBlock` : basic block class
+    * A basic block is an instruction list that belongs to a function.
+    * Instructions in a basic block execute sequentially without branching.
+    * In a well-formed basic block, the instruction list ends with a terminator instruction.
+    * In a well-formed basic block, no terminator instruction appears in the middle of the instruction list.
 * `qret/ir/function.h`
-  * `qret::ir::Function` : function クラス
+  * `qret::ir::Function` : function class
 * `qret/ir/context.h`
-  * `qret::ir::IRContext` : 中間表現のコンテキスト
+  * `qret::ir::IRContext` : context for the intermediate representation
 * `qret/ir/function_pass.h`
-  * `qret::ir::FunctionPass` : function パスの親クラス
-    * function を最適化するパスはこのクラスを継承する
+  * `qret::ir::FunctionPass` : parent class for function passes
+    * Passes that optimize functions inherit from this class.
 * `qret/ir/instruction.h`
-  * `qret::ir::Instruction` : 命令クラスの親クラス
-* `qret/ir/instructions.h` : 様々な命令クラス
+  * `qret::ir::Instruction` : parent class for instruction classes
+* `qret/ir/instructions.h` : various instruction classes
   * `qret::ir::MeasurementInst`
+  * `qret::ir::PauliProductMeasurementInst`
   * `qret::ir::UnaryInst`
   * `qret::ir::ParametrizedRotationInst`
   * `qret::ir::BinaryInst`
@@ -37,8 +38,8 @@ QRET ライブラリにおける、量子回路の中間表現を実装する。
   * `qret::ir::CleanInst`
   * `qret::ir::CleanProbInst`
   * `qret::ir::DirtyInst`
-* `qret/ir/json.h` : 中間表現の JSON シリアライザ・デシリアライザ
-* `qret/ir/metadata.h` : 命令に付与するメタデータ
+* `qret/ir/json.h` : JSON serializer and deserializer for the intermediate representation
+* `qret/ir/metadata.h` : metadata attached to instructions
 * `qret/ir/module.h`
-  * `qret::ir::Module` : モジュール
-* `qret/ir/value.h` : 中間表現における値を定義する
+  * `qret::ir::Module` : module
+* `qret/ir/value.h` : defines values in the intermediate representation

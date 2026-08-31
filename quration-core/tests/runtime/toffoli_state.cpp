@@ -5,6 +5,25 @@
 #include <ranges>
 #include <vector>
 
+#include "qret/math/pauli.h"
+
+namespace {
+using qret::math::Pauli;
+using qret::runtime::ToffoliState;
+
+void ExpectRepeatedProductMeasurementMatchesFinalZParity(ToffoliState& state) {
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 0);
+    const auto parity_is_minus = state.ReadRegister(0);
+
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 1);
+    EXPECT_EQ(parity_is_minus, state.ReadRegister(1));
+
+    state.Measure(0, 2);
+    state.Measure(1, 3);
+    EXPECT_EQ(parity_is_minus, state.ReadRegister(2) != state.ReadRegister(3));
+}
+}  // namespace
+
 struct ToffoliStateTest : public ::testing::TestWithParam<std::uint64_t> {
     void SetUp() override {
         // Get the seed value from the fixture's parameters
@@ -64,6 +83,57 @@ TEST_P(ToffoliStateTest, Measurement) {
         for (const auto& [coeff, _] : state->GetRawVector()) {
             EXPECT_NEAR(1 / (std::pow(2.0, num_qubits / 2) - 1.0), std::norm(coeff), eps);
         }
+    }
+}
+
+TEST(ToffoliState, PauliProductMeasurement) {
+    auto state = qret::runtime::ToffoliState(12345, 2);
+
+    state.H(0);
+    state.CX(1, 0);
+
+    state.MeasurePauliProduct({0, 1}, {qret::math::Pauli::Z, qret::math::Pauli::Z}, 0);
+    EXPECT_FALSE(state.ReadRegister(0));
+
+    state.MeasurePauliProduct({0, 1}, {qret::math::Pauli::X, qret::math::Pauli::X}, 1);
+    EXPECT_FALSE(state.ReadRegister(1));
+}
+
+TEST(ToffoliState, PauliProductMeasurementDeterministicMinusEigenstate) {
+    auto state = ToffoliState(12345, 3);
+    state.X(1);
+
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 0);
+    EXPECT_TRUE(state.ReadRegister(0));
+
+    state.MeasurePauliProduct({0, 1}, {Pauli::Z, Pauli::Z}, 1);
+    EXPECT_TRUE(state.ReadRegister(1));
+    EXPECT_NEAR(0.0, state.Calc1Prob(0), 1e-10);
+    EXPECT_NEAR(1.0, state.Calc1Prob(1), 1e-10);
+}
+
+TEST(ToffoliState, PauliProductMeasurementSupportsYAndIdentity) {
+    auto y_z_state = ToffoliState(12345, 2);
+    y_z_state.H(0);
+    y_z_state.S(0);
+    y_z_state.X(1);
+    y_z_state.MeasurePauliProduct({0, 1}, {Pauli::Y, Pauli::Z}, 0);
+    EXPECT_TRUE(y_z_state.ReadRegister(0));
+
+    auto identity_state = ToffoliState(12345, 3);
+    identity_state.X(0);
+    identity_state.X(1);
+    identity_state.X(2);
+    identity_state.MeasurePauliProduct({0, 1, 2}, {Pauli::Z, Pauli::I, Pauli::Z}, 0);
+    EXPECT_FALSE(identity_state.ReadRegister(0));
+}
+
+TEST(ToffoliState, PauliProductMeasurementCollapseIsRepeatable) {
+    for (const auto seed : std::views::iota(std::uint64_t{0}, std::uint64_t{16})) {
+        auto state = ToffoliState(seed, 2);
+        state.H(0);
+        state.H(1);
+        ExpectRepeatedProductMeasurementMatchesFinalZParity(state);
     }
 }
 

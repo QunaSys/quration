@@ -58,9 +58,9 @@ def test_option():
         sc_ls_fixed_v0_option=ScLsFixedV0Option(
             topology=topology_path,
             magic_generation_period=20,
-            maximum_magic_state_stock=30,
+            magic_generation_maximum_stock=30,
             entanglement_generation_period=40,
-            maximum_entangled_state_stock=50,
+            entanglement_generation_maximum_stock=50,
             reaction_time=2,
         ),
     )
@@ -69,9 +69,9 @@ def test_option():
     assert option.verbose
     assert topology_path == option.sc_ls_fixed_v0_option.topology
     assert 20 == option.sc_ls_fixed_v0_option.magic_generation_period
-    assert 30 == option.sc_ls_fixed_v0_option.maximum_magic_state_stock
+    assert 30 == option.sc_ls_fixed_v0_option.magic_generation_maximum_stock
     assert 40 == option.sc_ls_fixed_v0_option.entanglement_generation_period
-    assert 50 == option.sc_ls_fixed_v0_option.maximum_entangled_state_stock
+    assert 50 == option.sc_ls_fixed_v0_option.entanglement_generation_maximum_stock
     assert 2 == option.sc_ls_fixed_v0_option.reaction_time
 
     print("option:", option)
@@ -87,16 +87,16 @@ def test_option():
         option.sc_ls_fixed_v0_option.magic_generation_period == option2.sc_ls_fixed_v0_option.magic_generation_period
     )
     assert (
-        option.sc_ls_fixed_v0_option.maximum_magic_state_stock
-        == option2.sc_ls_fixed_v0_option.maximum_magic_state_stock
+        option.sc_ls_fixed_v0_option.magic_generation_maximum_stock
+        == option2.sc_ls_fixed_v0_option.magic_generation_maximum_stock
     )
     assert (
         option.sc_ls_fixed_v0_option.entanglement_generation_period
         == option2.sc_ls_fixed_v0_option.entanglement_generation_period
     )
     assert (
-        option.sc_ls_fixed_v0_option.maximum_entangled_state_stock
-        == option2.sc_ls_fixed_v0_option.maximum_entangled_state_stock
+        option.sc_ls_fixed_v0_option.entanglement_generation_maximum_stock
+        == option2.sc_ls_fixed_v0_option.entanglement_generation_maximum_stock
     )
     assert option.sc_ls_fixed_v0_option.reaction_time == option2.sc_ls_fixed_v0_option.reaction_time
 
@@ -145,10 +145,10 @@ def test_simple_compile():
     assert compile_info.chip_cell_count == 20 * 20 - 4
 
     assert isinstance(compile_info.magic_generation_period, int)
-    assert isinstance(compile_info.maximum_magic_state_stock, int)
+    assert isinstance(compile_info.magic_generation_maximum_stock, int)
     assert isinstance(compile_info.reaction_time, int)
-    assert isinstance(compile_info.runtime, int)
-    assert isinstance(compile_info.runtime_without_topology, int)
+    assert isinstance(compile_info.execution_time, int)
+    assert isinstance(compile_info.execution_time_without_topology, int)
     assert isinstance(compile_info.gate_count, int)
     for k, v in compile_info.count_per_gate.items():
         assert isinstance(k, str)
@@ -156,18 +156,18 @@ def test_simple_compile():
     assert isinstance(compile_info.gate_depth, int)
     for x in compile_info.gate_throughput:
         assert isinstance(x, int)
-    assert isinstance(compile_info.measurement_feedback_count, int)
-    assert isinstance(compile_info.measurement_feedback_depth, int)
-    for x in compile_info.measurement_feedback_rate:
+    assert isinstance(compile_info.reaction_count, int)
+    assert isinstance(compile_info.reaction_depth, int)
+    for x in compile_info.reaction_rate:
         assert isinstance(x, int)
-    assert isinstance(compile_info.runtime_estimation_measurement_feedback_count, int)
-    assert isinstance(compile_info.runtime_estimation_measurement_feedback_depth, int)
+    assert isinstance(compile_info.execution_time_estimation_from_reaction_count, int)
+    assert isinstance(compile_info.execution_time_estimation_from_reaction_depth, int)
     assert isinstance(compile_info.magic_state_consumption_count, int)
     assert isinstance(compile_info.magic_state_consumption_depth, int)
     for x in compile_info.magic_state_consumption_rate:
         assert isinstance(x, int)
-    assert isinstance(compile_info.runtime_estimation_magic_state_consumption_count, int)
-    assert isinstance(compile_info.runtime_estimation_magic_state_consumption_depth, int)
+    assert isinstance(compile_info.execution_time_estimation_magic_state_consumption_count, int)
+    assert isinstance(compile_info.execution_time_estimation_magic_state_consumption_depth, int)
     assert isinstance(compile_info.magic_factory_count, int)
     assert isinstance(compile_info.chip_cell_count, int)
     for x in compile_info.chip_cell_algorithmic_qubit:
@@ -181,7 +181,7 @@ def test_simple_compile():
     assert isinstance(compile_info.qubit_volume, int)
     assert isinstance(compile_info.code_distance, int)
     assert isinstance(compile_info.execution_time_sec, float)
-    assert isinstance(compile_info.num_physical_qubits, int)
+    assert isinstance(compile_info.physical_qubit_count, int)
 
     print(compile_info.to_json())
     print(compile_info.to_markdown())
