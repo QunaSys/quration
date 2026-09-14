@@ -1,7 +1,5 @@
-Unlicensed
-
-The binaries under `quration-algorithm/examples` are distributed as
-unlicensed artifacts for research usage only.
+The binaries under `quration-algorithm/examples` are distributed only
+for research purpose.
 
 Shipped example binaries covered by this notice:
 - `compile_adder_to_distributed_chip`
