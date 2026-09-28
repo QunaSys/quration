@@ -50,7 +50,6 @@ Each GitHub Release carries an archive per platform:
 | --- | --- |
 | Linux (x86_64) | `qret-ubuntu-latest.tar.gz` |
 | macOS (Apple Silicon) | `qret-macos-latest.tar.gz` |
-| macOS (Intel) | `qret-macos-15-intel.tar.gz` |
 | Windows (x64) | `qret-windows-latest.zip` |
 
 Download from the command line. A browser download also works, but on macOS it sets the quarantine attribute -- see the note below.
