@@ -1,7 +1,16 @@
-The binaries under `quration-algorithm/examples` are distributed only
-for research purpose.
+The binaries built from `quration-algorithm/` are distributed for research
+purposes only. This notice grants permission to download, run and evaluate
+them, and to publish results obtained with them. It grants no other rights:
+no redistribution, no modification, no commercial use, and no license to the
+source they were built from. All other rights are reserved by the copyright
+holders.
 
-Shipped example binaries covered by this notice:
+This notice does not apply to anything else in a release archive. `qret`, the
+`quration-core` example binaries and the Quration libraries are under the MIT
+license (`licenses/qret/LICENSE`), and bundled third-party programs keep their
+own (`licenses/newsynth/`).
+
+Shipped binaries covered by this notice:
 - `compile_adder_to_distributed_chip`
 - `create_add_craig`
 - `create_add_cuccaro`

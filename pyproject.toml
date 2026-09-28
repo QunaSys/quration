@@ -6,7 +6,6 @@ required-python = ">=3.10"
 license = "MIT"
 
 # authors =
-# license =
 # keywords =
 classifiers = [
   "Programming Language :: Python :: 3",

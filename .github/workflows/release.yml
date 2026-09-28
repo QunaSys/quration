@@ -25,6 +25,16 @@ on:
   release:
     types: [published]
 
+env:
+  # Pin the bundled gridsynth build: qret parses its CLI output, and an unpinned
+  # `cabal install` silently picks up whatever Hackage has once the cache is evicted.
+  NEWSYNTH_VERSION: "0.4.1.0"
+  # Oldest macOS the released binaries are built to run on. Without this the
+  # deployment target follows the runner SDK, and dyld warns (or the binary crashes)
+  # on anything older than the runner. Set at workflow level so vcpkg and every other
+  # sub-build see it too, not just the CMake configure below.
+  MACOSX_DEPLOYMENT_TARGET: "13.0"
+
 jobs:
   newsynth:
     runs-on: ${{ matrix.os }}
@@ -48,7 +58,7 @@ jobs:
           path: |
             .newsynth/bin
             .newsynth/license
-          key: newsynth-${{ matrix.os }}-v1
+          key: newsynth-${{ matrix.os }}-${{ env.NEWSYNTH_VERSION }}
 
       - name: Setup Haskell (GHC/Cabal)
         if: steps.newsynth-cache.outputs.cache-hit != 'true'
@@ -63,7 +73,7 @@ jobs:
         run: |
           mkdir -p "$PWD/.newsynth/bin"
           cabal update
-          cabal install newsynth --installdir "$PWD/.newsynth/bin" --install-method=copy --overwrite-policy=always
+          cabal install "newsynth-${NEWSYNTH_VERSION}" --installdir "$PWD/.newsynth/bin" --install-method=copy --overwrite-policy=always
           if [ "$RUNNER_OS" != "Windows" ]; then
             chmod +x "$PWD/.newsynth/bin/gridsynth"
           fi
@@ -77,7 +87,7 @@ jobs:
           rm -rf "$PWD/.newsynth/license"
           mkdir -p "$PWD/.newsynth/src"
           mkdir -p "$PWD/.newsynth/license"
-          cabal get newsynth --destdir "$PWD/.newsynth/src" --pristine
+          cabal get "newsynth-${NEWSYNTH_VERSION}" --destdir "$PWD/.newsynth/src" --pristine
           newsynth_src_dir=$(find "$PWD/.newsynth/src" -maxdepth 1 -type d -name "newsynth-*" | head -n 1)
           if [ -n "$newsynth_src_dir" ]; then
             find "$newsynth_src_dir" -maxdepth 2 -type f \
@@ -115,7 +125,7 @@ jobs:
           path: |
             .newsynth/bin
             .newsynth/license
-          key: newsynth-${{ matrix.os }}-v1
+          key: newsynth-${{ matrix.os }}-${{ env.NEWSYNTH_VERSION }}
           fail-on-cache-miss: true
 
       - name: Restore vcpkg cache
@@ -204,11 +214,16 @@ jobs:
             launcher_args="-DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache"
             ccache -s || true
           fi
+          osx_args=""
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            osx_args="-DCMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET}"
+          fi
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DQRET_BUILD_ALGORITHM=ON \
             -DQRET_BUILD_EXAMPLE=ON \
             $launcher_args \
+            $osx_args \
             -DCMAKE_TOOLCHAIN_FILE="${{ env.VCPKG_ROOT }}/scripts/buildsystems/vcpkg.cmake"
 
       - name: Build qret and examples
@@ -244,14 +259,10 @@ jobs:
 
           # Copy runtime resources used by installed example binaries.
           mkdir -p "$package_root/quration-core/examples"
-          mkdir -p "$package_root/quration-algorithm/examples"
           mkdir -p "$package_root/quration-algorithm/benchmark_generators"
           cp -R "$PWD/quration-core/examples/data" "$package_root/quration-core/examples/"
           cp -R "$PWD/quration-core/examples/external-pass" "$package_root/quration-core/examples/"
           cp -R "$PWD/quration-algorithm/benchmark_generators/data" "$package_root/quration-algorithm/benchmark_generators/"
-          if [ -d "$PWD/quration-algorithm/examples/data" ]; then
-            cp -R "$PWD/quration-algorithm/examples/data" "$package_root/quration-algorithm/examples/"
-          fi
 
           mkdir -p "$package_root/licenses/qret"
           mkdir -p "$package_root/licenses/examples"
@@ -325,22 +336,20 @@ jobs:
           run_bin create_qrom \
             --input quration-algorithm/benchmark_generators/data/sample_qrom.json \
             --output _smoke_outputs/create_qrom.json
-          if [ -d quration-algorithm/examples/data ]; then
-            run_bin create_prepare \
-              --file quration-algorithm/examples/data/sample_prepare.json \
-              --out _smoke_outputs/create_prepare.json
-            run_bin create_qpe \
-              --file quration-algorithm/examples/data/sample_qpe.json \
-              --out _smoke_outputs/create_qpe.json
-            run_bin create_select \
-              --file quration-algorithm/examples/data/sample_select.json \
-              --out _smoke_outputs/create_select.json
-            run_bin create_trotter \
-              --file quration-algorithm/examples/data/1d_ising_hamiltonian.json \
-              --time 0.1 \
-              --num_trotter_steps 1 \
-              --out _smoke_outputs/create_trotter.json
-          fi
+          # sample_qpe.json carries every field create_qpe, create_prepare and
+          # create_select read, so all three run from the one fixture.
+          run_bin create_prepare \
+            --input quration-algorithm/benchmark_generators/data/sample_qpe.json \
+            --output _smoke_outputs/create_prepare.json
+          run_bin create_qpe \
+            --input quration-algorithm/benchmark_generators/data/sample_qpe.json \
+            --output _smoke_outputs/create_qpe.json
+          run_bin create_select \
+            --input quration-algorithm/benchmark_generators/data/sample_qpe.json \
+            --output _smoke_outputs/create_select.json
+          run_bin create_trotter \
+            --input quration-algorithm/benchmark_generators/data/sample_trotter.json \
+            --output _smoke_outputs/create_trotter.json
           run_bin create_uncompute_qrom \
             --input quration-algorithm/benchmark_generators/data/sample_qrom.json \
             --output _smoke_outputs/create_uncompute_qrom.json

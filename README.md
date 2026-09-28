@@ -8,7 +8,7 @@ The development of Quration is in progress, and their backward compatibility mig
 ## License
 
 - External libraries (`./externals/`) are re-distributed under each library's license.
-- Application generators (`./quration-algorithm/`) are distributed only for research purpose.
+- Binaries built from `./quration-algorithm/` are for research purposes only (`./quration-algorithm/examples/LICENSE`).
 - The other quration libraries (`./quration-core/`, `./quration-visualize/`, `./quration-docs/`) are distributed under MIT-license.
 
 ## Features
@@ -42,9 +42,58 @@ See `./quration-docs/tutorial/` for tutorials of these programs.
 - `quration-visualizer`: Visualize execution traces and compare resource estimation profiles on browers
 
 
-## Install Quration-Core and Quration-Algorithm
+## Install prebuilt binaries
 
-Currently we only support build from source. Pre-build executables, python libraries, and C++ shared library will be distributed soon.
+Each GitHub Release carries an archive per platform:
+
+| Platform | Asset |
+| --- | --- |
+| Linux (x86_64) | `qret-ubuntu-latest.tar.gz` |
+| macOS (Apple Silicon) | `qret-macos-latest.tar.gz` |
+| macOS (Intel) | `qret-macos-15-intel.tar.gz` |
+| Windows (x64) | `qret-windows-latest.zip` |
+
+Download from the command line. A browser download also works, but on macOS it sets the quarantine attribute -- see the note below.
+
+```sh
+gh release download <tag> -R quration/quration -p 'qret-ubuntu-latest.tar.gz'
+# or
+curl -LO https://github.com/quration/quration/releases/download/<tag>/qret-ubuntu-latest.tar.gz
+```
+
+Extract it:
+
+```sh
+tar xzf qret-ubuntu-latest.tar.gz        # tar -xf qret-windows-latest.zip on Windows
+cd qret-ubuntu-latest
+```
+
+The binaries carry no embedded library path, so point the dynamic linker at the bundled `lib/` before running them:
+
+```sh
+export LD_LIBRARY_PATH="$PWD/lib:$LD_LIBRARY_PATH"     # Linux
+export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH" # macOS
+set PATH=%CD%\bin;%CD%\lib;%PATH%                     :: Windows
+```
+
+Run them **from the extracted root**: the example and generator binaries read their input data through relative paths.
+
+```sh
+./bin/qret --help
+./bin/create_qpe \
+  --input quration-algorithm/benchmark_generators/data/sample_qpe.json \
+  --output qpe.json
+```
+
+On macOS, if you downloaded in a browser, Gatekeeper refuses to run unsigned binaries that carry the quarantine attribute. Clear it on the extracted directory:
+
+```sh
+xattr -dr com.apple.quarantine qret-macos-latest
+```
+
+Licensing differs per binary -- see [License](#license). The archive carries the notices under `licenses/`.
+
+## Build Quration-Core and Quration-Algorithm from source
 
 ### Environment
 
