@@ -1,9 +1,5 @@
-The binaries built from `quration-algorithm/` are distributed for research
-purposes only. This notice grants permission to download, run and evaluate
-them, and to publish results obtained with them. It grants no other rights:
-no redistribution, no modification, no commercial use, and no license to the
-source they were built from. All other rights are reserved by the copyright
-holders.
+The binaries under `quration-algorithm/examples` are distributed only
+for research purpose.
 
 This notice does not apply to anything else in a release archive. `qret`, the
 `quration-core` example binaries and the Quration libraries are under the MIT

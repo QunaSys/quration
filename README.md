@@ -8,7 +8,7 @@ The development of Quration is in progress, and their backward compatibility mig
 ## License
 
 - External libraries (`./externals/`) are re-distributed under each library's license.
-- Binaries built from `./quration-algorithm/` are for research purposes only (`./quration-algorithm/examples/LICENSE`).
+- Application generators (`./quration-algorithm/`) are distributed only for research purpose.
 - The other quration libraries (`./quration-core/`, `./quration-visualize/`, `./quration-docs/`) are distributed under MIT-license.
 
 ## Features
