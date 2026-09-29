@@ -52,7 +52,7 @@ Each GitHub Release carries an archive per platform:
 | macOS (Apple Silicon) | `qret-macos-latest.tar.gz` |
 | Windows (x64) | `qret-windows-latest.zip` |
 
-Download from the command line. A browser download also works, but on macOS it sets the quarantine attribute -- see the note below.
+Download from the command line.
 
 ```sh
 gh release download <tag> -R quration/quration -p 'qret-ubuntu-latest.tar.gz'
@@ -84,13 +84,6 @@ Run them **from the extracted root**: the example and generator binaries read th
   --output qpe.json
 ```
 
-On macOS, if you downloaded in a browser, Gatekeeper refuses to run unsigned binaries that carry the quarantine attribute. Clear it on the extracted directory:
-
-```sh
-xattr -dr com.apple.quarantine qret-macos-latest
-```
-
-Licensing differs per binary -- see [License](#license). The archive carries the notices under `licenses/`.
 
 ## Build Quration-Core and Quration-Algorithm from source
 
