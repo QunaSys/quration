@@ -28,7 +28,9 @@ on:
 env:
   # Pin the bundled gridsynth build: qret parses its CLI output, and an unpinned
   # `cabal install` silently picks up whatever Hackage has once the cache is evicted.
-  NEWSYNTH_VERSION: "0.4.1.0"
+  # 0.3.0.4 is the newest release that builds against the GHC pinned below --
+  # newsynth 0.4.x caps `time < 1.9`, which no GHC 9.6 boot library satisfies.
+  NEWSYNTH_VERSION: "0.3.0.4"
   # Oldest macOS the released binaries are built to run on. Without this the
   # deployment target follows the runner SDK, and dyld warns (or the binary crashes)
   # on anything older than the runner. Set at workflow level so vcpkg and every other
