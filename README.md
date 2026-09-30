@@ -75,6 +75,19 @@ export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH" # macOS
 set PATH=%CD%\bin;%CD%\lib;%PATH%                     :: Windows
 ```
 
+`qret` shells out to `gridsynth` to decompose rotation gates, and looks it up
+through `GRIDSYNTH_PATH`, the cabal install directories, the working directory
+and `PATH` -- never `bin/`. Point it at the bundled copy, giving the full path
+to the binary rather than the directory holding it:
+
+```sh
+export GRIDSYNTH_PATH="$PWD/bin/gridsynth"   # Linux, macOS
+set GRIDSYNTH_PATH=%CD%\bin\gridsynth.exe    :: Windows
+```
+
+Without it, any pass that decomposes a rotation fails with
+`cannot run gridsynth for this path: gridsynth`.
+
 Run them **from the extracted root**: the example and generator binaries read their input data through relative paths.
 
 ```sh
