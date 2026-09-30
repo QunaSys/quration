@@ -67,12 +67,13 @@ tar xzf qret-ubuntu-latest.tar.gz        # tar -xf qret-windows-latest.zip on Wi
 cd qret-ubuntu-latest
 ```
 
-The binaries carry no embedded library path, so point the dynamic linker at the bundled `lib/` before running them:
+On Linux and macOS the binaries carry no embedded library path, so point the
+dynamic linker at the bundled `lib/` before running them. Windows needs no
+library setup -- the DLLs are installed next to the executables in `bin/`.
 
 ```sh
-export LD_LIBRARY_PATH="$PWD/lib:$LD_LIBRARY_PATH"     # Linux
-export DYLD_LIBRARY_PATH="$PWD/lib:$DYLD_LIBRARY_PATH" # macOS
-set PATH=%CD%\bin;%CD%\lib;%PATH%                     :: Windows
+export LD_LIBRARY_PATH="$PWD/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"        # Linux
+export DYLD_LIBRARY_PATH="$PWD/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"  # macOS
 ```
 
 `qret` shells out to `gridsynth` to decompose rotation gates, and looks it up
@@ -82,13 +83,20 @@ to the binary rather than the directory holding it:
 
 ```sh
 export GRIDSYNTH_PATH="$PWD/bin/gridsynth"   # Linux, macOS
-set GRIDSYNTH_PATH=%CD%\bin\gridsynth.exe    :: Windows
+```
+
+```bat
+set GRIDSYNTH_PATH=%CD%\bin\gridsynth.exe
 ```
 
 Without it, any pass that decomposes a rotation fails with
 `cannot run gridsynth for this path: gridsynth`.
 
-Run them **from the extracted root**: the example and generator binaries read their input data through relative paths.
+`qret` and the generators take every path as an argument, so they run from
+anywhere. Three examples -- `compile_adder_to_distributed_chip`,
+`external_mapping_pass` and `external_decompose_pass` -- instead read their
+input through paths hard-coded relative to the working directory, so run those
+**from the extracted root**.
 
 ```sh
 ./bin/qret --help
