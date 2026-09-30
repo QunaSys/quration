@@ -2,48 +2,48 @@
 
 ## About pyqret
 
-pyqret は量子回路の開発と誤り耐性量子コンピュータ等の具体的な量子コンピュータの命令列へのコンパイルを行うためのライブラリである。
-C++ で実装された qret の Python ラッパーのため、内部実装を知りたい人は qret のドキュメントを参照すること。
+pyqret is a library for developing quantum circuits and compiling them into instruction sequences for concrete quantum computers, such as fault-tolerant quantum computers.
+Because pyqret is a Python wrapper for qret, which is implemented in C++, refer to the qret documentation for internal implementation details.
 
 ### Features
 
-* 量子回路の簡潔な記述
-* シミュレータによる量子回路の検証
-* 誤り耐性量子計算機向けのコンパイル
+* Concise description of quantum circuits
+* Verification of quantum circuits with a simulator
+* Compilation for fault-tolerant quantum computers
 
 ### Requirements
 
-Linux /macOS (ARM64) / Windows11 をサポートしている。
+Linux, macOS (ARM64), and Windows 11 are supported.
 
-* Linux の場合
+* Linux
   * Python 3.10, 3.11, 3.12, 3.13, 3.14
-* macOS (ARM64) の場合
+* macOS (ARM64)
   * Python 3.10, 3.11, 3.12, 3.13, 3.14
-* Windows11 の場合
+* Windows 11
   * Python 3.10, 3.11, 3.12, 3.13, 3.14
 
 ## Installation
 
 ### Quick install
 
-環境 (OS, Python version) にあった `.whl` ファイルを `pip` でインストールする。
-`<version>` の部分はインストールする pyqret のバージョン (例: `0.7.2`) に置き換える。
+Install the `.whl` file that matches your environment (OS and Python version) with `pip`.
+Replace `<version>` with the pyqret version to install, for example `0.7.2`.
 
-#### Python 3.12 以降 (3.12, 3.13, 3.14)
+#### Python 3.12 and later (3.12, 3.13, 3.14)
 
-Python 3.12 以降では、共通の Stable ABI (abi3) 対応ファイルを使用する。
+For Python 3.12 and later, use the common Stable ABI (abi3) compatible file.
 
 ```sh
-# Python 3.12, 3.13, 3.14 共通
+# Common to Python 3.12, 3.13, and 3.14
 pip install pyqret-<version>-cp312-abi3-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 ```
 
 #### Python 3.10, 3.11
 
-Python のバージョンごとに専用のファイルを使用する。
+Use the dedicated file for each Python version.
 
 ```sh
-# Python 3.10 の場合
+# For Python 3.10
 pip install pyqret-<version>-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
 ```
 
@@ -65,29 +65,29 @@ pip install pyqret-<version>-cp310-cp310-manylinux_2_27_x86_64.manylinux_2_28_x8
 
 #### How to install
 
-##### Linux/macOS(ARM64) の場合
+##### Linux/macOS(ARM64)
 
-`pyproject.toml` のあるディレクトリ (=このファイルの親ディレクトリ) で次のコマンドを実行する。
+Run the following command in the directory that contains `pyproject.toml` (the parent directory of this file).
 
 ```sh
 SKBUILD_CMAKE_DEFINE="QRET_BUILD_PYTHON=ON" pip install .
 ```
 
-アルゴリズムモジュールもインストールする場合は次を実行する。
+To install the algorithm module as well, run the following command.
 
 ```sh
 SKBUILD_CMAKE_DEFINE="QRET_BUILD_PYTHON=ON;QRET_PYTHON_WITH_ALGORITHM=ON" pip install .[algorithm]
 ```
 
-Vcpkg で環境構築している場合は次のコマンドを実行する。
+If you are building the environment with Vcpkg, run the following command.
 
 ```sh
 SKBUILD_CMAKE_DEFINE="CMAKE_TOOLCHAIN_FILE=<VCPKG_ROOT>/scripts/buildsystems/vcpkg.cmake;QRET_BUILD_PYTHON=ON" pip install .
 ```
 
-##### Windows の場合
+##### Windows
 
-`pyproject.toml` のあるディレクトリ (=このファイルの親ディレクトリ) で次のコマンドを実行する。
+Run the following commands in the directory that contains `pyproject.toml` (the parent directory of this file).
 
 ```cmd
 set SKBUILD_CMAKE_DEFINE=QRET_BUILD_PYTHON=ON
@@ -96,7 +96,7 @@ pip install .
 
 ##### Install options
 
-* `tests` : テストする場合に使用する。
-* `docs` : ドキュメントをビルドする場合に使用する。
-* `algorithm` : アルゴリズムモジュールを含めてインストールする場合に使用する。
-* `dev` : pyqret の開発時に使用する。
+* `tests` : use when running tests.
+* `docs` : use when building documentation.
+* `algorithm` : use when installing with the algorithm module included.
+* `dev` : use when developing pyqret.

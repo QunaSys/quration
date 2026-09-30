@@ -1,22 +1,22 @@
 # pyqret examples
 
-pyqret ライブラリの使用例を実装する。
+Implements examples that use the pyqret library.
 
-## 環境構築
+## Environment Setup
 
-スクリプトを実行するには以下のライブラリを必要とする。
+The following libraries are required to run the scripts.
 
 - numpy
 - qiskit
 
-## 概要
+## Overview
 
 - `create_adder_from_python.py`
-  - Python ラッパーを使って加算回路を実装する例
+  - Example that implements an adder circuit using the Python wrapper.
 - `create_adder_using_loaded_module.py`
-  - `boolean.json` で定義された回路を使って加算回路を実装する例
+  - Example that implements an adder circuit using the circuit defined in `boolean.json`.
 - `get_operation_matrix.py`
-  - 量子回路の操作行列を取得する例
-  - `boolean.json` で定義された回路を使って加算回路を実装する例
+  - Example that obtains the operation matrix of a quantum circuit.
+  - Example that implements an adder circuit using the circuit defined in `boolean.json`.
 - `trotter.py`
-  - Python ラッパーを使ってトロッター分解を用いたハミルトニアンの時間発展をシミュレートする量子回路の実装例
+  - Example that implements a quantum circuit for simulating Hamiltonian time evolution using Trotter decomposition with the Python wrapper.

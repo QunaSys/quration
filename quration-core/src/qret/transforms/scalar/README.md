@@ -1,13 +1,13 @@
 \page qret_transforms_scalar scalar transforms module
 
-scalar では、個々の量子ビットや局所的なゲートに対する最適化パスを実装する。
+The scalar module implements optimization passes for individual qubits and local gates.
 
-## コードマップ
+## Code map
 
-- `qret/transforms/scalar/decomposition.cpp` : 中間表現をより単純な命令で構成される中間表現に変換する
-  - RX, RY, RZ, CY, CZ, CCX, CCY, CCZ を {X,Y,Z,S,SDag,T,TDag,CX} の組合せに変換する
-- `qret/transforms/scalar/delete_consecutive_same_pauli.cpp` : 同じパウリ演算子を連続して適用している場合に削除する
-- `qret/transforms/scalar/delete_opt_hint.cpp` : 最適化ヒント命令を削除する
-- `qret/transforms/scalar/ignore_global_phase.cpp` : `qret::ir::GlobalPhaseInst` 命令を削除する
-  - 量子回路に本質的に関係のない、グローバル位相を回転する命令を削除する
-- `qret/transforms/static_condition_pruning.cpp` : 静的に定まる分岐を削除する
+- `qret/transforms/scalar/decomposition.cpp` : converts the intermediate representation into one composed of simpler instructions
+  - Converts RX, RY, RZ, CY, CZ, CCX, CCY, and CCZ into combinations of {X, Y, Z, S, SDag, T, TDag, CX}.
+- `qret/transforms/scalar/delete_consecutive_same_pauli.cpp` : removes consecutive applications of the same Pauli operator
+- `qret/transforms/scalar/delete_opt_hint.cpp` : removes optimization hint instructions
+- `qret/transforms/scalar/ignore_global_phase.cpp` : removes `qret::ir::GlobalPhaseInst` instructions
+  - Removes instructions that rotate the global phase, which is not essential to the quantum circuit.
+- `qret/transforms/static_condition_pruning.cpp` : removes statically determined branches

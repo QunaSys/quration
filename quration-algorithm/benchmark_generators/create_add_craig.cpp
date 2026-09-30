@@ -1,52 +1,49 @@
 #include <boost/program_options.hpp>
 #include <nlohmann/json.hpp>
 
-#include <cerrno>
 #include <cstddef>
 #include <cstdint>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
-#include "qret/algorithm/phase_estimation/qpe.h"
+#include "qret/algorithm/arithmetic/integer.h"
 #include "qret/frontend/builder.h"
 #include "qret/ir/context.h"
 #include "qret/ir/json.h"
-#include "qret/math/integer.h"
-#include "qret/math/lcu_helper.h"
 #include "qret/transforms/ipo/inliner.h"
 
-struct PREPAREParams {
-    std::vector<double> lcu_coefficients;
-    std::size_t sub_bit_precision;
-    PREPAREParams() = default;
+struct AddCraigParams {
+    std::size_t size;
 };
 
-void from_json(const nlohmann::json& j, PREPAREParams& p) {
-    p.sub_bit_precision = j.at("sub_bit_precision").get<std::size_t>();
-    p.lcu_coefficients = j.at("lcu_coefficients").get<std::vector<double>>();
+void from_json(const nlohmann::json& j, AddCraigParams& p) {
+    p.size = j.at("size").get<std::size_t>();
 }
 
-PREPAREParams LoadPREPAREJson(const std::string& path) {
+AddCraigParams LoadAddCraigJson(const std::string& path) {
     auto ifs = std::ifstream(path.data());
     if (!ifs.good()) {
         throw std::runtime_error("Could not open file: " + path);
     }
     nlohmann::json j;
     ifs >> j;
-    return j.get<PREPAREParams>();
+    return j.get<AddCraigParams>();
 };
 
 int main(std::int32_t argc, const char* const* const argv) {
     namespace po = boost::program_options;
-    po::options_description desc("Create PREPARE circuit from JSON file");
+    po::options_description desc(
+            "Create AddCraig circuit from JSON file\n\n"
+            "Input JSON fields:\n"
+            "  size: Number of bits in each addend register."
+    );
     desc.add_options()
         ("help", "Print usage instructions")
-        ("file", po::value<std::string>()->required(), "Path to JSON file of input parameters")
-        ("out", po::value<std::string>()->default_value("out.json"), "Path to the output file")
-        ("inline", "Option to enable inline expansion.");
+        ("input", po::value<std::string>()->required(), "Input JSON file")
+        ("output", po::value<std::string>()->required(), "Path to the output file")
+        ("inline", "Option to enable inline expansion");
 
     po::variables_map vm;
     try {
@@ -63,25 +60,15 @@ int main(std::int32_t argc, const char* const* const argv) {
     }
 
     std::string input_file;
-    if (vm.count("file") > 0) {
-        input_file = vm["file"].as<std::string>();
+    if (vm.count("input") > 0) {
+        input_file = vm["input"].as<std::string>();
     }
-    const auto params = LoadPREPAREJson(input_file);
-    const auto size = qret::math::BitSizeI(params.lcu_coefficients.size() - 1);
-    const auto alias_sampling = qret::math::PreprocessLCUCoefficientsForReversibleSampling(
-            params.lcu_coefficients,
-            params.sub_bit_precision
-    );
+    const auto params = LoadAddCraigJson(input_file);
 
     qret::ir::IRContext context;
-    auto* module = qret::ir::Module::Create("PREPAREModule", context);
+    auto* module = qret::ir::Module::Create("AddCraigModule", context);
     auto builder = qret::frontend::CircuitBuilder(module);
-    auto gen = qret::frontend::gate::PREPAREGen(
-            &builder,
-            alias_sampling,
-            size,
-            params.sub_bit_precision
-    );
+    auto gen = qret::frontend::gate::AddCraigGen(&builder, params.size);
     auto* circuit = gen.Generate();
     auto* ir_circuit = circuit->GetIR();
 
@@ -91,8 +78,8 @@ int main(std::int32_t argc, const char* const* const argv) {
     }
 
     std::string output_file;
-    if (vm.count("out") > 0) {
-        output_file = vm["out"].as<std::string>();
+    if (vm.count("output") > 0) {
+        output_file = vm["output"].as<std::string>();
     }
     std::ofstream ofs(output_file);
     if (!ofs) {

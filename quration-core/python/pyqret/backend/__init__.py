@@ -61,15 +61,16 @@ class ScLsFixedV0Option:
         use_magic_state_cultivation: bool = False,
         magic_factory_seed_offset: int = 0,
         magic_generation_period: int = 15,
-        prob_magic_state_creation: float = 1.0,
-        maximum_magic_state_stock: int = 10000,
+        magic_generation_success_probability: float = 1.0,
+        magic_generation_maximum_stock: int = 10000,
         entanglement_generation_period: int = 100,
-        maximum_entangled_state_stock: int = 10,
+        entanglement_generation_maximum_stock: int = 10,
         reaction_time: int = 1,
-        physical_error_rate: float = 0.0,
-        drop_rate: float = 0.0,
+        logical_error_rate_base: float = 0.0,
+        logical_error_rate_drop_rate: float = 0.0,
         code_cycle_time_sec: float = 0.0,
-        allowed_failure_prob: float = 0.0,
+        allowed_failure_probability: float = 0.0,
+        magic_factory_cell_count: int = 1,
     ) -> None:
         """Compiling options for the SC_LS_FIXED_V0 Machine.
 
@@ -78,30 +79,32 @@ class ScLsFixedV0Option:
             use_magic_state_cultivation (bool, optional): if true, magic state factories are simulated using the cultivation method. Defaults to False.
             magic_factory_seed_offset (int, optional): base seed offset added to each magic state factory's ID. Defaults to 0.
             magic_generation_period (int, optional): beats to generate a magic state. Defaults to 15.
-            prob_magic_state_creation (float, optional): success probability of creating a magic state. Defaults to 1.0.
-            maximum_magic_state_stock (int, optional): the number of magic states that can be stored in a magic state factory. Defaults to 10000.
+            magic_generation_success_probability (float, optional): success probability of creating a magic state. Defaults to 1.0.
+            magic_generation_maximum_stock (int, optional): the number of magic states that can be stored in a magic state factory. Defaults to 10000.
             entanglement_generation_period (int, optional): beats to generate an entanglement pair. Defaults to 100.
-            maximum_entangled_state_stock (int, optional): the number of entanglement pairs that can be stored in an entanglement factory. Defaults to 10.
+            entanglement_generation_maximum_stock (int, optional): the number of entanglement pairs that can be stored in an entanglement factory. Defaults to 10.
             reaction_time (int, optional): beats it takes for the measured value to be error-corrected. Defaults to 1.
-            physical_error_rate (float, optional): physical error rate p for logical error estimation. Defaults to 0.0.
-            drop_rate (float, optional): drop rate Lambda for logical error estimation. Defaults to 0.0.
+            logical_error_rate_base (float, optional): physical error rate p for logical error estimation. Defaults to 0.0.
+            logical_error_rate_drop_rate (float, optional): drop rate Lambda for logical error estimation. Defaults to 0.0.
             code_cycle_time_sec (float, optional): code cycle time in seconds (t_cycle). Defaults to 0.0.
-            allowed_failure_prob (float, optional): allowed failure probability eps. Defaults to 0.0.
+            allowed_failure_probability (float, optional): allowed failure probability eps. Defaults to 0.0.
+            magic_factory_cell_count (int, optional): number of surface code cells per magic state factory for resource estimation. The qubit plane always uses 1 cell per factory regardless of this value. Defaults to 1.
         """
         self._impl = _M.ScLsFixedV0Option(
             topology,
             use_magic_state_cultivation,
             magic_factory_seed_offset,
             magic_generation_period,
-            prob_magic_state_creation,
-            maximum_magic_state_stock,
+            magic_generation_success_probability,
+            magic_generation_maximum_stock,
             entanglement_generation_period,
-            maximum_entangled_state_stock,
+            entanglement_generation_maximum_stock,
             reaction_time,
-            physical_error_rate,
-            drop_rate,
+            logical_error_rate_base,
+            logical_error_rate_drop_rate,
             code_cycle_time_sec,
-            allowed_failure_prob,
+            allowed_failure_probability,
+            magic_factory_cell_count,
         )
 
     @property
@@ -115,9 +118,9 @@ class ScLsFixedV0Option:
         return self._impl.magic_generation_period
 
     @property
-    def maximum_magic_state_stock(self) -> int:
+    def magic_generation_maximum_stock(self) -> int:
         """The number of magic states that can be stored in a magic state factory."""
-        return self._impl.maximum_magic_state_stock
+        return self._impl.magic_generation_maximum_stock
 
     @property
     def entanglement_generation_period(self) -> int:
@@ -125,9 +128,9 @@ class ScLsFixedV0Option:
         return self._impl.entanglement_generation_period
 
     @property
-    def maximum_entangled_state_stock(self) -> int:
+    def entanglement_generation_maximum_stock(self) -> int:
         """The number of entanglement pairs that can be stored in an entanglement factory."""
-        return self._impl.maximum_entangled_state_stock
+        return self._impl.entanglement_generation_maximum_stock
 
     @property
     def reaction_time(self) -> int:
@@ -135,14 +138,14 @@ class ScLsFixedV0Option:
         return self._impl.reaction_time
 
     @property
-    def physical_error_rate(self) -> float:
+    def logical_error_rate_base(self) -> float:
         """Physical error rate p for logical error estimation."""
-        return self._impl.physical_error_rate
+        return self._impl.logical_error_rate_base
 
     @property
-    def drop_rate(self) -> float:
+    def logical_error_rate_drop_rate(self) -> float:
         """Drop rate Lambda for logical error estimation."""
-        return self._impl.drop_rate
+        return self._impl.logical_error_rate_drop_rate
 
     @property
     def code_cycle_time_sec(self) -> float:
@@ -150,9 +153,14 @@ class ScLsFixedV0Option:
         return self._impl.code_cycle_time_sec
 
     @property
-    def allowed_failure_prob(self) -> float:
+    def allowed_failure_probability(self) -> float:
         """Allowed failure probability eps."""
-        return self._impl.allowed_failure_prob
+        return self._impl.allowed_failure_probability
+
+    @property
+    def magic_factory_cell_count(self) -> int:
+        """Number of surface code cells per magic state factory for resource estimation."""
+        return self._impl.magic_factory_cell_count
 
     def __str__(self) -> str:
         return str(self._impl)
@@ -266,7 +274,9 @@ class Compiler:
         """
         self._impl.add_pass(name)
 
-    def add_external_pass(self, name: str, cmd: str, input_path: str | Path, output_path: str | Path) -> None:
+    def add_external_pass(
+        self, name: str, cmd: str, input_path: str | Path, output_path: str | Path
+    ) -> None:
         """Add an external pass to the compiler.
 
         Args:
@@ -317,20 +327,20 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.magic_generation_period
 
     @property
-    def maximum_magic_state_stock(self) -> int:  # noqa:D102
-        return self._impl.maximum_magic_state_stock
+    def magic_generation_maximum_stock(self) -> int:  # noqa:D102
+        return self._impl.magic_generation_maximum_stock
 
     @property
     def reaction_time(self) -> int:  # noqa:D102
         return self._impl.reaction_time
 
     @property
-    def runtime(self) -> int:  # noqa:D102
-        return self._impl.runtime
+    def execution_time(self) -> int:  # noqa:D102
+        return self._impl.execution_time
 
     @property
-    def runtime_without_topology(self) -> int:  # noqa:D102
-        return self._impl.runtime_without_topology
+    def execution_time_without_topology(self) -> int:  # noqa:D102
+        return self._impl.execution_time_without_topology
 
     @property
     def gate_count(self) -> int:  # noqa:D102
@@ -349,24 +359,24 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.gate_throughput
 
     @property
-    def measurement_feedback_count(self) -> int:  # noqa:D102
-        return self._impl.measurement_feedback_count
+    def reaction_count(self) -> int:  # noqa:D102
+        return self._impl.reaction_count
 
     @property
-    def measurement_feedback_depth(self) -> int:  # noqa:D102
-        return self._impl.measurement_feedback_depth
+    def reaction_depth(self) -> int:  # noqa:D102
+        return self._impl.reaction_depth
 
     @property
-    def measurement_feedback_rate(self) -> list[int]:  # noqa:D102
-        return self._impl.measurement_feedback_rate
+    def reaction_rate(self) -> list[int]:  # noqa:D102
+        return self._impl.reaction_rate
 
     @property
-    def runtime_estimation_measurement_feedback_count(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_measurement_feedback_count
+    def execution_time_estimation_from_reaction_count(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_from_reaction_count
 
     @property
-    def runtime_estimation_measurement_feedback_depth(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_measurement_feedback_depth
+    def execution_time_estimation_from_reaction_depth(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_from_reaction_depth
 
     @property
     def magic_state_consumption_count(self) -> int:  # noqa:D102
@@ -381,12 +391,12 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.magic_state_consumption_rate
 
     @property
-    def runtime_estimation_magic_state_consumption_count(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_magic_state_consumption_count
+    def execution_time_estimation_magic_state_consumption_count(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_magic_state_consumption_count
 
     @property
-    def runtime_estimation_magic_state_consumption_depth(self) -> int:  # noqa:D102
-        return self._impl.runtime_estimation_magic_state_consumption_depth
+    def execution_time_estimation_magic_state_consumption_depth(self) -> int:  # noqa:D102
+        return self._impl.execution_time_estimation_magic_state_consumption_depth
 
     @property
     def magic_factory_count(self) -> int:  # noqa:D102
@@ -425,8 +435,8 @@ class ScLsFixedV0CompileInfo:  # noqa:PLR0904
         return self._impl.execution_time_sec
 
     @property
-    def num_physical_qubits(self) -> int:  # noqa:D102
-        return self._impl.num_physical_qubits
+    def physical_qubit_count(self) -> int:  # noqa:D102
+        return self._impl.physical_qubit_count
 
     def to_json(self) -> dict:  # noqa:D102
         j = self._impl.to_json()

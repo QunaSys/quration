@@ -7,6 +7,7 @@
 #define QRET_RUNTIME_CLIFFORD_STATE_H
 
 #include <stdexcept>
+#include <vector>
 
 #include "qret/math/clifford.h"
 #include "qret/runtime/quantum_state.h"
@@ -18,6 +19,11 @@ public:
 
     // Gate
     void Measure(std::uint64_t q, std::uint64_t r) override;
+    void MeasurePauliProduct(
+            const std::vector<std::uint64_t>& qs,
+            const std::vector<math::Pauli>& ps,
+            std::uint64_t r
+    ) override;
     void X(std::uint64_t q) override;
     void Y(std::uint64_t q) override;
     void Z(std::uint64_t q) override;
@@ -100,6 +106,8 @@ public:
     }
 
 private:
+    bool MeasurePauliString(const math::PauliString& measurement_base);
+
     std::size_t num_qubits_ = 0;
     math::StabilizerGroup sg_;
 };

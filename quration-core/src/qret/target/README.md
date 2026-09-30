@@ -1,28 +1,28 @@
 \page qret_target target module
 
-バックエンドの量子コンピュータに固有の命令やパスを実装する。
+Implements instructions and passes specific to backend quantum computers.
 
-## コードマップ
+## Code map
 
-量子コンピュータ固有の情報やパスを登録する機能を以下のファイルで実装する。
+The following files implement functionality for registering quantum-computer-specific information and passes.
 
 * `qret/target/target_enum.h`
 * `qret/target/target_machine.h`
-  * `qret::TargetMachine` : ターゲットのマシンに関する情報を保持するクラス
+  * `qret::TargetMachine` : class that holds information about a target machine
 * `qret/target/target_registry.h`
-  * `qret::Target` : ターゲットに固有の情報を保持するクラス
-    * `name` : ターゲット識別子（例: `sc_ls_fixed_v0`, `tutorial_nisq_v0`）
-    * `short_desc` : ターゲットの短い説明
-    * `asm_printer_ctor` : `qret::AsmPrinter` 生成関数（optional capability）
-    * `CreateAsmStreamer()` : asm 出力時に使う `qret::AsmStreamer` を生成する
-    * `HasAsmPrinter()` / `TryCreateAsmPrinter()` で asm 機能の有無を安全に判定できる
-  * `qret::TargetRegistry` : ターゲットのレジストリクラス
-    * `target_map` : target 名 -> `qret::Target`
-    * `compile_backend_map` : target 名 -> `qret::TargetCompileBackend`
-    * `RegisterTarget` / `RegisterCompileBackend` / `RegisterAsmPrinter` を提供する
-    * compile backend と optional な asm printer capability を一元管理する
+  * `qret::Target` : class that holds target-specific information
+    * `name` : target identifier, for example `sc_ls_fixed_v0` or `tutorial_nisq_v0`
+    * `short_desc` : short description of the target
+    * `asm_printer_ctor` : function that creates `qret::AsmPrinter` (optional capability)
+    * `CreateAsmStreamer()` : creates the `qret::AsmStreamer` used for asm output
+    * `HasAsmPrinter()` / `TryCreateAsmPrinter()` : safely checks whether asm functionality is available
+  * `qret::TargetRegistry` : target registry class
+    * `target_map` : target name -> `qret::Target`
+    * `compile_backend_map` : target name -> `qret::TargetCompileBackend`
+    * Provides `RegisterTarget`, `RegisterCompileBackend`, and `RegisterAsmPrinter`.
+    * Centrally manages compile backends and optional asm printer capability.
 
-## バックエンド
+## Backends
 
-* SC_LS_FIXED_V0: `qret/target/sc_ls_fixed_v0/` で実装する
-* TUTORIAL_NISQ_V0: `qret/target/tutorial_nisq_v0/` で実装する
+* SC_LS_FIXED_V0: implemented in `qret/target/sc_ls_fixed_v0/`
+* TUTORIAL_NISQ_V0: implemented in `qret/target/tutorial_nisq_v0/`

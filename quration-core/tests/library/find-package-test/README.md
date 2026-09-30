@@ -1,5 +1,5 @@
 # find-package-test
 
-`cmake --install` で作成した配布用ライブラリが使用可能か判定するテスト
+This test checks whether the distribution library created by `cmake --install` can be used.
 
 * `test-shared.sh`

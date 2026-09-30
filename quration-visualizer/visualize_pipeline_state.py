@@ -365,7 +365,7 @@ def draw_qubit_cell(ax: plt.Axes, q: QubitSpan) -> None:
     z_color = "#ef4444"
     x_color = "#0284c7"
     if q.dir == 0:
-        # 左右が Z 境界、上下が X 境界
+        # Left/right edges are Z boundaries; top/bottom edges are X boundaries.
         edge_list = [
             ((x - CELL_HALF, y - CELL_HALF), (x - CELL_HALF, y + CELL_HALF), z_color),
             ((x + CELL_HALF, y - CELL_HALF), (x + CELL_HALF, y + CELL_HALF), z_color),
@@ -373,7 +373,7 @@ def draw_qubit_cell(ax: plt.Axes, q: QubitSpan) -> None:
             ((x - CELL_HALF, y - CELL_HALF), (x + CELL_HALF, y - CELL_HALF), x_color),
         ]
     else:
-        # 上下が Z 境界、左右が X 境界
+        # Top/bottom edges are Z boundaries; left/right edges are X boundaries.
         edge_list = [
             ((x - CELL_HALF, y - CELL_HALF), (x - CELL_HALF, y + CELL_HALF), x_color),
             ((x + CELL_HALF, y - CELL_HALF), (x + CELL_HALF, y + CELL_HALF), x_color),
@@ -648,10 +648,10 @@ def draw_running_ancilla(
 
 def validate_topology(target: dict[str, Any], *, allow_non_dim2: bool) -> None:
     machine_option = target.get("machine_option", {})
-    machine_type = str(machine_option.get("type", "")).lower()
-    if machine_type not in {"", "dim2"} and not allow_non_dim2:
+    topology_type = str(machine_option.get("topology_type", "")).lower()
+    if topology_type not in {"", "dim2"} and not allow_non_dim2:
         msg = (
-            f"machine_option.type is '{machine_type.upper()}' (not Dim2). "
+            f"machine_option.topology_type is '{topology_type.upper()}' (not Dim2). "
             "This viewer is optimized for Dim2 and may show unexpected layout."
         )
         print(f"[WARN] {msg}")

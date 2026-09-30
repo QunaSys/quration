@@ -1,16 +1,17 @@
 {
     "metadata": {
         "format": "IR",
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "qret_version": "0.6.0",
         "created_at": "2025-09-24T22:12:52"
     },
     "name": "branch",
-    "circuit_list": [
+    "entry_function": "Main",
+    "function_list": [
         {
             "name": "Main",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

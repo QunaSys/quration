@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.21)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(utils)
@@ -85,12 +85,6 @@ function(set_to_on option description)
   endif()
 endfunction(set_to_on)
 if(MSVC)
-  # Collect all binaries in a stable path on Windows.
-  set(QRET_WINDOWS_OUTPUT_DIRECTORY "$<1:${CMAKE_BINARY_DIR}/bin>")
-  set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${QRET_WINDOWS_OUTPUT_DIRECTORY}")
-  set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${QRET_WINDOWS_OUTPUT_DIRECTORY}")
-  set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${QRET_WINDOWS_OUTPUT_DIRECTORY}")
-
   foreach(option QRET_DEV_MODE QRET_MEASURE_COVERAGE QRET_USE_QULACS)
     set_to_off(${option} "in Windows.")
   endforeach(option)
@@ -163,6 +157,8 @@ if(QRET_BUILD_EXAMPLE)
   if(QRET_BUILD_ALGORITHM)
     add_subdirectory_with_runtime_output(quration-algorithm/examples
                                          "${CMAKE_BINARY_DIR}/examples")
+    add_subdirectory_with_runtime_output(quration-algorithm/benchmark_generators
+                                         "${CMAKE_BINARY_DIR}/benchmark_generators")
   endif()
 endif()
 
@@ -191,29 +187,13 @@ install(
   FILES "${PROJECT_BINARY_DIR}/${PROJECT_NAME}Config.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
   COMPONENT Devel)
-if(MSVC)
-  foreach(_target IN ITEMS yaml-cpp::yaml-cpp Boost::program_options)
-    if(TARGET ${_target})
-      get_target_property(_dll_path ${_target} IMPORTED_LOCATION_RELEASE)
-      if(NOT _dll_path)
-        get_target_property(_dll_path ${_target} IMPORTED_LOCATION)
-      endif()
-
-      if(_dll_path)
-        install(FILES ${_dll_path} DESTINATION ${CMAKE_INSTALL_BINDIR})
-      else()
-        message(WARNING "${_target} runtime DLL not found, manual copying might be needed.")
-      endif()
-
-      unset(_dll_path)
-    else()
-      message(WARNING "${_target} target not found, manual copying might be needed.")
-    endif()
-  endforeach()
-endif()
+# RUNTIME_DEPENDENCY_SET lets install() discover the full transitive closure
+# of runtime DLLs automatically,
+# instead of hand-maintaining a list of "known" DLL targets.
 install(
   TARGETS ${CORE_LIB_NAME}
   EXPORT ${PROJECT_NAME}Targets
+  RUNTIME_DEPENDENCY_SET ${PROJECT_NAME}RuntimeDeps
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -221,9 +201,30 @@ if(QRET_BUILD_ALGORITHM)
   install(
     TARGETS ${ALGORITHM_LIB_NAME}
     EXPORT ${PROJECT_NAME}Targets
+    RUNTIME_DEPENDENCY_SET ${PROJECT_NAME}RuntimeDeps
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+if(MSVC)
+  get_target_property(QRET_CORE_LIB_TYPE ${CORE_LIB_NAME} TYPE)
+  # OBJECT_LIBRARY targets (QRET_BUILD_PYTHON builds ${CORE_LIB_NAME} that
+  # way) have no TARGET_FILE_DIR, so this block only applies when it is a
+  # real SHARED/STATIC library.
+  if(NOT QRET_CORE_LIB_TYPE STREQUAL "OBJECT_LIBRARY")
+    # DIRECTORIES lets ${ALGORITHM_LIB_NAME} (when QRET_BUILD_ALGORITHM=ON)
+    # resolve its dependency on ${CORE_LIB_NAME}, which is built into a
+    # different output directory. Other dependencies are expected to be
+    # found via the normal Windows resolution (same directory as the
+    # depending file), which relies on vcpkg's default
+    # VCPKG_APPLOCAL_DEPS=ON copying them next to the build output.
+    install(
+      RUNTIME_DEPENDENCY_SET ${PROJECT_NAME}RuntimeDeps
+      DESTINATION ${CMAKE_INSTALL_BINDIR}
+      PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"
+      POST_EXCLUDE_REGEXES ".*system32.*"
+      DIRECTORIES $<TARGET_FILE_DIR:${CORE_LIB_NAME}>)
+  endif()
 endif()
 install(
   EXPORT ${PROJECT_NAME}Targets

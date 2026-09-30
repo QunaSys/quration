@@ -9,4 +9,5 @@ set_target_properties(
              CXX_STANDARD_REQUIRED ON
              CXX_EXTENSIONS OFF)
 target_compile_options(${TARGET_NAME} PRIVATE ${QRET_COMPILE_OPTIONS})
+qret_copy_runtime_dependencies(${TARGET_NAME})
 install(TARGETS ${TARGET_NAME})

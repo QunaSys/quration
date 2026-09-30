@@ -1,10 +1,10 @@
 {
     "name": "Tutorial3Module",
-    "circuit_list": [
+    "function_list": [
         {
             "name": "Tutorial3Function",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -60,7 +60,7 @@
         {
             "name": "Toffoli",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -90,7 +90,7 @@
         {
             "name": "RZ_0.1",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -122,7 +122,7 @@
         {
             "name": "RZ_0.01",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -155,7 +155,7 @@
         {
             "name": "RZ_0.01_impl",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

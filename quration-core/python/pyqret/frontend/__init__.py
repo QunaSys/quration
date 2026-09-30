@@ -10,7 +10,7 @@ from typing_extensions import Self
 
 from .. import IteratorWrapper
 from .._qret_impl import frontend as _M  # pyright: ignore[reportMissingImports]
-from .._qret_impl.frontend import Opcode, QuantumAttribute, QuantumType  # pyright: ignore[reportMissingImports]
+from .._qret_impl.frontend import Opcode, Pauli, QuantumAttribute, QuantumType  # pyright: ignore[reportMissingImports]
 
 if TYPE_CHECKING:
     from ..backend import MachineFunction

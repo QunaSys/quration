@@ -18,16 +18,16 @@ struct QRET_EXPORT ScLsFixedV0CompileInfo : CompileInfo {
     bool use_magic_state_cultivation = false;
     std::uint64_t magic_factory_seed_offset = 0;
     std::uint64_t magic_generation_period = 0;
-    double prob_magic_state_creation = 1.0;
-    std::uint64_t maximum_magic_state_stock = 0;
+    double magic_generation_success_probability = 1.0;
+    std::uint64_t magic_generation_maximum_stock = 0;
     std::uint64_t entanglement_generation_period = 0;
-    std::uint64_t maximum_entangled_state_stock = 0;
+    std::uint64_t entanglement_generation_maximum_stock = 0;
     std::uint64_t reaction_time = 0;
     std::shared_ptr<const Topology> topology = nullptr;
 
-    // info about runtime
-    std::uint64_t runtime = 0;
-    std::uint64_t runtime_without_topology = 0;
+    // info about execution time
+    std::uint64_t execution_time = 0;
+    std::uint64_t execution_time_without_topology = 0;
 
     // info about gate
     std::uint64_t gate_count = 0;
@@ -35,27 +35,27 @@ struct QRET_EXPORT ScLsFixedV0CompileInfo : CompileInfo {
     std::uint64_t gate_depth = 0;
     std::vector<std::uint64_t> gate_throughput = {};
 
-    // info about measurement depth
-    std::uint64_t measurement_feedback_count = 0;
-    std::uint64_t measurement_feedback_depth = 0;
-    std::vector<std::uint64_t> measurement_feedback_rate = {};
-    std::uint64_t runtime_estimation_measurement_feedback_count = 0;
-    std::uint64_t runtime_estimation_measurement_feedback_depth = 0;
+    // info about reaction
+    std::uint64_t reaction_count = 0;
+    std::uint64_t reaction_depth = 0;
+    std::vector<std::uint64_t> reaction_rate = {};
+    std::uint64_t execution_time_estimation_from_reaction_count = 0;
+    std::uint64_t execution_time_estimation_from_reaction_depth = 0;
 
     // info about magic state consumption
     std::uint64_t magic_state_consumption_count = 0;
     std::uint64_t magic_state_consumption_depth = 0;
     std::vector<std::uint64_t> magic_state_consumption_rate = {};
-    std::uint64_t runtime_estimation_magic_state_consumption_count = 0;
-    std::uint64_t runtime_estimation_magic_state_consumption_depth = 0;
+    std::uint64_t execution_time_estimation_magic_state_consumption_count = 0;
+    std::uint64_t execution_time_estimation_magic_state_consumption_depth = 0;
     std::uint64_t magic_factory_count = 0;
 
     // info about entanglement consumption
     std::uint64_t entanglement_consumption_count = 0;
     std::uint64_t entanglement_consumption_depth = 0;
     std::vector<std::uint64_t> entanglement_consumption_rate = {};
-    std::uint64_t runtime_estimation_entanglement_consumption_count = 0;
-    std::uint64_t runtime_estimation_entanglement_consumption_depth = 0;
+    std::uint64_t execution_time_estimation_entanglement_consumption_count = 0;
+    std::uint64_t execution_time_estimation_entanglement_consumption_depth = 0;
     std::uint64_t entanglement_factory_count = 0;
 
     // info about cell consumption
@@ -69,7 +69,7 @@ struct QRET_EXPORT ScLsFixedV0CompileInfo : CompileInfo {
     // info about QEC resource estimation
     std::uint64_t code_distance = 0;
     double execution_time_sec = 0.0;
-    std::uint64_t num_physical_qubits = 0;
+    std::uint64_t physical_qubit_count = 0;
 
     template <typename T>
     static std::tuple<double, T> CalcAveAndPeak(const std::vector<T>& vec) {
@@ -88,8 +88,8 @@ struct QRET_EXPORT ScLsFixedV0CompileInfo : CompileInfo {
 
     double GateThroughputAve() const;
     std::uint64_t GateThroughputPeak() const;
-    double MeasurementFeedbackRateAve() const;
-    std::uint64_t MeasurementFeedbackRatePeak() const;
+    double ReactionRateAve() const;
+    std::uint64_t ReactionRatePeak() const;
     double MagicStateConsumptionRateAve() const;
     std::uint64_t MagicStateConsumptionRatePeak() const;
     double EntanglementConsumptionRateAve() const;

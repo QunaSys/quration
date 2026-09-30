@@ -107,54 +107,59 @@ std::optional<qret::sc_ls_fixed_v0::ScLsFixedV0MachineOption> GetMachineOption(
         const qret::sc_ls_fixed_v0::Topology& topology
 ) {
     const auto enable_pbc_mode = options.Contains("sc_ls_fixed_v0_enable_pbc_mode");
-    const auto machine_type_str = options.GetString("sc_ls_fixed_v0_machine_type", "auto");
-    const auto required_type = qret::sc_ls_fixed_v0::GetMachineType(topology);
-    auto machine_type = required_type;
-    if (machine_type_str != "auto") {
+    const auto topology_type_str = options.GetString("sc_ls_fixed_v0_topology_type", "auto");
+    const auto required_type = qret::sc_ls_fixed_v0::GetTopologyType(topology);
+    auto topology_type = required_type;
+    if (topology_type_str != "auto") {
         try {
-            machine_type = qret::sc_ls_fixed_v0::ScLsFixedV0MachineTypeFromString(machine_type_str);
+            topology_type = qret::sc_ls_fixed_v0::ScLsFixedV0TopologyTypeFromString(topology_type_str);
         } catch (const std::exception&) {
-            std::cerr << "Error: Invalid --sc_ls_fixed_v0_machine_type '" << machine_type_str
+            std::cerr << "Error: Invalid --sc_ls_fixed_v0_topology_type '" << topology_type_str
                       << "'. Valid values are 'auto', 'Dim2', 'Dim3', 'DistributedDim2', "
                          "'DistributedDim3'.\n";
             return std::nullopt;
         }
     }
-    if (!qret::sc_ls_fixed_v0::IsCompatible(machine_type, required_type)) {
-        std::cerr << "Error: The specified machine type '" << machine_type_str
+    if (!qret::sc_ls_fixed_v0::IsCompatible(topology_type, required_type)) {
+        std::cerr << "Error: The specified machine type '" << topology_type_str
                   << "' is not compatible with the topology's minimum requirement of '"
                   << qret::sc_ls_fixed_v0::ToString(required_type) << "'.\n"
                   << "Please use a machine type that is either identical to or more advanced than '"
                   << qret::sc_ls_fixed_v0::ToString(required_type) << "'.\n";
         return std::nullopt;
     }
-    if (enable_pbc_mode && machine_type != qret::sc_ls_fixed_v0::ScLsFixedV0MachineType::Dim2) {
+    if (enable_pbc_mode && topology_type != qret::sc_ls_fixed_v0::ScLsFixedV0TopologyType::Dim2) {
         std::cerr << "Error: --sc_ls_fixed_v0_enable_pbc_mode currently supports only "
-                     "--sc_ls_fixed_v0_machine_type=Dim2.\n";
+                     "--sc_ls_fixed_v0_topology_type=Dim2.\n";
         return std::nullopt;
     }
 
     return qret::sc_ls_fixed_v0::ScLsFixedV0MachineOption{
-            .type = machine_type,
+            .topology_type = topology_type,
             .enable_pbc_mode = enable_pbc_mode,
             .use_magic_state_cultivation =
                     options.Contains("sc_ls_fixed_v0_use_magic_state_cultivation"),
             .magic_factory_seed_offset =
                     options.GetUInt64("sc_ls_fixed_v0_magic_factory_seed_offset", 0),
             .magic_generation_period = options.GetUInt64("sc_ls_fixed_v0_magic_generation_period"),
-            .prob_magic_state_creation =
-                    options.GetDouble("sc_ls_fixed_v0_prob_magic_state_creation", 1.0),
-            .maximum_magic_state_stock =
-                    options.GetUInt64("sc_ls_fixed_v0_maximum_magic_state_stock"),
+            .magic_generation_success_probability =
+                    options.GetDouble("sc_ls_fixed_v0_magic_generation_success_probability", 1.0),
+            .magic_generation_maximum_stock =
+                    options.GetUInt64("sc_ls_fixed_v0_magic_generation_maximum_stock"),
             .entanglement_generation_period =
                     options.GetUInt64("sc_ls_fixed_v0_entanglement_generation_period"),
-            .maximum_entangled_state_stock =
-                    options.GetUInt64("sc_ls_fixed_v0_maximum_entangled_state_stock"),
+            .entanglement_generation_maximum_stock =
+                    options.GetUInt64("sc_ls_fixed_v0_entanglement_generation_maximum_stock"),
             .reaction_time = options.GetUInt64("sc_ls_fixed_v0_reaction_time"),
-            .physical_error_rate = options.GetDouble("sc_ls_fixed_v0_physical_error_rate", 0.0),
-            .drop_rate = options.GetDouble("sc_ls_fixed_v0_drop_rate", 0.0),
+            .logical_error_rate_base =
+                    options.GetDouble("sc_ls_fixed_v0_logical_error_rate_base", 0.0),
+            .logical_error_rate_drop_rate =
+                    options.GetDouble("sc_ls_fixed_v0_logical_error_rate_drop_rate", 0.0),
             .code_cycle_time_sec = options.GetDouble("sc_ls_fixed_v0_code_cycle_time_sec", 0.0),
-            .allowed_failure_prob = options.GetDouble("sc_ls_fixed_v0_allowed_failure_prob", 0.0)
+            .allowed_failure_probability =
+                    options.GetDouble("sc_ls_fixed_v0_allowed_failure_probability", 0.0),
+            .magic_factory_cell_count =
+                    options.GetUInt64("sc_ls_fixed_v0_magic_factory_cell_count", 1),
     };
 }
 
@@ -245,7 +250,7 @@ void ScLsFixedV0CompileBackend::AddCompileOptions(qret::CompileOptionRegistrar& 
             "Path to the SC_LS_FIXED_V0 topology file."
     );
     registrar.AddStringOptionWithDefault(
-            "sc_ls_fixed_v0_machine_type",
+            "sc_ls_fixed_v0_topology_type",
             "auto",
             "TYPE",
             "SC_LS_FIXED_V0 machine type: 'Dim2', 'Dim3', 'DistributedDim2', or "
@@ -261,7 +266,7 @@ void ScLsFixedV0CompileBackend::AddCompileOptions(qret::CompileOptionRegistrar& 
             "sc_ls_fixed_v0_use_magic_state_cultivation",
             "Simulate magic-state factories using the cultivation method "
             "(requires --sc_ls_fixed_v0_magic_factory_seed_offset, "
-            "--sc_ls_fixed_v0_prob_magic_state_creation)."
+            "--sc_ls_fixed_v0_magic_generation_success_probability)."
     );
     registrar.AddUInt64Option(
             "sc_ls_fixed_v0_magic_factory_seed_offset",
@@ -275,13 +280,13 @@ void ScLsFixedV0CompileBackend::AddCompileOptions(qret::CompileOptionRegistrar& 
             "Beats required to produce one magic state."
     );
     registrar.AddDoubleOption(
-            "sc_ls_fixed_v0_prob_magic_state_creation",
+            "sc_ls_fixed_v0_magic_generation_success_probability",
             1.0,
             "Per-attempt success probability for magic-state creation. "
             "Required only if --sc_ls_fixed_v0_use_magic_state_cultivation=true."
     );
     registrar.AddUInt64Option(
-            "sc_ls_fixed_v0_maximum_magic_state_stock",
+            "sc_ls_fixed_v0_magic_generation_maximum_stock",
             10000,
             "Maximum number of magic states storable in a factory."
     );
@@ -291,7 +296,7 @@ void ScLsFixedV0CompileBackend::AddCompileOptions(qret::CompileOptionRegistrar& 
             "Beats required to generate one entangled pair."
     );
     registrar.AddUInt64Option(
-            "sc_ls_fixed_v0_maximum_entangled_state_stock",
+            "sc_ls_fixed_v0_entanglement_generation_maximum_stock",
             10,
             "Maximum number of entangled pairs storable in a factory."
     );
@@ -301,12 +306,12 @@ void ScLsFixedV0CompileBackend::AddCompileOptions(qret::CompileOptionRegistrar& 
             "Feed-forward latency in beats from measurement to error-corrected value."
     );
     registrar.AddDoubleOption(
-            "sc_ls_fixed_v0_physical_error_rate",
+            "sc_ls_fixed_v0_logical_error_rate_base",
             0.0,
             "Physical error rate p for logical error estimation."
     );
     registrar.AddDoubleOption(
-            "sc_ls_fixed_v0_drop_rate",
+            "sc_ls_fixed_v0_logical_error_rate_drop_rate",
             0.0,
             "Drop rate Lambda for logical error estimation."
     );
@@ -316,9 +321,15 @@ void ScLsFixedV0CompileBackend::AddCompileOptions(qret::CompileOptionRegistrar& 
             "Code cycle time in seconds (t_cycle) for execution time estimation."
     );
     registrar.AddDoubleOption(
-            "sc_ls_fixed_v0_allowed_failure_prob",
+            "sc_ls_fixed_v0_allowed_failure_probability",
             0.0,
             "Allowed failure probability (eps) for logical error estimation."
+    );
+    registrar.AddUInt64Option(
+            "sc_ls_fixed_v0_magic_factory_cell_count",
+            1,
+            "Number of surface code cells per magic state factory for resource estimation. "
+            "Qubit plane always uses 1 cell per factory regardless of this value."
     );
     registrar.AddStringOption(
             "sc_ls_fixed_v0_pass",

@@ -13,6 +13,7 @@
 #include "qret/ir/function.h"
 #include "qret/ir/instruction.h"
 #include "qret/ir/instructions.h"
+#include "qret/math/pauli.h"
 #include "qret/target/tutorial_nisq_v0/instruction.h"
 
 namespace qret::tutorial_nisq_v0 {
@@ -67,6 +68,21 @@ TutorialNisqV0Opcode FromIRBinaryOpcode(const qret::ir::Opcode::Table code) {
         default:
             throw std::runtime_error("unsupported binary opcode for tutorial_nisq_v0");
     }
+}
+
+TutorialNisqV0Opcode FromPauliMeasurementOpcode(const qret::math::Pauli pauli) {
+    switch (pauli) {
+        case qret::math::Pauli::X:
+            return TutorialNisqV0Opcode::MX;
+        case qret::math::Pauli::Y:
+            return TutorialNisqV0Opcode::MY;
+        case qret::math::Pauli::Z:
+            return TutorialNisqV0Opcode::MZ;
+        case qret::math::Pauli::I:
+        default:
+            break;
+    }
+    throw std::runtime_error("unsupported measurement Pauli for tutorial_nisq_v0");
 }
 
 [[nodiscard]] bool LowerInstruction(
@@ -138,6 +154,23 @@ TutorialNisqV0Opcode FromIRBinaryOpcode(const qret::ir::Opcode::Table code) {
                     std::unique_ptr<qret::MachineInstruction>(new TutorialMeasurementInstruction(
                             TutorialNisqV0Opcode::MZ,
                             i->GetQubit(),
+                            i->GetRegister()
+                    ))
+            );
+            return true;
+        }
+        case QOpcode::PauliProductMeasurement: {
+            const auto* i = qret::Cast<qret::ir::PauliProductMeasurementInst>(&inst);
+            if (i->GetQubits().size() != 1) {
+                std::cerr << "tutorial_nisq_v0 does not support multi-qubit Pauli product "
+                             "measurement"
+                          << " (basic block='" << bb_name << "')" << std::endl;
+                return false;
+            }
+            mbb.EmplaceBack(
+                    std::unique_ptr<qret::MachineInstruction>(new TutorialMeasurementInstruction(
+                            FromPauliMeasurementOpcode(i->GetPaulis().front()),
+                            i->GetQubits().front(),
                             i->GetRegister()
                     ))
             );

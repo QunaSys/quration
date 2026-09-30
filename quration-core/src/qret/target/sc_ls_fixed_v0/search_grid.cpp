@@ -506,9 +506,30 @@ std::optional<SearchRoute::Route2D> SearchRoute::FindCnotRoute2D(
     const auto& dst = state.GetPlace(q_dst);
     const auto dir_src = state.GetDir(q_src);
 
+    // verify source and targets are on the same node at time T
     if (src.z != dst.z || plane_0.GetTopology().GetZ() != src.z) {
         return std::nullopt;
     }
+
+    {
+        const auto& state_1 = plane_1.GetParent().GetParent();
+        const auto& src_1 = state_1.GetPlace(q_src);
+        const auto& dst_1 = state_1.GetPlace(q_dst);
+        // verify source and targets are on the same node at time T+1
+        if (src_1.z != dst_1.z
+            || plane_1.GetTopology().GetZ() != src_1.z) {
+            return std::nullopt;
+        }
+        // verify control and target are available at both T and T+1
+        // this is conservative conditioning, and can be relaxed
+        if (!plane_0.GetNode(src.XY()).is_available
+            || !plane_0.GetNode(dst.XY()).is_available
+            || !plane_1.GetNode(src_1.XY()).is_available
+            || !plane_1.GetNode(dst_1.XY()).is_available) {
+            return std::nullopt;
+        }
+    }
+
 
     const auto search = BuildCnotSearchData(plane_0, plane_1, q_dst, boundaries_dst);
     const auto best =
@@ -683,9 +704,25 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
         const std::list<QSymbol>& qs,
         const std::list<Pauli>& boundaries,
         const std::list<ESymbol>& es,
+        const std::list<EHandle>& ehs,
         bool use_magic_state
 ) {
-    // Fast paths for common small cases.
+    if (es.size() != ehs.size()) {
+        throw std::logic_error("ESymbol and EHandle list sizes must match.");
+    }
+
+    const auto& topology = plane.GetTopology();
+    auto& state = plane.GetParent().GetParent();
+    const auto can_use_entanglement = [&state](ESymbol e, EHandle h) {
+        const auto pair = state.GetTopology().GetPair(e);
+        const auto& e_state = state.GetState(e);
+        if (e_state.IsReserved(h)) {
+            return true;
+        }
+        return e_state.IsAvailable() && state.GetState(pair).IsAvailable();
+    };
+
+    // Fast paths for two qubits
     if (qs.size() == 2 && es.empty() && !use_magic_state && boundaries.size() == 2) {
         const auto q_src = *qs.begin();
         const auto q_dst = *std::next(qs.begin());
@@ -719,6 +756,8 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
                 .qubit_contacts = std::move(contacts),
         };
     }
+
+    // Fast paths for one qubit and magic state
     if (qs.size() == 1 && es.empty() && use_magic_state && boundaries.size() == 1) {
         const auto q_dst = *qs.begin();
         const auto boundary_dst = *boundaries.begin();
@@ -743,9 +782,15 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
                 .qubit_contacts = std::move(contacts),
         };
     }
+
+    // Fast paths for one qubit and one entanglement
     if (qs.size() == 1 && es.size() == 1 && !use_magic_state && boundaries.size() == 1) {
         const auto q_dst = *qs.begin();
         const auto e_factory = *es.begin();
+        const auto e_handle = *ehs.begin();
+        if (!can_use_entanglement(e_factory, e_handle)) {
+            return std::nullopt;
+        }
         const auto boundary_dst = *boundaries.begin();
         SearchHelper::SetCostsOfFreeAncillae(plane, Unreachable2D);
         const auto route = FindRoute2DE(plane, e_factory, q_dst, GetBoundaryCode(boundary_dst));
@@ -768,9 +813,6 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
                 .qubit_contacts = std::move(contacts),
         };
     }
-
-    const auto& topology = plane.GetTopology();
-    auto& state = plane.GetParent().GetParent();
 
     static constexpr auto MId = -1;
     const auto ind_width = topology.GetMaxY();
@@ -860,8 +902,12 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
             b_itr++;
         }
     }
-    for (const auto e_factory : es) {
-        if (!state.GetState(e_factory).IsAvailable()) {
+    auto e_itr = es.begin();
+    auto h_itr = ehs.begin();
+    while (e_itr != es.end() && h_itr != ehs.end()) {
+        const auto e_factory = *e_itr;
+        const auto e_handle = *h_itr;
+        if (!can_use_entanglement(e_factory, e_handle)) {
             return std::nullopt;
         }
 
@@ -873,6 +919,8 @@ std::optional<SearchRoute::Ancilla2D> SearchRoute::FindAncilla(
         for (const auto place : GetNeighbors(e_place)) {
             add_to_node_if_free_ancilla(place, e_node);
         }
+        e_itr++;
+        h_itr++;
     }
 
     // BFS to construct graph.
@@ -1603,7 +1651,7 @@ std::optional<SearchRoute::Route3D> SearchRoute::FindRoute3D(
     route.dst = plane_2.GetParent().GetParent().GetPlace(q_dst);
     route.Audit();
 
-    return std::move(route);
+    return route;
 }
 std::optional<SearchRoute::Route3D> SearchRoute::FindCnotRoute3D(
         QuantumGrid& grid_0,
@@ -1789,7 +1837,7 @@ std::optional<SearchRoute::Route3DM> SearchRoute::FindRoute3DM(
     route.dst = plane_2.GetParent().GetParent().GetPlace(q_dst);
     route.Audit();
 
-    return std::move(route);
+    return route;
 }
 bool SearchRoute::TransReachable(QuantumGrid& grid, const Coord3D& src, std::int32_t dst_z) {
     const auto [s, d] = std::minmax(src.z, dst_z);

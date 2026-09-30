@@ -1,8 +1,8 @@
 \page qret_parser parser module
 
-パーサを実装する。
+Implements parsers.
 
-## コードマップ
+## Code map
 
 * `qret/parser/openqasm2.h`
 * `qret/parser/openqasm3.h`

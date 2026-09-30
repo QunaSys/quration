@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 
+#include "qret/math/pauli.h"
 #include "qret/qret_export.h"
 
 namespace qret {
@@ -78,6 +79,11 @@ public:
 
     void Barrier(std::string_view label);
     void Measure(std::size_t q, std::size_t r);
+    void PauliProductMeasure(
+            const std::vector<std::size_t>& qs,
+            const std::vector<math::Pauli>& ps,
+            std::size_t r
+    );
     void I(std::size_t q);
     void X(std::size_t q);
     void Y(std::size_t q);

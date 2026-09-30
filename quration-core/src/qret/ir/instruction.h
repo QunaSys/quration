@@ -34,6 +34,7 @@ public:
         // Measurement
         MeasurementOpsBegin = 0,
         Measurement,
+        PauliProductMeasurement,
         MeasurementOpsEnd,
 
         // Unary

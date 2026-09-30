@@ -33,6 +33,36 @@ std::int64_t EstimateInsertedWeight(
     // ordering.
     return base_weight + static_cast<std::int64_t>(rank);
 }
+void AddDependency(
+        std::unordered_map<ScLsInstructionBase*, InstQueue::Node>& nodes,
+        ScLsInstructionBase* parent,
+        ScLsInstructionBase* child,
+        Beat length
+) {
+    if (parent == child) {
+        return;
+    }
+
+    auto parent_node = nodes.find(parent);
+    auto child_node = nodes.find(child);
+    if (parent_node == nodes.end() || child_node == nodes.end()) {
+        return;
+    }
+
+    const auto old_child = parent_node->second.children.find(child);
+    if (old_child == parent_node->second.children.end() || old_child->second < length) {
+        parent_node->second.children[child] = length;
+    }
+
+    const auto old_parent = child_node->second.parents.find(parent);
+    const auto parent_is_new = old_parent == child_node->second.parents.end();
+    if (parent_is_new || old_parent->second < length) {
+        child_node->second.parents[parent] = length;
+    }
+    if (parent_is_new) {
+        child_node->second.num_remaining_parents++;
+    }
+}
 }  // namespace
 
 ScLsInstIterator::ScLsInstIterator(MachineFunction& tmp)
@@ -205,42 +235,40 @@ void InstQueue::CalculateWeightByInvDepth(std::unordered_map<ScLsInstructionBase
     }
 }
 bool InstQueue::Peek(const std::size_t size) {
-    const auto update_qmap = [&](QSymbol q, ScLsInstructionBase* inst, Node& node) {
+    const auto update_qmap = [&](QSymbol q, ScLsInstructionBase* inst) {
         auto itr = qmap_.find(q);
         if (itr != qmap_.end()) {
             auto* prev = itr->second;
 
             // If the previous instruction is still in the InstQueue, set a dependency.
-            auto prev_node = nodes_.find(prev);
-            if (prev_node != nodes_.end()) {
-                const auto latency = prev->Latency();
-                const auto length = prev_node->second.children.contains(inst)
-                        ? std::max(prev_node->second.children.at(inst), latency)
-                        : latency;
-                prev_node->second.children[inst] = length;
-                node.parents[prev] = length;
-                node.num_remaining_parents = static_cast<std::uint32_t>(node.parents.size());
-            }
+            AddDependency(nodes_, prev, inst, prev->Latency());
         }
         qmap_[q] = inst;
     };
-    const auto set_c_dep = [&](CSymbol condition, ScLsInstructionBase* inst, Node& node) {
+    const auto set_c_dep = [&](CSymbol condition, ScLsInstructionBase* inst) {
         auto itr = cmap_.find(condition);
         if (itr != cmap_.end()) {
             auto* prev = itr->second;
 
             // If the previous instruction is still in the InstQueue, set a dependency.
-            auto prev_node = nodes_.find(prev);
-            if (prev_node != nodes_.end()) {
-                const auto latency = prev->StartCorrecting() + option_.reaction_time;
-                const auto length = prev_node->second.children.contains(inst)
-                        ? std::max(prev_node->second.children.at(inst), latency)
-                        : latency;
-                prev_node->second.children[inst] = length;
-                node.parents[prev] = length;
-                node.num_remaining_parents = static_cast<std::uint32_t>(node.parents.size());
-            }
+            AddDependency(nodes_, prev, inst, prev->StartCorrecting() + option_.reaction_time);
         }
+    };
+    const auto update_emap = [&](ESymbol e, ScLsInstructionBase* inst) {
+        auto itr = emap_.find(e);
+        if (itr != emap_.end()) {
+            auto* prev = itr->second;
+            AddDependency(nodes_, prev, inst, prev->Latency());
+        }
+        emap_[e] = inst;
+    };
+    const auto update_mmap = [&](MSymbol m, ScLsInstructionBase* inst) {
+        auto itr = mmap_.find(m);
+        if (itr != mmap_.end()) {
+            auto* prev = itr->second;
+            AddDependency(nodes_, prev, inst, prev->Latency());
+        }
+        mmap_[m] = inst;
     };
 
     nodes_.reserve(nodes_.size() + size);
@@ -257,14 +285,20 @@ bool InstQueue::Peek(const std::size_t size) {
         auto& node = nodes_[inst] = Node(index_, {}, {});
 
         for (const auto& q : inst->QTarget()) {
-            update_qmap(q, inst, node);
+            update_qmap(q, inst);
+        }
+        for (const auto& e : inst->ETarget()) {
+            update_emap(e, inst);
+        }
+        for (const auto& m : inst->MTarget()) {
+            update_mmap(m, inst);
         }
         for (const auto& c : inst->Condition()) {
-            set_c_dep(c, inst, node);
+            set_c_dep(c, inst);
         }
         for (const auto& c : inst->CDepend()) {
             if (c.Id() >= NumReservedCSymbols) {
-                set_c_dep(c, inst, node);
+                set_c_dep(c, inst);
             }
         }
         for (const auto& c : inst->CCreate()) {
@@ -429,13 +463,23 @@ void InstQueue::InsertAfter(ScLsInstructionBase* inst, ScLsInstructionBase* new_
         child_node.parents[new_inst] = tmp_len;
     }
 
-    // Replace 'inst' with 'new_inst' in 'qmap_' and 'cmap_'.
+    // Replace 'inst' with 'new_inst' in 'qmap_', 'cmap_', 'mmap_', and 'emap_'.
     for (auto&& [_, tmp_inst] : qmap_) {
         if (tmp_inst == inst) {
             tmp_inst = new_inst;
         }
     }
     for (auto&& [_, tmp_inst] : cmap_) {
+        if (tmp_inst == inst) {
+            tmp_inst = new_inst;
+        }
+    }
+    for (auto&& [_, tmp_inst] : mmap_) {
+        if (tmp_inst == inst) {
+            tmp_inst = new_inst;
+        }
+    }
+    for (auto&& [_, tmp_inst] : emap_) {
         if (tmp_inst == inst) {
             tmp_inst = new_inst;
         }
@@ -466,6 +510,37 @@ void InstQueue::Replace(
         new_node_itr->second.weight =
                 EstimateInsertedWeight(algorithm_, new_inst, node.weight, node.index, i);
         new_node_itr->second.index = ++index_;
+    }
+
+    for (auto e_itr = emap_.begin(); e_itr != emap_.end();) {
+        if (e_itr->second == inst) {
+            e_itr = emap_.erase(e_itr);
+        } else {
+            ++e_itr;
+        }
+    }
+    for (auto m_itr = mmap_.begin(); m_itr != mmap_.end();) {
+        if (m_itr->second == inst) {
+            m_itr = mmap_.erase(m_itr);
+        } else {
+            ++m_itr;
+        }
+    }
+    for (auto* new_inst : new_insts) {
+        for (const auto& e : new_inst->ETarget()) {
+            const auto prev = emap_.find(e);
+            if (prev != emap_.end()) {
+                AddDependency(nodes_, prev->second, new_inst, prev->second->Latency());
+            }
+            emap_[e] = new_inst;
+        }
+        for (const auto& m : new_inst->MTarget()) {
+            const auto prev = mmap_.find(m);
+            if (prev != mmap_.end()) {
+                AddDependency(nodes_, prev->second, new_inst, prev->second->Latency());
+            }
+            mmap_[m] = new_inst;
+        }
     }
 
     // Replace 'inst' with 'new_insts' in parents of children.
@@ -537,7 +612,9 @@ void InstQueue::Replace(
     // Replace 'inst' with 'new_insts' in runnable if 'inst' is in runnable.
     if (runnable_.contains(inst)) {
         for (auto* new_inst : new_insts) {
-            runnable_.emplace(new_inst);
+            if (nodes_.at(new_inst).num_remaining_parents == 0) {
+                runnable_.emplace(new_inst);
+            }
         }
         runnable_.erase(inst);
     }

@@ -5,40 +5,100 @@
 
 #include "qret/math/pauli.h"
 
-#include <cctype>
 #include <iterator>
-#include <memory>
 #include <stdexcept>
 
 #include "qret/base/list.h"
 
 namespace qret::math {
-std::string ToString(Pauli p) {
+char ToChar(Pauli p) {
     switch (p) {
         case Pauli::I:
-            return "I";
+            return 'I';
         case Pauli::X:
-            return "X";
+            return 'X';
         case Pauli::Y:
-            return "Y";
+            return 'Y';
         case Pauli::Z:
-            return "Z";
+            return 'Z';
         default:
-            throw std::logic_error("unreachable");
+            throw std::logic_error("unknown Pauli");
     }
 }
-Pauli PauliFromString(const std::string& str) {
-    if (str == "I") {
-        return Pauli::I;
-    } else if (str == "X") {
-        return Pauli::X;
-    } else if (str == "Y") {
-        return Pauli::Y;
-    } else if (str == "Z") {
-        return Pauli::Z;
-    } else {
-        throw std::runtime_error("Unknown Pauli: " + str);
+
+Pauli PauliFromChar(char c) {
+    if (auto p = TryPauliFromChar(c)) {
+        return *p;
     }
+    throw std::runtime_error("Unknown Pauli: " + std::string(1, c));
+}
+
+std::optional<Pauli> TryPauliFromChar(char c) {
+    switch (c) {
+        case 'i':
+        case 'I':
+            return Pauli::I;
+        case 'x':
+        case 'X':
+            return Pauli::X;
+        case 'y':
+        case 'Y':
+            return Pauli::Y;
+        case 'z':
+        case 'Z':
+            return Pauli::Z;
+        default:
+            return std::nullopt;
+    }
+}
+
+int ToInt(Pauli p) {
+    switch (p) {
+        case Pauli::I:
+        case Pauli::X:
+        case Pauli::Y:
+        case Pauli::Z:
+            return static_cast<int>(p);
+        default:
+            throw std::logic_error("unknown Pauli");
+    }
+}
+
+Pauli PauliFromInt(int value) {
+    if (auto p = TryPauliFromInt(value)) {
+        return *p;
+    }
+    throw std::runtime_error("Unknown Pauli: " + std::to_string(value));
+}
+
+std::optional<Pauli> TryPauliFromInt(int value) {
+    switch (value) {
+        case 0:
+            return Pauli::I;
+        case 1:
+            return Pauli::X;
+        case 2:
+            return Pauli::Y;
+        case 3:
+            return Pauli::Z;
+        default:
+            return std::nullopt;
+    }
+}
+
+std::string ToString(Pauli p) {
+    return std::string(1, ToChar(p));
+}
+
+Pauli PauliFromString(const std::string& str) {
+    if (str.size() == 1) {
+        return PauliFromChar(str.front());
+    }
+    throw std::runtime_error("Unknown Pauli: " + str);
+}
+
+std::ostream& operator<<(std::ostream& out, Pauli p) {
+    return out << ToChar(p);
 }
 
 PauliString::PauliString(std::size_t num_qubits, std::uint32_t sign)
@@ -52,27 +112,7 @@ PauliString::PauliString(std::string_view pauli_string, std::uint32_t sign)
     xs_.resize(pauli_string.size());
     zs_.resize(pauli_string.size());
     for (auto i = std::size_t{0}; i < pauli_string.size(); ++i) {
-        switch (std::tolower(pauli_string[i])) {
-            case 'x':
-            case 'X':
-                xs_.set(i);
-                break;
-            case 'z':
-            case 'Z':
-                zs_.set(i);
-                break;
-            case 'y':
-            case 'Y':
-                xs_.set(i);
-                zs_.set(i);
-                break;
-            case 'i':
-            case 'I':
-                break;
-            default:
-                throw std::runtime_error("Unknown char");
-                break;
-        }
+        Set(i, PauliFromChar(pauli_string[i]));
     }
 }
 
@@ -122,15 +162,7 @@ std::string PauliString::ToString(const bool show_sign) const {
         }
     }
     for (auto i = std::size_t{0}; i < GetNumQubits(); ++i) {
-        if (xs_[i] && zs_[i]) {
-            ret += 'Y';
-        } else if (xs_[i]) {
-            ret += 'X';
-        } else if (zs_[i]) {
-            ret += 'Z';
-        } else {
-            ret += 'I';
-        }
+        ret += ToChar(Get(i));
     }
     return ret;
 }

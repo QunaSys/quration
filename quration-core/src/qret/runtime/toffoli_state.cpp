@@ -7,11 +7,14 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cmath>
+#include <map>
 #include <numbers>
 #include <stdexcept>
 
 #include "qret/base/log.h"
 #include "qret/base/type.h"
+#include "qret/math/pauli.h"
 #include "qret/runtime/quantum_state.h"
 
 namespace qret::runtime {
@@ -37,6 +40,31 @@ void ZImpl(std::uint64_t q, ToffoliState::Coefficient& coef, ToffoliState::State
     if (state[q] == 1) {
         coef *= -1.0;
     }
+}
+std::pair<ToffoliState::Coefficient, ToffoliState::State> ApplyPauliProduct(
+        const std::vector<std::uint64_t>& qs,
+        const std::vector<math::Pauli>& ps,
+        ToffoliState::Coefficient coef,
+        ToffoliState::State state
+) {
+    for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+        switch (ps[i]) {
+            case math::Pauli::X:
+                XImpl(qs[i], coef, state);
+                break;
+            case math::Pauli::Y:
+                YImpl(qs[i], coef, state);
+                break;
+            case math::Pauli::Z:
+                ZImpl(qs[i], coef, state);
+                break;
+            case math::Pauli::I:
+                break;
+            default:
+                throw std::logic_error("unknown Pauli in Pauli product measurement");
+        }
+    }
+    return {coef, std::move(state)};
 }
 }  // namespace
 void ToffoliState::Measure(std::uint64_t q, std::uint64_t r) {
@@ -92,6 +120,63 @@ void ToffoliState::Measure(std::uint64_t q, std::uint64_t r) {
             i--;
             num--;
         }
+    }
+}
+void ToffoliState::MeasurePauliProduct(
+        const std::vector<std::uint64_t>& qs,
+        const std::vector<math::Pauli>& ps,
+        std::uint64_t r
+) {
+    auto psi = std::map<State, Coefficient>{};
+    auto pauli_psi = std::map<State, Coefficient>{};
+    for (const auto& [coef, state] : states_) {
+        psi[state] += coef;
+        auto [pauli_coef, pauli_state] = ApplyPauliProduct(qs, ps, coef, state);
+        pauli_psi[std::move(pauli_state)] += pauli_coef;
+    }
+
+    auto expectation = Coefficient{0.0, 0.0};
+    for (const auto& [state, coef] : psi) {
+        const auto itr = pauli_psi.find(state);
+        if (itr != pauli_psi.end()) {
+            expectation += std::conj(coef) * itr->second;
+        }
+    }
+    if (std::abs(expectation.imag()) >= eps_) {
+        LOG_DEBUG("Pauli product expectation should be real: {}", expectation.imag());
+    }
+    const auto real_expectation = std::clamp(expectation.real(), -1.0, 1.0);
+    const auto prob_plus = (1.0 + real_expectation) / 2.0;
+    const auto prob_minus = (1.0 - real_expectation) / 2.0;
+
+    const bool result_minus = [&]() {
+        if (prob_plus < eps_) {
+            return true;
+        }
+        if (prob_minus < eps_) {
+            return false;
+        }
+        return QuantumState::Flip(prob_minus);
+    }();
+    QuantumState::SaveMeasuredResult(r, result_minus);
+
+    const auto eigen_sign = result_minus ? -1.0 : 1.0;
+    const auto normalize = 1.0 / std::sqrt(2.0 * (1.0 + eigen_sign * real_expectation));
+    auto collapsed = psi;
+    for (const auto& [state, coef] : pauli_psi) {
+        collapsed[state] += eigen_sign * coef;
+    }
+
+    states_.clear();
+    states_.reserve(collapsed.size());
+    for (const auto& [state, coef] : collapsed) {
+        const auto normalized_coef = coef * normalize;
+        if (std::abs(normalized_coef) >= eps_) {
+            states_.emplace_back(normalized_coef, state);
+        }
+    }
+    if (states_.empty()) {
+        throw std::logic_error("Pauli product measurement collapsed to an empty state.");
     }
 }
 void ToffoliState::X(std::uint64_t q) {

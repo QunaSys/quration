@@ -1,10 +1,77 @@
 #include "qret/math/pauli.h"
 
+#include <fmt/format.h>
 #include <gtest/gtest.h>
 
+#include <array>
+#include <cctype>
+#include <optional>
+#include <sstream>
+#include <utility>
 #include <variant>
 
 using namespace qret::math;
+
+TEST(PauliTest, CharConversionRoundTrip) {
+    const auto cases = std::array{
+            std::pair{Pauli::I, 'I'},
+            std::pair{Pauli::X, 'X'},
+            std::pair{Pauli::Y, 'Y'},
+            std::pair{Pauli::Z, 'Z'},
+    };
+
+    for (const auto& [pauli, c] : cases) {
+        EXPECT_EQ(ToChar(pauli), c);
+        EXPECT_EQ(PauliFromChar(c), pauli);
+        EXPECT_EQ(PauliFromChar(static_cast<char>(std::tolower(c))), pauli);
+        EXPECT_EQ(TryPauliFromChar(c), std::optional{pauli});
+    }
+}
+
+TEST(PauliTest, IntConversionRoundTrip) {
+    const auto cases = std::array{
+            std::pair{Pauli::I, 0},
+            std::pair{Pauli::X, 1},
+            std::pair{Pauli::Y, 2},
+            std::pair{Pauli::Z, 3},
+    };
+
+    for (const auto& [pauli, value] : cases) {
+        EXPECT_EQ(ToInt(pauli), value);
+        EXPECT_EQ(PauliFromInt(value), pauli);
+        EXPECT_EQ(TryPauliFromInt(value), std::optional{pauli});
+    }
+}
+
+TEST(PauliTest, StringConversionUsesCharConversion) {
+    EXPECT_EQ(ToString(Pauli::I), "I");
+    EXPECT_EQ(ToString(Pauli::X), "X");
+    EXPECT_EQ(ToString(Pauli::Y), "Y");
+    EXPECT_EQ(ToString(Pauli::Z), "Z");
+
+    EXPECT_EQ(PauliFromString("I"), Pauli::I);
+    EXPECT_EQ(PauliFromString("x"), Pauli::X);
+    EXPECT_EQ(PauliFromString("Y"), Pauli::Y);
+    EXPECT_EQ(PauliFromString("z"), Pauli::Z);
+}
+
+TEST(PauliTest, InvalidConversionThrowsOrReturnsNullopt) {
+    EXPECT_EQ(TryPauliFromChar('A'), std::nullopt);
+    EXPECT_EQ(TryPauliFromInt(-1), std::nullopt);
+    EXPECT_EQ(TryPauliFromInt(4), std::nullopt);
+
+    EXPECT_THROW(PauliFromChar('A'), std::runtime_error);
+    EXPECT_THROW(PauliFromInt(-1), std::runtime_error);
+    EXPECT_THROW(PauliFromInt(4), std::runtime_error);
+    EXPECT_THROW(PauliFromString("XX"), std::runtime_error);
+}
+
+TEST(PauliTest, StreamAndFormat) {
+    auto out = std::ostringstream{};
+    out << Pauli::Y;
+    EXPECT_EQ(out.str(), "Y");
+    EXPECT_EQ(fmt::format("{}", Pauli::Z), "Z");
+}
 
 TEST(PauliStringTest, ConstructionAndToString) {
     PauliString p0("XYZI");
@@ -15,6 +82,32 @@ TEST(PauliStringTest, ConstructionAndToString) {
     PauliString p1("YZXI", 1);  // sign = i
     EXPECT_EQ(p1.GetSign(), 1);
     EXPECT_STREQ(p1.ToString().c_str(), "+i YZXI");
+}
+
+TEST(PauliStringTest, TypedGetAndSet) {
+    auto p = PauliString(4);
+    p.Set(0, Pauli::X);
+    p.Set(1, Pauli::Y);
+    p.Set(2, Pauli::Z);
+    p.Set(3, Pauli::I);
+
+    EXPECT_EQ(p.Get(0), Pauli::X);
+    EXPECT_EQ(p.Get(1), Pauli::Y);
+    EXPECT_EQ(p.Get(2), Pauli::Z);
+    EXPECT_EQ(p.Get(3), Pauli::I);
+    EXPECT_STREQ(p.ToString(false).c_str(), "XYZI");
+
+    p.Set(3, 'z');
+    EXPECT_EQ(p.Get(3), Pauli::Z);
+    p.Set(3, '?');
+    EXPECT_EQ(p.Get(3), Pauli::I);
+}
+
+TEST(PauliStringTest, StaticConstructorsExposeTypedPaulis) {
+    EXPECT_EQ(PauliString::I(1).Get(0), Pauli::I);
+    EXPECT_EQ(PauliString::X(1, 0).Get(0), Pauli::X);
+    EXPECT_EQ(PauliString::Y(1, 0).Get(0), Pauli::Y);
+    EXPECT_EQ(PauliString::Z(1, 0).Get(0), Pauli::Z);
 }
 
 TEST(PauliStringTest, SingleQubitMultiplicationAllCases) {

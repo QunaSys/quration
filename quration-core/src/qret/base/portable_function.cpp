@@ -992,7 +992,7 @@ PortableFunctionBuilder::AddBoolInputVariable(const std::string& name) {
         throw std::runtime_error("variable named " + name + " is already used");
     }
     input_[name] = PortableFunction::RegisterType::Bool();
-    return PrimitiveVariable<Bool>(*this, {name});
+    return PrimitiveVariable<Bool>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::PrimitiveVariable<PortableFunction::Int>
@@ -1004,7 +1004,7 @@ PortableFunctionBuilder::AddIntInputVariable(const std::string& name) {
         throw std::runtime_error("variable named " + name + " is already used");
     }
     input_[name] = PortableFunction::RegisterType::Int();
-    return PrimitiveVariable<Int>(*this, {name});
+    return PrimitiveVariable<Int>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Bool>
@@ -1016,7 +1016,7 @@ PortableFunctionBuilder::AddBoolArrayInputVariable(const std::string& name, std:
         throw std::runtime_error("variable named " + name + " is already used");
     }
     input_[name] = PortableFunction::RegisterType::BoolArray(size);
-    return ArrayVariable<Bool>(*this, {name});
+    return ArrayVariable<Bool>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Int>
@@ -1028,7 +1028,7 @@ PortableFunctionBuilder::AddIntArrayInputVariable(const std::string& name, std::
         throw std::runtime_error("variable named " + name + " is already used");
     }
     input_[name] = PortableFunction::RegisterType::IntArray(size);
-    return ArrayVariable<Int>(*this, {name});
+    return ArrayVariable<Int>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::PrimitiveVariable<PortableFunction::Bool>
@@ -1040,7 +1040,7 @@ PortableFunctionBuilder::AddBoolOutputVariable(const std::string& name) {
         throw std::runtime_error("variable named " + name + " is already used");
     }
     output_[name] = PortableFunction::RegisterType::Bool();
-    return PrimitiveVariable<Bool>(*this, {name});
+    return PrimitiveVariable<Bool>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::PrimitiveVariable<PortableFunction::Int>
@@ -1052,7 +1052,7 @@ PortableFunctionBuilder::AddIntOutputVariable(const std::string& name) {
         throw std::runtime_error("variable named " + name + " is already used");
     }
     output_[name] = PortableFunction::RegisterType::Int();
-    return PrimitiveVariable<Int>(*this, {name});
+    return PrimitiveVariable<Int>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Bool>
@@ -1064,7 +1064,7 @@ PortableFunctionBuilder::AddBoolArrayOutputVariable(const std::string& name, std
         throw std::runtime_error("variable named " + name + " is already used");
     }
     output_[name] = PortableFunction::RegisterType::BoolArray(size);
-    return ArrayVariable<Bool>(*this, {name});
+    return ArrayVariable<Bool>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Int>
@@ -1076,7 +1076,7 @@ PortableFunctionBuilder::AddIntArrayOutputVariable(const std::string& name, std:
         throw std::runtime_error("variable named " + name + " is already used");
     }
     output_[name] = PortableFunction::RegisterType::IntArray(size);
-    return ArrayVariable<Int>(*this, {name});
+    return ArrayVariable<Int>(*this, PortableFunction::RegisterAccessor{name});
 }
 
 PortableFunctionBuilder::PrimitiveVariable<PortableFunction::Bool>
@@ -1084,14 +1084,14 @@ PortableFunctionBuilder::AddTmpBoolVariable() {
     auto ss = std::stringstream{};
     ss << "_bool_" << std::setw(9) << std::setfill('0') << num_tmp_bool_++;
     tmp_variable_[ss.str()] = PortableFunction::RegisterType::Bool();
-    return PrimitiveVariable<Bool>(*this, {ss.str()});
+    return PrimitiveVariable<Bool>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 PortableFunctionBuilder::PrimitiveVariable<PortableFunction::Int>
 PortableFunctionBuilder::AddTmpIntVariable() {
     auto ss = std::stringstream{};
     ss << "_int_" << std::setw(9) << std::setfill('0') << num_tmp_int_++;
     tmp_variable_[ss.str()] = PortableFunction::RegisterType::Int();
-    return PrimitiveVariable<Int>(*this, {ss.str()});
+    return PrimitiveVariable<Int>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Bool>
 PortableFunctionBuilder::AddTmpBoolArrayVariable(std::size_t size) {
@@ -1099,7 +1099,7 @@ PortableFunctionBuilder::AddTmpBoolArrayVariable(std::size_t size) {
     auto ss = std::stringstream{};
     ss << "_boolarray_" << std::setw(9) << std::setfill('0') << num_tmp_boolarray_++;
     tmp_variable_[ss.str()] = PortableFunction::RegisterType::BoolArray(size);
-    return ArrayVariable<Bool>(*this, {ss.str()});
+    return ArrayVariable<Bool>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Int>
 PortableFunctionBuilder::AddTmpIntArrayVariable(std::size_t size) {
@@ -1107,7 +1107,7 @@ PortableFunctionBuilder::AddTmpIntArrayVariable(std::size_t size) {
     auto ss = std::stringstream{};
     ss << "_intarray_" << std::setw(9) << std::setfill('0') << num_tmp_intarray_++;
     tmp_variable_[ss.str()] = PortableFunction::RegisterType::IntArray(size);
-    return ArrayVariable<Int>(*this, {ss.str()});
+    return ArrayVariable<Int>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 
 PortableFunctionBuilder::PrimitiveVariable<PortableFunction::Bool>
@@ -1124,7 +1124,7 @@ PortableFunctionBuilder::AssignInternalBoolVariable() {
     if (newly_assign) {
         tmp_variable_[ss.str()] = PortableFunction::RegisterType::Bool();
     }
-    return PrimitiveVariable<Bool>(*this, {ss.str()});
+    return PrimitiveVariable<Bool>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 PortableFunctionBuilder::PrimitiveVariable<PortableFunction::Int>
 PortableFunctionBuilder::AssignInternalIntVariable() {
@@ -1140,7 +1140,7 @@ PortableFunctionBuilder::AssignInternalIntVariable() {
     if (newly_assign) {
         tmp_variable_[ss.str()] = PortableFunction::RegisterType::Int();
     }
-    return PrimitiveVariable<Int>(*this, {ss.str()});
+    return PrimitiveVariable<Int>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Bool>
 PortableFunctionBuilder::AssignInternalBool2Variable() {
@@ -1156,7 +1156,7 @@ PortableFunctionBuilder::AssignInternalBool2Variable() {
     if (newly_assign) {
         tmp_variable_[ss.str()] = PortableFunction::RegisterType::BoolArray(2);
     }
-    return ArrayVariable<Bool>(*this, {ss.str()});
+    return ArrayVariable<Bool>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 PortableFunctionBuilder::ArrayVariable<PortableFunction::Int>
 PortableFunctionBuilder::AssignInternalInt2Variable() {
@@ -1172,7 +1172,7 @@ PortableFunctionBuilder::AssignInternalInt2Variable() {
     if (newly_assign) {
         tmp_variable_[ss.str()] = PortableFunction::RegisterType::IntArray(2);
     }
-    return ArrayVariable<Int>(*this, {ss.str()});
+    return ArrayVariable<Int>(*this, PortableFunction::RegisterAccessor{ss.str()});
 }
 
 void PortableFunctionBuilder::ReleaseInternalBoolVariable(std::size_t id) {

@@ -24,7 +24,7 @@ TEST(QecResourceEstimation, EstimateExecutionTimeSec) {
 
 TEST(QecResourceEstimation, EstimatePhysicalQubitCount) {
     const auto count = CompileInfoWithQecResourceEstimation::EstimatePhysicalQubitCount(3, 5);
-    EXPECT_EQ(count, 90UL);
+    EXPECT_EQ(count, 160UL);
 }
 
 TEST(QecResourceEstimation, EstimateMinimumCodeDistanceRejectsInvalidLambda) {

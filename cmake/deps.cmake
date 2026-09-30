@@ -97,7 +97,7 @@ endif()
 
 if(QRET_DEV_MODE)
   # sanitizer
-  set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/externals/sanitizers-cmake/cmake"
+  set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/externals/sanitizers-cmake/cmake"
                         ${CMAKE_MODULE_PATH})
   find_package(Sanitizers)
 endif()
@@ -123,5 +123,5 @@ if(QRET_BUILD_PYTHON)
   endif()
 
   # nanobind
-  add_subdirectory(${CMAKE_SOURCE_DIR}/externals/nanobind)
+  add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/externals/nanobind)
 endif()

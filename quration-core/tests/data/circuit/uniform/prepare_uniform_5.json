@@ -1,16 +1,17 @@
 {
     "metadata": {
         "format": "IR",
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "qret_version": "0.7.1",
         "created_at": "2026-02-20T03:34:43"
     },
     "name": "prepare_uniform",
-    "circuit_list": [
+    "entry_function": "PrepareUniformSuperposition(5)",
+    "function_list": [
         {
             "name": "PrepareUniformSuperposition(5)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -367,7 +368,7 @@
         {
             "name": "ApplyXToEachIfImm(5,4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -399,7 +400,7 @@
         {
             "name": "AddCuccaro(4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -509,7 +510,7 @@
         {
             "name": "MAJ",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -551,7 +552,7 @@
         {
             "name": "UMA",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -593,7 +594,7 @@
         {
             "name": "__adjoint__AddCuccaro(4)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -703,7 +704,7 @@
         {
             "name": "__adjoint__UMA",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -745,7 +746,7 @@
         {
             "name": "__adjoint__MAJ",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -787,7 +788,7 @@
         {
             "name": "TemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -882,7 +883,7 @@
         {
             "name": "UncomputeTemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

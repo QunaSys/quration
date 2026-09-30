@@ -10,8 +10,10 @@
 #include <sstream>
 
 #ifdef USE_PEGTL
+#ifdef __clang__
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wsign-conversion"
+#endif
 #include <tao/pegtl.hpp>
 #include <tao/pegtl/argv_input.hpp>
 #include <tao/pegtl/ascii.hpp>
@@ -21,7 +23,9 @@
 #include <tao/pegtl/file_input.hpp>
 #include <tao/pegtl/rules.hpp>
 #include <tao/pegtl/string_input.hpp>
+#ifdef __clang__
 #pragma clang diagnostic pop
+#endif
 #endif
 
 namespace qret::openqasm2 {

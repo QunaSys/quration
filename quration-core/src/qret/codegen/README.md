@@ -1,25 +1,25 @@
 \page qret_codegen codegen module
 
-ターゲットの量子コンピュータに共通する親クラスを提供する。
-各ターゲットごとの実装は `qret/target/` で行う。
+Provides parent classes shared by target quantum computers.
+Target-specific implementations are placed under `qret/target/`.
 
-## 概要
+## Overview
 
 * `qret/codegen/asm_printer.h`
-  * `qret::AsmPrinter` : アセンブリをストリームに出力するクラス
+  * `qret::AsmPrinter` : class that outputs assembly to a stream
 * `qret/codegen/asm_streamer.h`
-  * `qret::AsmStreamer` : アセンブリ用のストリームクラス
-  * 区切り文字/コメント記号/インデント幅などの出力書式も保持する
-  * `ToString()` で生成済みテキストを取得し、ファイル I/O は呼び出し側で行う
+  * `qret::AsmStreamer` : stream class for assembly
+  * Also stores output formatting such as separators, comment markers, and indentation width.
+  * `ToString()` returns the generated text; file I/O is handled by the caller.
 * `qret/codegen/compile_info.h`
 * `qret/codegen/dummy.h`
 * `qret/codegen/machine_function_pass.h`
-  * `qret::MachineFunctionPass` : ターゲットの関数についてのパスの親クラス
-  * `qret::MFAnalysis` : `qret::MachineFunctionPass` の実行順や実行時間を記録する
+  * `qret::MachineFunctionPass` : parent class for passes over target functions
+  * `qret::MFAnalysis` : records the execution order and execution time of `qret::MachineFunctionPass`
   * `qret::MFPassManager`
-    * 複数の `qret::MachineFunctionPass` を保持し、適切な順番でパスを実行する
-    * 実行後に `qret::MFAnalysis` を返す
+    * Holds multiple `qret::MachineFunctionPass` objects and runs passes in an appropriate order.
+    * Returns `qret::MFAnalysis` after execution.
 * `qret/codegen/machine_function.h`
-  * `qret::MachineInstruction` : ターゲットの命令の親クラス
-  * `qret::MachineBasicBlock` : ターゲットの基本ブロックの親クラス
-  * `qret::MachineFunction` : ターゲットの関数の親クラス
+  * `qret::MachineInstruction` : parent class for target instructions
+  * `qret::MachineBasicBlock` : parent class for target basic blocks
+  * `qret::MachineFunction` : parent class for target functions

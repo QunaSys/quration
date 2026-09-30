@@ -1,53 +1,42 @@
 \page examples Examples
 
-qret ライブラリの使用例を実装する。
+Implements examples that use the qret library.
 
-## 概要
+## Overview
 
-### 回路の記述 (core)
+### Circuit Description (core)
 
-| ファイル                | 説明                                                                            |
-| ----------------------- | ------------------------------------------------------------------------------- |
-| `quration-core/examples/grover.cpp`   | グローバー探索を実装する                                                        |
-| `quration-core/examples/trotter.cpp`  | トロッター分解を用いたハミルトニアンの時間発展をシミュレートする回路を実装する  |
-| `quration-core/examples/portable_function.cpp` | PortableFunction の利用例を示す                                        |
-| `quration-core/examples/external_decompose_pass.cpp` | 外部パスの利用例を示す                                             |
-| `quration-core/examples/external_mapping_pass.cpp`   | 外部マッピングパスの利用例を示す                                   |
-| `quration-core/examples/create_random.cpp`           | ランダム回路生成の例を示す                                         |
-
+| File | Description |
+| ---- | ----------- |
+| `quration-core/examples/grover.cpp` | Implements Grover search. |
+| `quration-core/examples/trotter.cpp` | Implements a circuit that simulates Hamiltonian time evolution using Trotter decomposition. |
+| `quration-core/examples/portable_function.cpp` | Shows an example of using `PortableFunction`. |
+| `quration-core/examples/external_decompose_pass.cpp` | Shows an example of using an external pass. |
+| `quration-core/examples/external_mapping_pass.cpp` | Shows an example of using an external mapping pass. |
+| `quration-core/examples/create_random.cpp` | Shows an example of random circuit generation. |
 
 #### `quration-core/examples/trotter.cpp`
 
-パウリ文字列から構成されるハミルトニアンの時間発展をシミュレートする回路をトロッター分解を用いて実装する。
+Implements a circuit that simulates the time evolution of a Hamiltonian composed of Pauli strings using Trotter decomposition.
 
-### 回路の記述 (algorithm)
+### Circuit Description (algorithm)
 
-アルゴリズムライブラリのサンプルは `quration-algorithm/examples/` に配置している。
+Examples for the algorithm library are placed under `quration-algorithm/examples/`.
 
-### 中間表現
+### Intermediate Representation
 
-| ファイル                               | 説明                                                       |
-| -------------------------------------- | ---------------------------------------------------------- |
-| `examples/create_{}.cpp`               | 量子回路の中間表現の JSON ファイルを作成する               |
-| `examples/external_decompose_pass.cpp` | 外部パスを使って、 Toffoli ゲートを T ゲートなどに分解する |
+| File | Description |
+| ---- | ----------- |
+| `examples/external_decompose_pass.cpp` | Uses an external pass to decompose Toffoli gates into T gates and other gates. |
 
-### SC_LS_FIXED_V0 へのコンパイル
+### Compilation to SC_LS_FIXED_V0
 
-| ファイル                                         | 説明                                              |
-| ------------------------------------------------ | ------------------------------------------------- |
-| `examples/compile_adder_to_distributed_chip.cpp` | 加算回路を SC_LS_FIXED_V0 (分散命令セット) にコンパイルする |
+| File | Description |
+| ---- | ----------- |
+| `examples/compile_adder_to_distributed_chip.cpp` | Compiles an adder circuit to SC_LS_FIXED_V0 (distributed instruction set). |
 
-### その他
+### Other
 
-| ファイル                         | 説明                                              |
-| -------------------------------- | ------------------------------------------------- |
-| `examples/portable_function.cpp` | `PortableFunction` を使ってコラッツ関数を実装する |
-
-## 参考文献
-
-- [1] : Encoding Electronic Spectra in Quantum Circuits with Linear T Complexity
-  - <https://arxiv.org/abs/1805.03662>
-- [2] : Factoring with n+2 clean qubits and n-1 dirty qubits
-  - <https://arxiv.org/abs/1706.07884>
-- [3] : Stern–Brocot tree
-  - <https://en.wikipedia.org/wiki/Stern-Brocot_tree>
+| File | Description |
+| ---- | ----------- |
+| `examples/portable_function.cpp` | Implements the Collatz function using `PortableFunction`. |

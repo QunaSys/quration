@@ -38,11 +38,11 @@ def decompose_inst(inst: dict) -> list[dict]:
 
 
 def decompose(input_module: dict, circuit_name: str) -> dict:
-    for circuit in input_module["circuit_list"]:
+    for circuit in input_module["function_list"]:
         if circuit["name"] != circuit_name:
             continue
 
-        for bb in circuit["bb_list"]:
+        for bb in circuit["basicblock_list"]:
             new_inst_list = []
             for inst in bb["inst_list"]:
                 new_inst_list.extend(decompose_inst(inst))

@@ -1,16 +1,17 @@
 {
     "metadata": {
         "format": "IR",
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "qret_version": "0.7.1",
         "created_at": "2026-02-20T03:34:42"
     },
     "name": "add_craig",
-    "circuit_list": [
+    "entry_function": "AddCraig(2)",
+    "function_list": [
         {
             "name": "AddCraig(2)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -81,7 +82,7 @@
         {
             "name": "TemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -176,7 +177,7 @@
         {
             "name": "UncomputeTemporalAnd",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
