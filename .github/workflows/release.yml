@@ -26,11 +26,6 @@ on:
     types: [published]
 
 env:
-  # Pin the bundled gridsynth build: qret parses its CLI output, and an unpinned
-  # `cabal install` silently picks up whatever Hackage has once the cache is evicted.
-  # 0.3.0.4 is the newest release that builds against the GHC pinned below --
-  # newsynth 0.4.x caps `time < 1.9`, which no GHC 9.6 boot library satisfies.
-  NEWSYNTH_VERSION: "0.3.0.4"
   # Oldest macOS the released binaries are built to run on. Without this the
   # deployment target follows the runner SDK, and dyld warns (or the binary crashes)
   # on anything older than the runner. Set at workflow level so vcpkg and every other
@@ -38,68 +33,7 @@ env:
   MACOSX_DEPLOYMENT_TARGET: "13.0"
 
 jobs:
-  newsynth:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - macos-latest
-          - windows-latest
-          - ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Restore newsynth cache
-        id: newsynth-cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .newsynth/bin
-            .newsynth/license
-          key: newsynth-${{ matrix.os }}-${{ env.NEWSYNTH_VERSION }}
-
-      - name: Setup Haskell (GHC/Cabal)
-        if: steps.newsynth-cache.outputs.cache-hit != 'true'
-        uses: haskell-actions/setup@v2
-        with:
-          ghc-version: "9.6.6"
-          cabal-version: "3.12.1.0"
-
-      - name: Build newsynth binaries from Hackage
-        if: steps.newsynth-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          mkdir -p "$PWD/.newsynth/bin"
-          cabal update
-          cabal install "newsynth-${NEWSYNTH_VERSION}" --installdir "$PWD/.newsynth/bin" --install-method=copy --overwrite-policy=always
-          if [ "$RUNNER_OS" != "Windows" ]; then
-            chmod +x "$PWD/.newsynth/bin/gridsynth"
-          fi
-          ls -la "$PWD/.newsynth/bin"
-
-      - name: Download newsynth LICENSE files
-        if: steps.newsynth-cache.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          rm -rf "$PWD/.newsynth/src"
-          rm -rf "$PWD/.newsynth/license"
-          mkdir -p "$PWD/.newsynth/src"
-          mkdir -p "$PWD/.newsynth/license"
-          cabal get "newsynth-${NEWSYNTH_VERSION}" --destdir "$PWD/.newsynth/src" --pristine
-          newsynth_src_dir=$(find "$PWD/.newsynth/src" -maxdepth 1 -type d -name "newsynth-*" | head -n 1)
-          if [ -n "$newsynth_src_dir" ]; then
-            find "$newsynth_src_dir" -maxdepth 2 -type f \
-              \( -iname "LICENSE*" -o -iname "COPYING*" -o -iname "README*" -o -iname "GPL*" \) \
-              -exec cp {} "$PWD/.newsynth/license/" \;
-          fi
-          ls -la "$PWD/.newsynth/license"
-
   build-qret:
-    needs: [newsynth]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -121,15 +55,6 @@ jobs:
         with:
           submodules: recursive
 
-      - name: Restore newsynth cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            .newsynth/bin
-            .newsynth/license
-          key: newsynth-${{ matrix.os }}-${{ env.NEWSYNTH_VERSION }}
-          fail-on-cache-miss: true
-
       - name: Restore vcpkg cache
         uses: actions/cache@v4
         with:
@@ -150,13 +75,31 @@ jobs:
           restore-keys: |
             ccache-${{ matrix.os }}-
 
-      - name: Fix newsynth permissions (Unix)
-        if: runner.os != 'Windows'
+      - name: Stage the bundled gridsynth
         shell: bash
         run: |
-          if [ -d "$PWD/.newsynth/bin" ]; then
-            chmod +x "$PWD"/.newsynth/bin/* || true
+          # externals/bin/ carries a prebuilt gridsynth per platform; see
+          # externals/bin/README.md for provenance and license. qret looks the
+          # binary up under the name `gridsynth` / `gridsynth.exe`, so the macOS
+          # build is renamed on the way in.
+          mkdir -p "$PWD/.gridsynth/bin"
+          case "$RUNNER_OS" in
+            Windows) cp "$PWD/externals/bin/gridsynth.exe"   "$PWD/.gridsynth/bin/gridsynth.exe" ;;
+            macOS)   cp "$PWD/externals/bin/gridsynth_macos" "$PWD/.gridsynth/bin/gridsynth" ;;
+            *)       cp "$PWD/externals/bin/gridsynth"       "$PWD/.gridsynth/bin/gridsynth" ;;
+          esac
+          gridsynth="$PWD/.gridsynth/bin/gridsynth"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            gridsynth="$gridsynth.exe"
+          else
+            chmod +x "$gridsynth"
           fi
+          # Fail here rather than ship an archive whose gridsynth cannot run on
+          # the platform it is packaged for.
+          "$gridsynth" --help >/dev/null
+          # tr strips the CR that the Windows build's output carries.
+          [ "$("$gridsynth" pi/4 -p | tr -d '\r\n')" = "T" ]
+          ls -la "$PWD/.gridsynth/bin"
 
       - name: Setup MSVC (Windows)
         if: runner.os == 'Windows'
@@ -273,18 +216,8 @@ jobs:
           cp "$PWD/quration-algorithm/examples/LICENSE" "$package_root/licenses/examples/LICENSE"
 
           mkdir -p "$package_root/bin"
-          for file in "$PWD"/.newsynth/bin/*; do
-            [ -f "$file" ] || continue
-            base_name="$(basename "$file")"
-            case "$base_name" in
-              README*|readme*)
-                continue
-                ;;
-            esac
-            cp "$file" "$package_root/bin/"
-          done
-
-          find "$PWD/.newsynth/license" -mindepth 1 -maxdepth 1 -type f -exec cp {} "$package_root/licenses/newsynth/" \;
+          cp "$PWD"/.gridsynth/bin/* "$package_root/bin/"
+          cp "$PWD/externals/bin/README.md" "$package_root/licenses/newsynth/README.md"
 
           # Smoke-test every installed qret binary from inside the packaged tree.
           pushd "$package_root" >/dev/null
