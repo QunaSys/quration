@@ -1,0 +1,11 @@
+{
+    "pauli_strings": [
+        ["Z", "I"],
+        ["Z", "Z"],
+        ["X", "X"]
+    ],
+    "lcu_coefficients": [0.25, 0.25, 0.5],
+    "system_size": 2,
+    "hadamard_size": 3,
+    "sub_bit_precision": 3
+}

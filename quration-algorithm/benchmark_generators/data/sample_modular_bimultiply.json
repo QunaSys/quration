@@ -1,0 +1,6 @@
+{
+  "modulus": "15",
+  "multiplier": "2",
+  "num_control_qubits": 1,
+  "num_system_qubits": 4
+}

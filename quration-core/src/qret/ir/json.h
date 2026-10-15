@@ -18,7 +18,7 @@
 #include "qret/qret_export.h"
 
 namespace qret::ir {
-inline constexpr auto IRJsonSchemaVersion = "0.1";
+inline constexpr auto IRJsonSchemaVersion = "0.2";
 
 //--------------------------------------------------//
 // Serialization
@@ -29,6 +29,7 @@ QRET_EXPORT void to_json(Json& j, const Function& func);
 QRET_EXPORT void to_json(Json& j, const BasicBlock& bb);
 QRET_EXPORT void to_json(Json& j, const Instruction& inst);
 QRET_EXPORT void to_json(Json& j, const MeasurementInst& inst);
+QRET_EXPORT void to_json(Json& j, const PauliProductMeasurementInst& inst);
 QRET_EXPORT void to_json(Json& j, const UnaryInst& inst);
 QRET_EXPORT void to_json(Json& j, const ParametrizedRotationInst& inst);
 QRET_EXPORT void to_json(Json& j, const BinaryInst& inst);

@@ -850,7 +850,7 @@ bool ScLsSimulator::SearchTwistDir(Beat beat, Twist* inst) {
         for (auto b = beat; b < beat + inst->Latency(); ++b) {
             auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
             if (plane.GetTopology().OutOfPlane(ancilla.XY())
-                || !plane.GetNode(ancilla.XY()).is_available) {
+                || !plane.GetNode(ancilla.XY()).IsFreeAncilla()) {
                 runnable = false;
                 break;
             }
@@ -947,12 +947,12 @@ bool ScLsSimulator::SearchRotateDir(Beat beat, Rotate* inst) {
     }
     inst->SetDir(4);
     for (auto dir = std::uint32_t{0}; dir < 4; ++dir) {
-        const auto ancilla = Rotate::Ancilla(place, dir);
+        const auto ancilla = Rotate::GetAncilla(place, dir);
         auto runnable = true;
         for (auto b = beat; b < beat + inst->Latency(); ++b) {
             auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
             if (plane.GetTopology().OutOfPlane(ancilla.XY())
-                || !plane.GetNode(ancilla.XY()).is_available) {
+                || !plane.GetNode(ancilla.XY()).IsFreeAncilla()) {
                 runnable = false;
                 break;
             }
@@ -979,7 +979,7 @@ bool ScLsSimulator::IsRotateRunnable(Beat beat, Rotate* inst) {
     for (auto b = beat; b < beat + inst->Latency(); ++b) {
         auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
         const auto& topology = plane.GetTopology();
-        const auto ancilla = Rotate::Ancilla(place, dir);
+        const auto ancilla = Rotate::GetAncilla(place, dir);
 
         if (topology.OutOfPlane(place.XY())) {
             return false;
@@ -1004,7 +1004,7 @@ void ScLsSimulator::RunRotate(Beat beat, Rotate* inst) {
     const auto& place = state.GetPlace(qubit);
 
     // Update buffer.
-    const auto ancilla = Rotate::Ancilla(place, dir);
+    const auto ancilla = Rotate::GetAncilla(place, dir);
     for (auto b = beat; b < beat + inst->Latency(); ++b) {
         auto& plane = GetStateBuffer().GetQuantumState(b).GetGrid(place.z).GetPlane(place.z);
         plane.GetNode(place.XY()).is_available = false;
@@ -1354,6 +1354,7 @@ bool ScLsSimulator::SearchLatticeSurgeryPath2DSteinerAndRun(
             inst->QubitList(),
             inst->BasisList(),
             {},
+            {},
             false
     );
     if (!tmp_ancilla) {
@@ -1573,6 +1574,9 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DBFSAndRun(
     path.pop_front();  // Delete coord of magic factory.
     path.pop_back();  // Delete coord of 'q_dst'.
     inst->SetPath(std::move(path));
+    if (!MagicFactoryIsAvailable(beat, inst->MagicFactory())) {
+        return false;
+    }
     inst->SetQubitContacts(std::move(qubit_contacts));
     // Run LATTICE_SURGERY_MAGIC.
     RunLatticeSurgeryMagic(beat, inst);
@@ -1594,6 +1598,7 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DSteinerAndRun(
             inst->QubitList(),
             inst->BasisList(),
             {},
+            {},
             true
     );
     if (!tmp_ancilla) {
@@ -1608,6 +1613,9 @@ bool ScLsSimulator::SearchLatticeSurgeryMagicPath2DSteinerAndRun(
     }
     inst->SetMagicFactory(ancilla.m.value());
     inst->SetPath(ancilla.ancilla);
+    if (!MagicFactoryIsAvailable(beat, inst->MagicFactory())) {
+        return false;
+    }
     inst->SetQubitContacts(ancilla.qubit_contacts);
     // Run LATTICE_SURGERY_MAGIC.
     RunLatticeSurgeryMagic(beat, inst);
@@ -1789,6 +1797,7 @@ bool ScLsSimulator::SearchLatticeSurgeryMultinodePathAndRun(
             inst->QubitList(),
             inst->BasisList(),
             inst->EFactoryList(),
+            inst->EHandleList(),
             inst->UseMagicFactory()
     );
     if (!tmp_ancilla.has_value()) {

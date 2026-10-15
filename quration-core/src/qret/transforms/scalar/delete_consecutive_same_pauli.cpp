@@ -19,8 +19,10 @@ static auto X = RegisterPass<DeleteConsecutiveSamePauli>(
 
 namespace {
 std::vector<Qubit> GetTargetQubits(Instruction* inst) {
-    if (inst->IsMeasurement()) {
-        return {Cast<MeasurementInst>(inst)->GetQubit()};
+    if (auto* product_measurement = DynCast<PauliProductMeasurementInst>(inst)) {
+        return product_measurement->GetQubits();
+    } else if (auto* measurement = DynCast<MeasurementInst>(inst)) {
+        return {measurement->GetQubit()};
     } else if (inst->IsUnary()) {
         return {Cast<UnaryInst>(inst)->GetQubit()};
     } else if (inst->IsBinary()) {

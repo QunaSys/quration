@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include "qret/math/pauli.h"
+
 namespace qret {
 std::ostream&
 CircuitDrawer::Print(std::ostream& out, const std::vector<std::string>& lsticks) const {
@@ -58,6 +60,23 @@ void CircuitDrawer::Measure(std::size_t q, std::size_t r) {
     col[n_qubits_ + r] = fmt::format(
             "\\cwbend{{{}}} \\cw",
             static_cast<int>(q) - static_cast<int>(n_qubits_ + r)
+    );
+}
+
+void CircuitDrawer::PauliProductMeasure(
+        const std::vector<std::size_t>& qs,
+        const std::vector<math::Pauli>& ps,
+        std::size_t r
+) {
+    const auto [q_min, q_max] = std::ranges::minmax_element(qs);
+    const auto reg = n_qubits_ + r;
+    auto& col = FindVacantColumnAndOccupy(std::min(*q_min, reg), std::max(*q_max, reg));
+    for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+        col[qs[i]] = fmt::format("\\meter{{{}}}", ps[i]);
+    }
+    col[reg] = fmt::format(
+            "\\cwbend{{{}}} \\cw",
+            static_cast<int>(*q_min) - static_cast<int>(reg)
     );
 }
 

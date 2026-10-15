@@ -12,6 +12,7 @@ function(add_exe filename)
                CXX_STANDARD_REQUIRED ON
                CXX_EXTENSIONS OFF)
   target_compile_options(${target} PRIVATE ${QRET_COMPILE_OPTIONS})
+  qret_copy_runtime_dependencies(${target})
   install(TARGETS ${target})
 endfunction()
 

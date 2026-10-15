@@ -22,11 +22,13 @@
 #include "qret/ir/instructions.h"
 #include "qret/ir/json.h"
 #include "qret/ir/module.h"
+#include "qret/math/pauli.h"
 
 #include "frontend/pycircuit.h"
 
 namespace pyqret {
 namespace ir = qret::ir;
+namespace math = qret::math;
 namespace nb = nanobind;
 
 void BindIR(nanobind::module_& m) {
@@ -118,9 +120,16 @@ void BindIR(nanobind::module_& m) {
             });
 
     // Instruction
+    nb::enum_<math::Pauli>(m, "Pauli", "Pauli operator.")
+            .value("I", math::Pauli::I)
+            .value("X", math::Pauli::X)
+            .value("Y", math::Pauli::Y)
+            .value("Z", math::Pauli::Z);
+
     using Table = ir::Opcode::Table;
     nb::enum_<Table>(m, "Opcode", "Opcode of an ir instruction.")
             .value("Measurement", Table::Measurement)
+            .value("PauliProductMeasurement", Table::PauliProductMeasurement)
             .value("I", Table::I)
             .value("X", Table::X)
             .value("Y", Table::Y)
@@ -184,6 +193,15 @@ void BindIR(nanobind::module_& m) {
     // Instructions
     nb::class_<ir::MeasurementInst, ir::Instruction>(m, "MeasurementInst")
             .def("__str__", [](const ir::MeasurementInst& inst) {
+                auto ss = std::stringstream();
+                inst.Print(ss);
+                return ss.str();
+            });
+    nb::class_<ir::PauliProductMeasurementInst, ir::Instruction>(
+            m,
+            "PauliProductMeasurementInst"
+    )
+            .def("__str__", [](const ir::PauliProductMeasurementInst& inst) {
                 auto ss = std::stringstream();
                 inst.Print(ss);
                 return ss.str();

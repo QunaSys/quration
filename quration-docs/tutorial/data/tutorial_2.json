@@ -1,10 +1,10 @@
 {
     "name": "Tutorial2Module",
-    "circuit_list": [
+    "function_list": [
         {
             "name": "Tutorial2Function",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

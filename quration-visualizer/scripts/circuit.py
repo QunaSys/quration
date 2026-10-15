@@ -159,7 +159,7 @@ def make_paths(points: set[Point], start_list: list[Point]) -> list[list[Point]]
 
 @dataclass
 class FTQCConfig:
-    machine_type: str
+    topology_type: str
     topology_count: int
     max_x: int
     max_y: int
@@ -171,8 +171,9 @@ class FTQCConfig:
     reaction_time: int
 
     def __init__(self, config: dict) -> None:
-        machine_type: str = config["machine_option"]["type"]
-        if machine_type.lower() not in {
+        machine_option = config["machine_option"]
+        topology_type: str = machine_option["topology_type"]
+        if topology_type.lower() not in {
             "dim2",
             "dim3",
             "distributeddim2",
@@ -184,18 +185,27 @@ class FTQCConfig:
             )
             raise ValueError(msg)
 
-        self.machine_type = machine_type
+        self.topology_type = topology_type
         self.topology_count = len(config.get("topology", []))
         self.max_x = config["topology"][0]["coord"][0]
         self.max_y = config["topology"][0]["coord"][1]
-        self.use_magic_state_cultivation = config["machine_option"]["use_magic_state_cultivation"]
-        self.magic_factory_seed_offset = config["machine_option"]["magic_factory_seed_offset"]
-        self.magic_generation_period = config["machine_option"]["magic_generation_period"]
-        self.prob_magic_state_creation = config["machine_option"]["prob_magic_state_creation"]
-        self.maximum_magic_state_stock = config["machine_option"]["maximum_magic_state_stock"]
-        self.entanglement_generation_period = config["machine_option"]["entanglement_generation_period"]
-        self.maximum_entangled_state_stock = config["machine_option"]["maximum_entangled_state_stock"]
-        self.reaction_time = config["machine_option"]["reaction_time"]
+        self.use_magic_state_cultivation = machine_option["use_magic_state_cultivation"]
+        self.magic_factory_seed_offset = machine_option["magic_factory_seed_offset"]
+        self.magic_generation_period = machine_option["magic_generation_period"]
+        self.prob_magic_state_creation = machine_option.get(
+            "prob_magic_state_creation",
+            machine_option.get("magic_generation_success_probability"),
+        )
+        self.maximum_magic_state_stock = machine_option.get(
+            "maximum_magic_state_stock",
+            machine_option.get("magic_generation_maximum_stock"),
+        )
+        self.entanglement_generation_period = machine_option["entanglement_generation_period"]
+        self.maximum_entangled_state_stock = machine_option.get(
+            "maximum_entangled_state_stock",
+            machine_option.get("entanglement_generation_maximum_stock"),
+        )
+        self.reaction_time = machine_option["reaction_time"]
 
 
 @dataclass

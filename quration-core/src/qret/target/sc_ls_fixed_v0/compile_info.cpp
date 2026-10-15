@@ -19,11 +19,11 @@ double ScLsFixedV0CompileInfo::GateThroughputAve() const {
 std::uint64_t ScLsFixedV0CompileInfo::GateThroughputPeak() const {
     return std::get<1>(CalcAveAndPeak(gate_throughput));
 }
-double ScLsFixedV0CompileInfo::MeasurementFeedbackRateAve() const {
-    return std::get<0>(CalcAveAndPeak(measurement_feedback_rate));
+double ScLsFixedV0CompileInfo::ReactionRateAve() const {
+    return std::get<0>(CalcAveAndPeak(reaction_rate));
 }
-std::uint64_t ScLsFixedV0CompileInfo::MeasurementFeedbackRatePeak() const {
-    return std::get<1>(CalcAveAndPeak(measurement_feedback_rate));
+std::uint64_t ScLsFixedV0CompileInfo::ReactionRatePeak() const {
+    return std::get<1>(CalcAveAndPeak(reaction_rate));
 }
 double ScLsFixedV0CompileInfo::MagicStateConsumptionRateAve() const {
     return std::get<0>(CalcAveAndPeak(magic_state_consumption_rate));
@@ -75,18 +75,18 @@ double ScLsFixedV0CompileInfo::ChipCellActiveQubitAreaRatioPeak() const {
     j["use_magic_state_cultivation"] = use_magic_state_cultivation;
     j["magic_factory_seed_offset"] = magic_factory_seed_offset;
     j["magic_generation_period"] = magic_generation_period;
-    j["prob_magic_state_creation"] = prob_magic_state_creation;
-    j["maximum_magic_state_stock"] = maximum_magic_state_stock;
+    j["magic_generation_success_probability"] = magic_generation_success_probability;
+    j["magic_generation_maximum_stock"] = magic_generation_maximum_stock;
     j["entanglement_generation_period"] = entanglement_generation_period;
-    j["maximum_entangled_state_stock"] = maximum_entangled_state_stock;
+    j["entanglement_generation_maximum_stock"] = entanglement_generation_maximum_stock;
     j["reaction_time"] = reaction_time;
     if (topology) {
         j["topology"] = *topology;
     }
 
-    // about runtime
-    j["runtime"] = runtime;
-    j["runtime_without_topology"] = runtime_without_topology;
+    // about execution time
+    j["execution_time"] = execution_time;
+    j["execution_time_without_topology"] = execution_time_without_topology;
 
     // about gate
     j["gate_count"] = gate_count;
@@ -97,33 +97,31 @@ double ScLsFixedV0CompileInfo::ChipCellActiveQubitAreaRatioPeak() const {
     j["gate_depth"] = gate_depth;
     to_json_time_series(gate_throughput, "gate_throughput");
 
-    // about measurement depth
-    j["measurement_feedback_count"] = measurement_feedback_count;
-    j["measurement_feedback_depth"] = measurement_feedback_depth;
-    to_json_time_series(measurement_feedback_rate, "measurement_feedback_rate");
-    j["runtime_estimation_measurement_feedback_count"] =
-            runtime_estimation_measurement_feedback_count;
-    j["runtime_estimation_measurement_feedback_depth"] =
-            runtime_estimation_measurement_feedback_depth;
+    // about reaction
+    j["reaction_count"] = reaction_count;
+    j["reaction_depth"] = reaction_depth;
+    to_json_time_series(reaction_rate, "reaction_rate");
+    j["execution_time_estimation_from_reaction_count"] = execution_time_estimation_from_reaction_count;
+    j["execution_time_estimation_from_reaction_depth"] = execution_time_estimation_from_reaction_depth;
 
     // about magic state consumption
     j["magic_state_consumption_count"] = magic_state_consumption_count;
     j["magic_state_consumption_depth"] = magic_state_consumption_depth;
     to_json_time_series(magic_state_consumption_rate, "magic_state_consumption_rate");
-    j["runtime_estimation_magic_state_consumption_count"] =
-            runtime_estimation_magic_state_consumption_count;
-    j["runtime_estimation_magic_state_consumption_depth"] =
-            runtime_estimation_magic_state_consumption_depth;
+    j["execution_time_estimation_magic_state_consumption_count"] =
+            execution_time_estimation_magic_state_consumption_count;
+    j["execution_time_estimation_magic_state_consumption_depth"] =
+            execution_time_estimation_magic_state_consumption_depth;
     j["magic_factory_count"] = magic_factory_count;
 
     // about entanglement consumption
     j["entanglement_consumption_count"] = entanglement_consumption_count;
     j["entanglement_consumption_depth"] = entanglement_consumption_depth;
     to_json_time_series(entanglement_consumption_rate, "entanglement_consumption_rate");
-    j["runtime_estimation_entanglement_consumption_count"] =
-            runtime_estimation_entanglement_consumption_count;
-    j["runtime_estimation_entanglement_consumption_depth"] =
-            runtime_estimation_entanglement_consumption_depth;
+    j["execution_time_estimation_entanglement_consumption_count"] =
+            execution_time_estimation_entanglement_consumption_count;
+    j["execution_time_estimation_entanglement_consumption_depth"] =
+            execution_time_estimation_entanglement_consumption_depth;
     j["entanglement_factory_count"] = entanglement_factory_count;
 
     // about cell consumption
@@ -137,7 +135,7 @@ double ScLsFixedV0CompileInfo::ChipCellActiveQubitAreaRatioPeak() const {
     // about QEC resource estimation
     j["code_distance"] = code_distance;
     j["execution_time_sec"] = execution_time_sec;
-    j["num_physical_qubits"] = num_physical_qubits;
+    j["physical_qubit_count"] = physical_qubit_count;
     return j;
 }
 std::string ScLsFixedV0CompileInfo::Markdown() const {
@@ -147,9 +145,9 @@ std::string ScLsFixedV0CompileInfo::Markdown() const {
     ss << "# Compile information of SC_LS_FIXED_V0\n\n";
     ss << "## Constant\n\n";
     ss << prefix << "magic_generation_period: " << magic_generation_period << '\n';
-    ss << prefix << "maximum_magic_state_stock: " << maximum_magic_state_stock << '\n';
+    ss << prefix << "magic_generation_maximum_stock: " << magic_generation_maximum_stock << '\n';
     ss << prefix << "entanglement_generation_period: " << entanglement_generation_period << '\n';
-    ss << prefix << "maximum_entangled_state_stock: " << maximum_entangled_state_stock << '\n';
+    ss << prefix << "entanglement_generation_maximum_stock: " << entanglement_generation_maximum_stock << '\n';
     ss << prefix << "reaction_time: " << reaction_time << '\n';
     for (const auto& grid : *topology) {
         if (grid.IsPlane()) {
@@ -172,9 +170,10 @@ std::string ScLsFixedV0CompileInfo::Markdown() const {
     }
     ss << '\n';
 
-    ss << "## Runtime\n\n";
-    ss << prefix << "runtime: " << runtime << '\n';
-    ss << prefix << "runtime without topology: " << runtime_without_topology << '\n';
+    ss << "## Execution time\n\n";
+    ss << prefix << "execution_time: " << execution_time << '\n';
+    ss << prefix << "execution_time_without_topology: " << execution_time_without_topology
+       << '\n';
     ss << '\n';
 
     ss << "## Gate\n\n";
@@ -188,15 +187,15 @@ std::string ScLsFixedV0CompileInfo::Markdown() const {
     ss << prefix << "gate_throughput [peak]: " << GateThroughputPeak() << '\n';
     ss << '\n';
 
-    ss << "## Measurement depth\n\n";
-    ss << prefix << "measurement feedback count: " << measurement_feedback_count << '\n';
-    ss << prefix << "measurement feedback depth: " << measurement_feedback_depth << '\n';
-    ss << prefix << "measurement feedback rate [ave]: " << MeasurementFeedbackRateAve() << '\n';
-    ss << prefix << "measurement feedback rate [peak]: " << MeasurementFeedbackRatePeak() << '\n';
-    ss << prefix << "runtime estimation measurement feedback count: "
-       << runtime_estimation_measurement_feedback_count << '\n';
-    ss << prefix << "runtime estimation measurement feedback depth: "
-       << runtime_estimation_measurement_feedback_depth << '\n';
+    ss << "## Reaction\n\n";
+    ss << prefix << "reaction_count: " << reaction_count << '\n';
+    ss << prefix << "reaction_depth: " << reaction_depth << '\n';
+    ss << prefix << "reaction_rate [ave]: " << ReactionRateAve() << '\n';
+    ss << prefix << "reaction_rate [peak]: " << ReactionRatePeak() << '\n';
+    ss << prefix << "execution_time_estimation_from_reaction_count: "
+       << execution_time_estimation_from_reaction_count << '\n';
+    ss << prefix << "execution_time_estimation_from_reaction_depth: "
+       << execution_time_estimation_from_reaction_depth << '\n';
     ss << '\n';
 
     ss << "## Magic state consumption\n\n";
@@ -206,10 +205,10 @@ std::string ScLsFixedV0CompileInfo::Markdown() const {
        << '\n';
     ss << prefix << "magic state consumption rate [peak]: " << MagicStateConsumptionRatePeak()
        << '\n';
-    ss << prefix << "runtime estimation magic state consumption count: "
-       << runtime_estimation_magic_state_consumption_count << '\n';
-    ss << prefix << "runtime estimation magic state consumption depth: "
-       << runtime_estimation_magic_state_consumption_depth << '\n';
+    ss << prefix << "execution_time_estimation_magic_state_consumption_count: "
+       << execution_time_estimation_magic_state_consumption_count << '\n';
+    ss << prefix << "execution_time_estimation_magic_state_consumption_depth: "
+       << execution_time_estimation_magic_state_consumption_depth << '\n';
     ss << prefix << "magic factory count: " << magic_factory_count << '\n';
     ss << '\n';
 
@@ -220,10 +219,10 @@ std::string ScLsFixedV0CompileInfo::Markdown() const {
        << '\n';
     ss << prefix << "entanglement consumption rate [peak]: " << EntanglementConsumptionRatePeak()
        << '\n';
-    ss << prefix << "runtime estimation entanglement consumption count: "
-       << runtime_estimation_entanglement_consumption_count << '\n';
-    ss << prefix << "runtime estimation entanglement consumption depth: "
-       << runtime_estimation_entanglement_consumption_depth << '\n';
+    ss << prefix << "execution_time_estimation_entanglement_consumption_count: "
+       << execution_time_estimation_entanglement_consumption_count << '\n';
+    ss << prefix << "execution_time_estimation_entanglement_consumption_depth: "
+       << execution_time_estimation_entanglement_consumption_depth << '\n';
     ss << prefix << "entanglement factory count: " << entanglement_factory_count << '\n';
     ss << '\n';
 
@@ -248,8 +247,8 @@ std::string ScLsFixedV0CompileInfo::Markdown() const {
 
     ss << "## QEC Resource Estimation\n\n";
     ss << prefix << "code distance: " << code_distance << '\n';
-    ss << prefix << "execution time (sec): " << execution_time_sec << '\n';
-    ss << prefix << "num physical qubits: " << num_physical_qubits;
+    ss << prefix << "execution_time_sec: " << execution_time_sec << '\n';
+    ss << prefix << "physical_qubit_count: " << physical_qubit_count;
     return ss.str();
 }
 void to_json(Json& j, const ScLsFixedV0CompileInfo& info) {
@@ -257,18 +256,21 @@ void to_json(Json& j, const ScLsFixedV0CompileInfo& info) {
 }
 void from_json(const Json& j, ScLsFixedV0CompileInfo& info) {
     // about constants
+    j["magic_generation_success_probability"].get_to(info.magic_generation_success_probability);
     j["magic_generation_period"].get_to(info.magic_generation_period);
-    j["maximum_magic_state_stock"].get_to(info.maximum_magic_state_stock);
+    j["magic_generation_maximum_stock"].get_to(info.magic_generation_maximum_stock);
     j["entanglement_generation_period"].get_to(info.entanglement_generation_period);
-    j["maximum_entangled_state_stock"].get_to(info.maximum_entangled_state_stock);
+    j["entanglement_generation_maximum_stock"].get_to(info.entanglement_generation_maximum_stock);
     j["reaction_time"].get_to(info.reaction_time);
     if (j.contains("topology")) {
         info.topology = Topology::FromJSON(j["topology"]);
     }
 
-    // about runtime
-    j["runtime"].get_to(info.runtime);
-    j["runtime_without_topology"].get_to(info.runtime_without_topology);
+    // about execution time
+    j["execution_time"].get_to(info.execution_time);
+    j["execution_time_without_topology"].get_to(
+            info.execution_time_without_topology
+    );
 
     // about gate
     j["gate_count"].get_to(info.gate_count);
@@ -279,26 +281,26 @@ void from_json(const Json& j, ScLsFixedV0CompileInfo& info) {
     }
     j["gate_throughput"].get_to(info.gate_throughput);
 
-    // about measurement depth
-    j["measurement_feedback_count"].get_to(info.measurement_feedback_count);
-    j["measurement_feedback_depth"].get_to(info.measurement_feedback_depth);
-    j["measurement_feedback_rate"].get_to(info.measurement_feedback_rate);
-    j["runtime_estimation_measurement_feedback_count"].get_to(
-            info.runtime_estimation_measurement_feedback_count
+    // about reaction
+    j["reaction_count"].get_to(info.reaction_count);
+    j["reaction_depth"].get_to(info.reaction_depth);
+    j["reaction_rate"].get_to(info.reaction_rate);
+    j["execution_time_estimation_from_reaction_count"].get_to(
+            info.execution_time_estimation_from_reaction_count
     );
-    j["runtime_estimation_measurement_feedback_depth"].get_to(
-            info.runtime_estimation_measurement_feedback_depth
+    j["execution_time_estimation_from_reaction_depth"].get_to(
+            info.execution_time_estimation_from_reaction_depth
     );
 
     // about magic state consumption
     j["magic_state_consumption_count"].get_to(info.magic_state_consumption_count);
     j["magic_state_consumption_depth"].get_to(info.magic_state_consumption_depth);
     j["magic_state_consumption_rate"].get_to(info.magic_state_consumption_rate);
-    j["runtime_estimation_magic_state_consumption_count"].get_to(
-            info.runtime_estimation_magic_state_consumption_count
+    j["execution_time_estimation_magic_state_consumption_count"].get_to(
+            info.execution_time_estimation_magic_state_consumption_count
     );
-    j["runtime_estimation_magic_state_consumption_depth"].get_to(
-            info.runtime_estimation_magic_state_consumption_depth
+    j["execution_time_estimation_magic_state_consumption_depth"].get_to(
+            info.execution_time_estimation_magic_state_consumption_depth
     );
     j["magic_factory_count"].get_to(info.magic_factory_count);
 
@@ -306,11 +308,11 @@ void from_json(const Json& j, ScLsFixedV0CompileInfo& info) {
     j["entanglement_consumption_count"].get_to(info.entanglement_consumption_count);
     j["entanglement_consumption_depth"].get_to(info.entanglement_consumption_depth);
     j["entanglement_consumption_rate"].get_to(info.entanglement_consumption_rate);
-    j["runtime_estimation_entanglement_consumption_count"].get_to(
-            info.runtime_estimation_entanglement_consumption_count
+    j["execution_time_estimation_entanglement_consumption_count"].get_to(
+            info.execution_time_estimation_entanglement_consumption_count
     );
-    j["runtime_estimation_entanglement_consumption_depth"].get_to(
-            info.runtime_estimation_entanglement_consumption_depth
+    j["execution_time_estimation_entanglement_consumption_depth"].get_to(
+            info.execution_time_estimation_entanglement_consumption_depth
     );
     j["entanglement_factory_count"].get_to(info.entanglement_factory_count);
 
@@ -326,12 +328,8 @@ void from_json(const Json& j, ScLsFixedV0CompileInfo& info) {
     if (j.contains("code_distance")) {
         j["code_distance"].get_to(info.code_distance);
     }
-    if (j.contains("execution_time_sec")) {
-        j["execution_time_sec"].get_to(info.execution_time_sec);
-    }
-    if (j.contains("num_physical_qubits")) {
-        j["num_physical_qubits"].get_to(info.num_physical_qubits);
-    }
+    j["execution_time_sec"].get_to(info.execution_time_sec);
+    j["physical_qubit_count"].get_to(info.physical_qubit_count);
 }
 std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) {
     const auto* indent = "  ";
@@ -339,11 +337,11 @@ std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) 
         << indent << "use_magic_state_cultivation: " << info.use_magic_state_cultivation << '\n'
         << indent << "magic_factory_seed_offset: " << info.magic_factory_seed_offset << '\n'
         << indent << "magic_generation_period: " << info.magic_generation_period << '\n'
-        << indent << "prob_magic_state_creation: " << info.prob_magic_state_creation << '\n'
-        << indent << "maximum_magic_state_stock: " << info.maximum_magic_state_stock << '\n'
+        << indent << "magic_generation_success_probability: " << info.magic_generation_success_probability << '\n'
+        << indent << "magic_generation_maximum_stock: " << info.magic_generation_maximum_stock << '\n'
         << indent << "entanglement_generation_period: " << info.entanglement_generation_period
         << '\n'
-        << indent << "maximum_entangled_state_stock: " << info.maximum_entangled_state_stock << '\n'
+        << indent << "entanglement_generation_maximum_stock: " << info.entanglement_generation_maximum_stock << '\n'
         << indent << "reaction_time: " << info.reaction_time << '\n';
     for (const auto& grid : *info.topology) {
         if (grid.IsPlane()) {
@@ -364,9 +362,10 @@ std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) 
             out << indent << "  chip_y: " << grid.GetMaxY() << '\n';
         }
     }
-    out << "about runtime\n"
-        << indent << "runtime: " << info.runtime << '\n'
-        << indent << "runtime without topology: " << info.runtime_without_topology << '\n'
+    out << "about execution time\n"
+        << indent << "execution_time: " << info.execution_time << '\n'
+        << indent << "execution_time_without_topology: "
+        << info.execution_time_without_topology << '\n'
         << "about gate\n"
         << indent << "gate count: " << info.gate_count << '\n';
     for (const auto& [type, count] : info.gate_count_dict) {
@@ -375,17 +374,15 @@ std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) 
     out << indent << "gate depth: " << info.gate_depth << '\n'
         << indent << "gate throughput [ave]: " << info.GateThroughputAve() << '\n'
         << indent << "gate throughput [peak]: " << info.GateThroughputPeak() << '\n'
-        << "about measurement depth\n"
-        << indent << "measurement feedback count: " << info.measurement_feedback_count << '\n'
-        << indent << "measurement feedback depth: " << info.measurement_feedback_depth << '\n'
-        << indent << "measurement feedback rate [ave]: " << info.MeasurementFeedbackRateAve()
-        << '\n'
-        << indent << "measurement feedback rate [peak]: " << info.MeasurementFeedbackRatePeak()
-        << '\n'
-        << indent << "runtime estimation measurement feedback count: "
-        << info.runtime_estimation_measurement_feedback_count << '\n'
-        << indent << "runtime estimation measurement feedback depth: "
-        << info.runtime_estimation_measurement_feedback_depth << '\n'
+        << "about reaction\n"
+        << indent << "reaction_count: " << info.reaction_count << '\n'
+        << indent << "reaction_depth: " << info.reaction_depth << '\n'
+        << indent << "reaction_rate [ave]: " << info.ReactionRateAve() << '\n'
+        << indent << "reaction_rate [peak]: " << info.ReactionRatePeak() << '\n'
+        << indent << "execution_time_estimation_from_reaction_count: "
+        << info.execution_time_estimation_from_reaction_count << '\n'
+        << indent << "execution_time_estimation_from_reaction_depth: "
+        << info.execution_time_estimation_from_reaction_depth << '\n'
         << "about magic state consumption\n"
         << indent << "magic state consumption count: " << info.magic_state_consumption_count << '\n'
         << indent << "magic state consumption depth: " << info.magic_state_consumption_depth << '\n'
@@ -393,10 +390,10 @@ std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) 
         << '\n'
         << indent << "magic state consumption rate [peak]: " << info.MagicStateConsumptionRatePeak()
         << '\n'
-        << indent << "runtime estimation magic state consumption count: "
-        << info.runtime_estimation_magic_state_consumption_count << '\n'
-        << indent << "runtime estimation magic state consumption depth: "
-        << info.runtime_estimation_magic_state_consumption_depth << '\n'
+        << indent << "execution_time_estimation_magic_state_consumption_count: "
+        << info.execution_time_estimation_magic_state_consumption_count << '\n'
+        << indent << "execution_time_estimation_magic_state_consumption_depth: "
+        << info.execution_time_estimation_magic_state_consumption_depth << '\n'
         << indent << "magic factory count: " << info.magic_factory_count << '\n'
         << "about entanglement consumption\n"
         << indent << "entanglement consumption count: " << info.entanglement_consumption_count
@@ -408,10 +405,10 @@ std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) 
         << indent
         << "entanglement consumption rate [peak]: " << info.EntanglementConsumptionRatePeak()
         << '\n'
-        << indent << "runtime estimation entanglement consumption count: "
-        << info.runtime_estimation_entanglement_consumption_count << '\n'
-        << indent << "runtime estimation entanglement consumption depth: "
-        << info.runtime_estimation_entanglement_consumption_depth << '\n'
+        << indent << "execution_time_estimation_entanglement_consumption_count: "
+        << info.execution_time_estimation_entanglement_consumption_count << '\n'
+        << indent << "execution_time_estimation_entanglement_consumption_depth: "
+        << info.execution_time_estimation_entanglement_consumption_depth << '\n'
         << indent << "entanglement factory count: " << info.entanglement_factory_count << '\n'
         << "about cell consumption\n"
         << indent << "chip cell count: " << info.chip_cell_count << '\n'
@@ -438,8 +435,8 @@ std::ostream& operator<<(std::ostream& out, const ScLsFixedV0CompileInfo& info) 
         << indent << "qubit volume: " << info.qubit_volume << '\n'
         << "about QEC resource estimation\n"
         << indent << "code distance: " << info.code_distance << '\n'
-        << indent << "execution time (sec): " << info.execution_time_sec << '\n'
-        << indent << "num physical qubits: " << info.num_physical_qubits;
+        << indent << "execution_time_sec: " << info.execution_time_sec << '\n'
+        << indent << "physical_qubit_count: " << info.physical_qubit_count;
     return out;
 }
 }  // namespace qret::sc_ls_fixed_v0

@@ -163,14 +163,14 @@ void StabilizerTableau::Apply(PauliString& pauli) const {
     auto target = PauliString(GetNumTargets());
     auto num_y = std::uint32_t{0};
     for (auto i = std::size_t{0}; i < GetNumTargets(); ++i) {
-        switch (pauli[target_idx_[i]]) {
-            case 'X':
+        switch (pauli.Get(target_idx_[i])) {
+            case Pauli::X:
                 target *= xs_[i];
                 break;
-            case 'Z':
+            case Pauli::Z:
                 target *= zs_[i];
                 break;
-            case 'Y':  // Y = i X Z
+            case Pauli::Y:  // Y = i X Z
                 target *= xs_[i];
                 target *= zs_[i];
                 num_y++;
@@ -187,7 +187,7 @@ void StabilizerTableau::Apply(PauliString& pauli) const {
 
     // Update pauli.
     for (auto i = std::size_t{0}; i < GetNumTargets(); ++i) {
-        pauli.Set(target_idx_[i], target[i]);
+        pauli.Set(target_idx_[i], target.Get(i));
     }
     pauli.SetSign(pauli.GetSign() + target.GetSign() + num_y);
 }
@@ -196,7 +196,7 @@ StabilizerTableau StabilizerTableau::FromPauliString(const PauliString& pauli) {
 
     auto target_idx = std::vector<std::size_t>{};
     for (auto t = std::size_t{0}; t < nq; ++t) {
-        if (pauli[t] != 'I') {
+        if (pauli.Get(t) != Pauli::I) {
             target_idx.emplace_back(t);
         }
     }
@@ -208,16 +208,16 @@ StabilizerTableau StabilizerTableau::FromPauliString(const PauliString& pauli) {
     zs.reserve(target_idx.size());
     for (auto i = std::size_t{0}; i < target_idx.size(); ++i) {
         const auto t = target_idx[i];
-        switch (pauli[t]) {
-            case 'X':
+        switch (pauli.Get(t)) {
+            case Pauli::X:
                 xs.emplace_back(PauliString::X(nt, i));
                 zs.emplace_back(PauliString::Z(nt, i, 2));
                 break;
-            case 'Y':
+            case Pauli::Y:
                 xs.emplace_back(PauliString::X(nt, i, 2));
                 zs.emplace_back(PauliString::Z(nt, i, 2));
                 break;
-            case 'Z':
+            case Pauli::Z:
                 xs.emplace_back(PauliString::X(nt, i, 2));
                 zs.emplace_back(PauliString::Z(nt, i));
                 break;

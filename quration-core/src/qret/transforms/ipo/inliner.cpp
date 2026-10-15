@@ -110,6 +110,13 @@ void InlineInstruction(BasicBlock* bb, const InlineInfo& info, const Instruction
                 info.GetCallerRegister(tmp->GetRegister()),
                 bb
         );
+    } else if (const auto* tmp = DynCast<PauliProductMeasurementInst>(inst)) {
+        PauliProductMeasurementInst::Create(
+                convert_q(tmp->GetQubits()),
+                tmp->GetPaulis(),
+                info.GetCallerRegister(tmp->GetRegister()),
+                bb
+        );
     } else if (const auto* tmp = DynCast<ParametrizedRotationInst>(inst)) {
         ParametrizedRotationInst::Create(
                 inst->GetOpcode(),

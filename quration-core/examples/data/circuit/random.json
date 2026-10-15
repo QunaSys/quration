@@ -1,16 +1,17 @@
 {
     "metadata": {
         "format": "IR",
-        "schema_version": "0.1",
+        "schema_version": "0.2",
         "qret_version": "0.6.0",
         "created_at": "2025-09-24T22:12:52"
     },
     "name": "random",
-    "circuit_list": [
+    "entry_function": "Random",
+    "function_list": [
         {
             "name": "Random",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -14637,7 +14638,7 @@
         {
             "name": "Rot(0)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -14665,7 +14666,7 @@
         {
             "name": "Rot(1)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -14693,7 +14694,7 @@
         {
             "name": "Rot(2)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [
@@ -14721,7 +14722,7 @@
         {
             "name": "Rot(3)",
             "entry_point": "entry",
-            "bb_list": [
+            "basicblock_list": [
                 {
                     "name": "entry",
                     "inst_list": [

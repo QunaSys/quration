@@ -38,36 +38,38 @@ struct PyScLsFixedV0Option {
     bool use_magic_state_cultivation = false;
     std::size_t magic_factory_seed_offset = 0;
     std::size_t magic_generation_period = 15;
-    double prob_magic_state_creation = 1.0;
-    std::size_t maximum_magic_state_stock = 10000;
+    double magic_generation_success_probability = 1.0;
+    std::size_t magic_generation_maximum_stock = 10000;
     std::uint64_t entanglement_generation_period = 100;
-    std::uint64_t maximum_entangled_state_stock = 10;
+    std::uint64_t entanglement_generation_maximum_stock = 10;
     std::size_t reaction_time = 1;
-    double physical_error_rate = 0.0;
-    double drop_rate = 0.0;
+    double logical_error_rate_base = 0.0;
+    double logical_error_rate_drop_rate = 0.0;
     double code_cycle_time_sec = 0.0;
-    double allowed_failure_prob = 0.0;
+    double allowed_failure_probability = 0.0;
+    std::uint64_t magic_factory_cell_count = 1;
 };
 std::ostream& operator<<(std::ostream& out, const PyScLsFixedV0Option& o) {
     return out << fmt::format(
                    "topology={},use_magic_state_cultivation={},magic_factory_seed_offset={},magic_"
-                   "generation_period={},prob_magic_state_creation={},maximum_magic_state_stock={},"
-                   "entanglement_generation_period={},maximum_entangled_state_stock={},reaction_"
-                   "time={},physical_error_rate={},drop_rate={},code_cycle_time_sec={},"
-                   "allowed_failure_prob={}",
+                   "generation_period={},magic_generation_success_probability={},magic_generation_maximum_stock={},"
+                   "entanglement_generation_period={},entanglement_generation_maximum_stock={},reaction_"
+                   "time={},logical_error_rate_base={},logical_error_rate_drop_rate={},code_cycle_time_sec={},"
+                   "allowed_failure_probability={},magic_factory_cell_count={}",
                    o.topology,
                    o.use_magic_state_cultivation,
                    o.magic_factory_seed_offset,
                    o.magic_generation_period,
-                   o.prob_magic_state_creation,
-                   o.maximum_magic_state_stock,
+                   o.magic_generation_success_probability,
+                   o.magic_generation_maximum_stock,
                    o.entanglement_generation_period,
-                   o.maximum_entangled_state_stock,
+                   o.entanglement_generation_maximum_stock,
                    o.reaction_time,
-                   o.physical_error_rate,
-                   o.drop_rate,
+                   o.logical_error_rate_base,
+                   o.logical_error_rate_drop_rate,
                    o.code_cycle_time_sec,
-                   o.allowed_failure_prob
+                   o.allowed_failure_probability,
+                   o.magic_factory_cell_count
            );
 }
 
@@ -96,16 +98,21 @@ std::unique_ptr<sc_ls_fixed_v0::ScLsFixedV0TargetMachine> CreateMachine(
     auto ret = sc_ls_fixed_v0::ScLsFixedV0TargetMachine::New(
             topology,
             sc_ls_fixed_v0::ScLsFixedV0MachineOption{
-                    .type = sc_ls_fixed_v0::GetMachineType(*topology),
+                    .topology_type = sc_ls_fixed_v0::GetTopologyType(*topology),
+                    .use_magic_state_cultivation = option.use_magic_state_cultivation,
+                    .magic_factory_seed_offset = option.magic_factory_seed_offset,
                     .magic_generation_period = option.magic_generation_period,
-                    .maximum_magic_state_stock = option.maximum_magic_state_stock,
+                    .magic_generation_success_probability =
+                            option.magic_generation_success_probability,
+                    .magic_generation_maximum_stock = option.magic_generation_maximum_stock,
                     .entanglement_generation_period = option.entanglement_generation_period,
-                    .maximum_entangled_state_stock = option.maximum_entangled_state_stock,
+                    .entanglement_generation_maximum_stock = option.entanglement_generation_maximum_stock,
                     .reaction_time = option.reaction_time,
-                    .physical_error_rate = option.physical_error_rate,
-                    .drop_rate = option.drop_rate,
+                    .logical_error_rate_base = option.logical_error_rate_base,
+                    .logical_error_rate_drop_rate = option.logical_error_rate_drop_rate,
                     .code_cycle_time_sec = option.code_cycle_time_sec,
-                    .allowed_failure_prob = option.allowed_failure_prob
+                    .allowed_failure_probability = option.allowed_failure_probability,
+                    .magic_factory_cell_count = option.magic_factory_cell_count
             }
     );
     return ret;
@@ -221,55 +228,58 @@ void BindCompileOption(nb::module_& m) {
         auto def = PyScLsFixedV0Option();
         nb::class_<PyScLsFixedV0Option>(m, "ScLsFixedV0Option")
                 .def("__init__",
-                     [](PyScLsFixedV0Option* t,
+                    [](PyScLsFixedV0Option* t,
                         const std::string& topology,
                         bool use_magic_state_cultivation,
                         std::size_t magic_factory_seed_offset,
                         std::size_t magic_generation_period,
-                        double prob_magic_state_creation,
-                        std::size_t maximum_magic_state_stock,
+                        double magic_generation_success_probability,
+                        std::size_t magic_generation_maximum_stock,
                         std::size_t entanglement_generation_period,
-                        std::size_t maximum_entangled_state_stock,
+                        std::size_t entanglement_generation_maximum_stock,
                         std::size_t reaction_time,
-                        double physical_error_rate,
-                        double drop_rate,
+                        double logical_error_rate_base,
+                        double logical_error_rate_drop_rate,
                         double code_cycle_time_sec,
-                        double allowed_failure_prob) {
-                         new (t) PyScLsFixedV0Option{
+                        double allowed_failure_probability,
+                        std::uint64_t magic_factory_cell_count) {
+                            new (t) PyScLsFixedV0Option{
                                  topology,
                                  use_magic_state_cultivation,
                                  magic_factory_seed_offset,
                                  magic_generation_period,
-                                 prob_magic_state_creation,
-                                 maximum_magic_state_stock,
+                                 magic_generation_success_probability,
+                                 magic_generation_maximum_stock,
                                  entanglement_generation_period,
-                                 maximum_entangled_state_stock,
+                                 entanglement_generation_maximum_stock,
                                  reaction_time,
-                                 physical_error_rate,
-                                 drop_rate,
+                                 logical_error_rate_base,
+                                 logical_error_rate_drop_rate,
                                  code_cycle_time_sec,
-                                 allowed_failure_prob
-                         };
-                     })
+                                 allowed_failure_probability,
+                                 magic_factory_cell_count
+                            };
+                    })
                 .def_rw("topology", &PyScLsFixedV0Option::topology)
                 .def_rw("use_magic_state_cultivation",
                         &PyScLsFixedV0Option::use_magic_state_cultivation)
                 .def_rw("magic_factory_seed_offset",
                         &PyScLsFixedV0Option::magic_factory_seed_offset)
                 .def_rw("magic_generation_period", &PyScLsFixedV0Option::magic_generation_period)
-                .def_rw("prob_magic_state_creation",
-                        &PyScLsFixedV0Option::prob_magic_state_creation)
-                .def_rw("maximum_magic_state_stock",
-                        &PyScLsFixedV0Option::maximum_magic_state_stock)
+                .def_rw("magic_generation_success_probability",
+                        &PyScLsFixedV0Option::magic_generation_success_probability)
+                .def_rw("magic_generation_maximum_stock",
+                        &PyScLsFixedV0Option::magic_generation_maximum_stock)
                 .def_rw("entanglement_generation_period",
                         &PyScLsFixedV0Option::entanglement_generation_period)
-                .def_rw("maximum_entangled_state_stock",
-                        &PyScLsFixedV0Option::maximum_entangled_state_stock)
+                .def_rw("entanglement_generation_maximum_stock",
+                        &PyScLsFixedV0Option::entanglement_generation_maximum_stock)
                 .def_rw("reaction_time", &PyScLsFixedV0Option::reaction_time)
-                .def_rw("physical_error_rate", &PyScLsFixedV0Option::physical_error_rate)
-                .def_rw("drop_rate", &PyScLsFixedV0Option::drop_rate)
+                .def_rw("logical_error_rate_base", &PyScLsFixedV0Option::logical_error_rate_base)
+                .def_rw("logical_error_rate_drop_rate", &PyScLsFixedV0Option::logical_error_rate_drop_rate)
                 .def_rw("code_cycle_time_sec", &PyScLsFixedV0Option::code_cycle_time_sec)
-                .def_rw("allowed_failure_prob", &PyScLsFixedV0Option::allowed_failure_prob)
+                .def_rw("allowed_failure_probability", &PyScLsFixedV0Option::allowed_failure_probability)
+                .def_rw("magic_factory_cell_count", &PyScLsFixedV0Option::magic_factory_cell_count)
                 .def("__str__", BindFmtUsingOstream<PyScLsFixedV0Option>);
     }
 }
@@ -333,10 +343,11 @@ void BindCompileInfo(nb::module_& m) {
     nb::class_<ScLsFixedV0CompileInfo>(m, "ScLsFixedV0CompileInfo")
             // fields
             .def_ro("magic_generation_period", &ScLsFixedV0CompileInfo::magic_generation_period)
-            .def_ro("maximum_magic_state_stock", &ScLsFixedV0CompileInfo::maximum_magic_state_stock)
+            .def_ro("magic_generation_maximum_stock", &ScLsFixedV0CompileInfo::magic_generation_maximum_stock)
             .def_ro("reaction_time", &ScLsFixedV0CompileInfo::reaction_time)
-            .def_ro("runtime", &ScLsFixedV0CompileInfo::runtime)
-            .def_ro("runtime_without_topology", &ScLsFixedV0CompileInfo::runtime_without_topology)
+            .def_ro("execution_time", &ScLsFixedV0CompileInfo::execution_time)
+            .def_ro("execution_time_without_topology",
+                    &ScLsFixedV0CompileInfo::execution_time_without_topology)
             .def_ro("gate_count", &ScLsFixedV0CompileInfo::gate_count)
             .def("count_per_gate",
                  [](const ScLsFixedV0CompileInfo& info) {
@@ -348,25 +359,23 @@ void BindCompileInfo(nb::module_& m) {
                  })
             .def_ro("gate_depth", &ScLsFixedV0CompileInfo::gate_depth)
             .def_ro("gate_throughput", &ScLsFixedV0CompileInfo::gate_throughput)
-            .def_ro("measurement_feedback_count",
-                    &ScLsFixedV0CompileInfo::measurement_feedback_count)
-            .def_ro("measurement_feedback_depth",
-                    &ScLsFixedV0CompileInfo::measurement_feedback_depth)
-            .def_ro("measurement_feedback_rate", &ScLsFixedV0CompileInfo::measurement_feedback_rate)
-            .def_ro("runtime_estimation_measurement_feedback_count",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_measurement_feedback_count)
-            .def_ro("runtime_estimation_measurement_feedback_depth",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_measurement_feedback_depth)
+            .def_ro("reaction_count", &ScLsFixedV0CompileInfo::reaction_count)
+            .def_ro("reaction_depth", &ScLsFixedV0CompileInfo::reaction_depth)
+            .def_ro("reaction_rate", &ScLsFixedV0CompileInfo::reaction_rate)
+            .def_ro("execution_time_estimation_from_reaction_count",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_from_reaction_count)
+            .def_ro("execution_time_estimation_from_reaction_depth",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_from_reaction_depth)
             .def_ro("magic_state_consumption_count",
                     &ScLsFixedV0CompileInfo::magic_state_consumption_count)
             .def_ro("magic_state_consumption_depth",
                     &ScLsFixedV0CompileInfo::magic_state_consumption_depth)
             .def_ro("magic_state_consumption_rate",
                     &ScLsFixedV0CompileInfo::magic_state_consumption_rate)
-            .def_ro("runtime_estimation_magic_state_consumption_count",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_magic_state_consumption_count)
-            .def_ro("runtime_estimation_magic_state_consumption_depth",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_magic_state_consumption_depth)
+            .def_ro("execution_time_estimation_magic_state_consumption_count",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_magic_state_consumption_count)
+            .def_ro("execution_time_estimation_magic_state_consumption_depth",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_magic_state_consumption_depth)
             .def_ro("magic_factory_count", &ScLsFixedV0CompileInfo::magic_factory_count)
             .def_ro("entanglement_consumption_count",
                     &ScLsFixedV0CompileInfo::entanglement_consumption_count)
@@ -374,10 +383,10 @@ void BindCompileInfo(nb::module_& m) {
                     &ScLsFixedV0CompileInfo::entanglement_consumption_depth)
             .def_ro("entanglement_consumption_rate",
                     &ScLsFixedV0CompileInfo::entanglement_consumption_rate)
-            .def_ro("runtime_estimation_entanglement_consumption_count",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_entanglement_consumption_count)
-            .def_ro("runtime_estimation_entanglement_consumption_depth",
-                    &ScLsFixedV0CompileInfo::runtime_estimation_entanglement_consumption_depth)
+            .def_ro("execution_time_estimation_entanglement_consumption_count",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_entanglement_consumption_count)
+            .def_ro("execution_time_estimation_entanglement_consumption_depth",
+                    &ScLsFixedV0CompileInfo::execution_time_estimation_entanglement_consumption_depth)
             .def_ro("entanglement_factory_count",
                     &ScLsFixedV0CompileInfo::entanglement_factory_count)
             .def_ro("chip_cell_count", &ScLsFixedV0CompileInfo::chip_cell_count)
@@ -392,7 +401,7 @@ void BindCompileInfo(nb::module_& m) {
             .def_ro("qubit_volume", &ScLsFixedV0CompileInfo::qubit_volume)
             .def_ro("code_distance", &ScLsFixedV0CompileInfo::code_distance)
             .def_ro("execution_time_sec", &ScLsFixedV0CompileInfo::execution_time_sec)
-            .def_ro("num_physical_qubits", &ScLsFixedV0CompileInfo::num_physical_qubits)
+            .def_ro("physical_qubit_count", &ScLsFixedV0CompileInfo::physical_qubit_count)
             // methods
             .def("to_json", [](const ScLsFixedV0CompileInfo& info) { return info.Json().dump(); })
             .def("to_markdown", [](const ScLsFixedV0CompileInfo& info) { return info.Markdown(); });

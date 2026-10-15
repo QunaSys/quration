@@ -1,4 +1,6 @@
 {
+    "time": 1.0,
+    "num_trotter_steps": 1,
     "num_qubits": 5,
     "pauli_terms": [
         {

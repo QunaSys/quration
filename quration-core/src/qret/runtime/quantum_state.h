@@ -18,6 +18,7 @@
 #include <vector>
 
 #include "qret/base/type.h"
+#include "qret/math/pauli.h"
 
 namespace qret::runtime {
 /**
@@ -46,6 +47,13 @@ public:
 
     // Gate
     virtual void Measure(std::uint64_t q, std::uint64_t r) = 0;
+    virtual void MeasurePauliProduct(
+            const std::vector<std::uint64_t>&,
+            const std::vector<math::Pauli>&,
+            std::uint64_t
+    ) {
+        throw std::runtime_error("Pauli product measurement is not supported by this state.");
+    }
     virtual void X(std::uint64_t q) = 0;
     virtual void Y(std::uint64_t q) = 0;
     virtual void Z(std::uint64_t q) = 0;

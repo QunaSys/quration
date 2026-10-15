@@ -31,9 +31,16 @@
 #include "qret/ir/instructions.h"
 #include "qret/ir/metadata.h"
 #include "qret/ir/value.h"
+#include "qret/math/pauli.h"
 #include "qret/version.h"
 
 namespace qret::ir {
+namespace {
+constexpr auto FunctionListKey = "function_list";
+constexpr auto BasicBlockListKey = "basicblock_list";
+constexpr auto EntryFunctionKey = "entry_function";
+}  // namespace
+
 //--------------------------------------------------//
 // Serialization
 //--------------------------------------------------//
@@ -49,22 +56,23 @@ void to_json(Json& j, const Module& module) {
 
     // Set module data.
     j["name"] = module.GetName();
-    j["circuit_list"] = Json::array();
+    j[EntryFunctionKey] = module.begin() == module.end() ? "" : module.begin()->GetName();
+    j[FunctionListKey] = Json::array();
     for (const auto& func : module) {
         auto tmp = Json();
         to_json(tmp, func);
-        j["circuit_list"].emplace_back(tmp);
+        j[FunctionListKey].emplace_back(tmp);
     }
 }
 void to_json(Json& j, const Function& func) {
     // FIXME: currently ignore parent_
     j["name"] = func.GetName();
     j["entry_point"] = func.GetEntryBB()->GetName();
-    j["bb_list"] = Json::array();
+    j[BasicBlockListKey] = Json::array();
     for (const auto& bb : func) {
         auto tmp = Json();
         to_json(tmp, bb);
-        j["bb_list"].emplace_back(tmp);
+        j[BasicBlockListKey].emplace_back(tmp);
     }
     const auto& argument = func.GetArgument();
     j["argument"]["num_qubits"] = func.GetNumQubits();
@@ -98,6 +106,8 @@ void to_json(Json& j, const BasicBlock& bb) {
 void to_json(Json& j, const Instruction& inst) {
     // FIXME: currently ignore parent_
     if (const auto* i = DynCast<MeasurementInst>(&inst)) {
+        to_json(j, *i);
+    } else if (const auto* i = DynCast<PauliProductMeasurementInst>(&inst)) {
         to_json(j, *i);
     } else if (const auto* i = DynCast<UnaryInst>(&inst)) {
         to_json(j, *i);
@@ -143,6 +153,18 @@ void to_json(Json& j, const Instruction& inst) {
 void to_json(Json& j, const MeasurementInst& inst) {
     to_json(j, inst.GetOpcode());
     j["q"] = inst.GetQubit().id;
+    j["r"] = inst.GetRegister().id;
+}
+void to_json(Json& j, const PauliProductMeasurementInst& inst) {
+    to_json(j, inst.GetOpcode());
+    j["qs"] = Json::array();
+    for (const auto q : inst.GetQubits()) {
+        j["qs"].emplace_back(q.id);
+    }
+    j["ps"] = Json::array();
+    for (const auto p : inst.GetPaulis()) {
+        j["ps"].emplace_back(math::ToString(p));
+    }
     j["r"] = inst.GetRegister().id;
 }
 void to_json(Json& j, const UnaryInst& inst) {
@@ -542,7 +564,7 @@ void ValidateCallArgumentSize(const Module& module) {
 
 void ValidateFunctionJsonWarnings(const Json& function_json) {
     const auto function_name = function_json.at("name").get<std::string>();
-    const auto& bb_list = function_json.at("bb_list");
+    const auto& bb_list = function_json.at(BasicBlockListKey);
 
     auto bb_names = std::unordered_set<std::string>{};
     for (const auto& bb_json : bb_list) {
@@ -796,7 +818,7 @@ void LoadFunction(const Json& j, const FunctionMap& fmap) {
 
     // Create empty BBs at first.
     auto bmap = BBMap();
-    const auto& bb_list = j.at("bb_list");
+    const auto& bb_list = j.at(BasicBlockListKey);
     if (bb_list.empty()) {
         throw std::runtime_error(
                 fmt::format("Function '{}' must contain at least one BB.", function_name)
@@ -861,12 +883,30 @@ void InsertInst(const Json& j, BasicBlock* parent, const BBMap& bmap, const Func
     from_json(j, opcode);
     const auto code = opcode.GetCode();
 
-    if (opcode.IsMeasurement()) {
+    if (code == Opcode::Table::Measurement) {
         const auto q = Qubit{j.at("q").get<std::uint64_t>()};
         const auto r = Register{j.at("r").get<std::uint64_t>()};
         ValidateQubitRange(q, *func, function_name, bb_name, "Measurement", "q");
         ValidateRegisterRange(r, *func, function_name, bb_name, "Measurement", "r");
         MeasurementInst::Create(q, r, parent);
+    } else if (code == Opcode::Table::PauliProductMeasurement) {
+        auto qs = std::vector<Qubit>{};
+        qs.reserve(j.at("qs").size());
+        for (const auto& q_json : j.at("qs")) {
+            auto q = Qubit{q_json.get<std::uint64_t>()};
+            ValidateQubitRange(q, *func, function_name, bb_name, "PauliProductMeasurement", "qs");
+            qs.emplace_back(q);
+        }
+
+        auto ps = std::vector<math::Pauli>{};
+        ps.reserve(j.at("ps").size());
+        for (const auto& p_json : j.at("ps")) {
+            ps.emplace_back(math::PauliFromString(p_json.get<std::string>()));
+        }
+
+        const auto r = Register{j.at("r").get<std::uint64_t>()};
+        ValidateRegisterRange(r, *func, function_name, bb_name, "PauliProductMeasurement", "r");
+        PauliProductMeasurementInst::Create(qs, ps, r, parent);
     } else if (opcode.IsUnary()) {
         const auto q = Qubit{j.at("q").get<std::uint64_t>()};
         ValidateQubitRange(q, *func, function_name, bb_name, "Unary", "q");
@@ -1088,6 +1128,8 @@ void LoadJsonImpl(const Json& j, Module& module) {
     LOG_DEBUG("Loading module {}", module.GetName());
 
     auto fmap = FunctionMap();
+    const auto& function_list = j.at(FunctionListKey);
+    auto module_function_names = std::unordered_set<std::string>{};
 
     // Load functions already registered in context.
     for (auto& tmp : module.GetContext().owned_module) {
@@ -1097,12 +1139,13 @@ void LoadJsonImpl(const Json& j, Module& module) {
     }
 
     // Create empty functions first.
-    for (const auto& tmp : j["circuit_list"]) {
+    for (const auto& tmp : function_list) {
         if (!tmp.contains("name")) {
             throw std::runtime_error("JSON does not contain func name");
         }
 
         const auto function_name = tmp["name"].get<std::string>();
+        module_function_names.emplace(function_name);
         if (fmap.contains(function_name)) {
             throw std::runtime_error(
                     fmt::format("JSON contains duplicate function name: {}", function_name)
@@ -1113,8 +1156,21 @@ void LoadJsonImpl(const Json& j, Module& module) {
         fmap[function_name] = func;
     }
 
+    if (j.contains(EntryFunctionKey)) {
+        const auto entry_function = j.at(EntryFunctionKey).get<std::string>();
+        if (!entry_function.empty() && !module_function_names.contains(entry_function)) {
+            throw std::runtime_error(
+                    fmt::format(
+                            "Module '{}' entry point refers to unknown function '{}'.",
+                            module.GetName(),
+                            entry_function
+                    )
+            );
+        }
+    }
+
     // Load function contents.
-    for (const auto& tmp : j["circuit_list"]) {
+    for (const auto& tmp : function_list) {
         LOG_DEBUG("Loading module {}", module.GetName());
         LoadFunction(tmp, fmap);
     }

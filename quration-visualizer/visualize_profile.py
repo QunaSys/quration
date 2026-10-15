@@ -1,4 +1,4 @@
-"""Visualize compile information using streamlit."""
+"""Visualize profile using streamlit."""
 
 from __future__ import annotations
 
@@ -144,10 +144,10 @@ def get_color_set() -> list[str]:
 
 
 def get_summary(jsons: OrderedDict[str, dict]) -> str:
-    """Get summary of compile information.
+    """Get summary of profile.
 
     Args:
-        jsons (OrderedDict[str, dict]): compile information files in json format
+        jsons (OrderedDict[str, dict]): profile in json format
 
     Returns:
         str: summary
@@ -171,7 +171,7 @@ def stateful_text_input(key: str, value: str) -> str | None:
 
 
 class CreateTable:
-    """Create tables of compile information."""
+    """Create tables of profile."""
 
     @staticmethod
     def _dict_or_empty(value: object) -> dict:
@@ -262,11 +262,11 @@ class CreateTable:
         return df  # noqa:DOC201
 
     @staticmethod
-    def runtime(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
-        """Create table of runtime information."""
+    def execution_time(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
+        """Create table of execution time information."""
         df = pd.DataFrame()
 
-        keys = ["runtime", "runtime_without_topology"]
+        keys = ["execution_time", "execution_time_without_topology"]
         for name, j in jsons.items():
             df[name] = [j.get(key, None) for key in keys]
 
@@ -317,18 +317,18 @@ class CreateTable:
         return df  # noqa:DOC201
 
     @staticmethod
-    def measurement_depth(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
-        """Create table of measurement depth information."""
+    def reaction(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
+        """Create table of reaction information."""
         df = pd.DataFrame()
 
         keys = None
         for name, j in jsons.items():
             keys = [
-                "measurement_feedback_count",
-                "measurement_feedback_depth",
+                "reaction_count",
+                "reaction_depth",
             ]
             values = [j.get(key, None) for key in keys]
-            CreateTable._time_series(j, "measurement_feedback_rate", keys, values)
+            CreateTable._time_series(j, "reaction_rate", keys, values)
             new_keys = ["gate_depth"]
             keys.extend(new_keys)
             values.extend([j.get(key, None) for key in new_keys])
@@ -353,8 +353,8 @@ class CreateTable:
             values = [j.get(key, None) for key in keys]
             CreateTable._time_series(j, "magic_state_consumption_rate", keys, values)
             new_keys = [
-                "runtime_estimation_magic_state_consumption_count",
-                "runtime_estimation_magic_state_consumption_depth",
+                "execution_time_estimation_magic_state_consumption_count",
+                "execution_time_estimation_magic_state_consumption_depth",
                 "magic_factory_count",
             ]
             keys.extend(new_keys)
@@ -379,8 +379,8 @@ class CreateTable:
             values = [j.get(key, None) for key in keys]
             CreateTable._time_series(j, "entanglement_consumption_rate", keys, values)
             new_keys = [
-                "runtime_estimation_entanglement_consumption_count",
-                "runtime_estimation_entanglement_consumption_depth",
+                "execution_time_estimation_entanglement_consumption_count",
+                "execution_time_estimation_entanglement_consumption_depth",
                 "entanglement_factory_count",
             ]
             keys.extend(new_keys)
@@ -416,14 +416,14 @@ class CreateTable:
 
 def visualize_table(col: DeltaGenerator, jsons: OrderedDict[str, dict]) -> None:
     """Visualize table."""
-    col.markdown("## Runtime")
-    col.dataframe(CreateTable.runtime(jsons), width="stretch")
+    col.markdown("## Execution time")
+    col.dataframe(CreateTable.execution_time(jsons), width="stretch")
     col.markdown("## Gate")
     col.dataframe(CreateTable.gate(jsons), width="stretch")
     col.markdown("### Details")
     col.dataframe(CreateTable.gate_detail(jsons), width="stretch")
-    col.markdown("## Measurement depth")
-    col.dataframe(CreateTable.measurement_depth(jsons), width="stretch")
+    col.markdown("## Reaction")
+    col.dataframe(CreateTable.reaction(jsons), width="stretch")
     col.markdown("## Magic state consumption")
     col.dataframe(CreateTable.magic_state_consumption(jsons), width="stretch")
     col.markdown("## Entanglement consumption")
@@ -531,7 +531,7 @@ def visualize_time_series(col: DeltaGenerator, jsons: OrderedDict[str, dict], co
     col.markdown("## Time series")
     col.markdown(f"Visualize time series from {tmin} to {tmax} with bin size {bin_size}")
     visualize("gate_throughput", expanded=True)
-    visualize("measurement_feedback_rate")
+    visualize("reaction_rate")
     visualize("magic_state_consumption_rate")
     visualize("entanglement_consumption_rate")
     visualize("chip_cell_algorithmic_qubit")
@@ -541,20 +541,20 @@ def visualize_time_series(col: DeltaGenerator, jsons: OrderedDict[str, dict], co
 
 
 CORE_METRICS = [
-    "runtime",
+    "execution_time",
     "gate_count",
     "gate_depth",
-    "measurement_feedback_count",
+    "reaction_count",
     "magic_state_consumption_count",
     "entanglement_consumption_count",
     "code_distance",
-    "num_physical_qubits",
+    "physical_qubit_count",
     "execution_time_sec",
 ]
 
 TIME_SERIES_KEYS = [
     "gate_throughput",
-    "measurement_feedback_rate",
+    "reaction_rate",
     "magic_state_consumption_rate",
     "entanglement_consumption_rate",
     "chip_cell_algorithmic_qubit",
@@ -597,9 +597,9 @@ def inject_modern_style() -> None:
     )
 
 
-def extract_compile_info(raw: dict) -> dict:
-    if "opt" in raw and isinstance(raw["opt"], dict) and "compile_info" in raw["opt"]:
-        return raw["opt"]["compile_info"]
+def extract_profile_info(raw: dict) -> dict:
+    if "opt" in raw and isinstance(raw["opt"], dict) and "profile_info" in raw["opt"]:
+        return raw["opt"]["profile_info"]
     return raw
 
 
@@ -621,7 +621,7 @@ def build_overview_df(jsons: OrderedDict[str, dict]) -> pd.DataFrame:
 def rename_labels(items: OrderedDict[str, dict]) -> dict[str, str]:
     renamed: dict[str, str] = {}
     with st.expander("Labels", expanded=False):
-        st.caption("表示名を変更できます（重複不可）。")
+        st.caption("You can change display names; duplicate names are not allowed.")
         for name in items:
             renamed[name] = stateful_text_input(key=f"label:{name}", value=name) or name
     return renamed
@@ -640,7 +640,7 @@ def render_overview_tab(
     st.markdown("### Overview")
 
     metric_cols = st.columns(4)
-    summary_metrics = ["runtime", "gate_count", "code_distance", "num_physical_qubits"]
+    summary_metrics = ["execution_time", "gate_count", "code_distance", "physical_qubit_count"]
     for i, metric in enumerate(summary_metrics):
         values = overview_df.loc[metric].dropna()
         if len(values) == 0:
@@ -695,8 +695,8 @@ def render_tables_tab(jsons: OrderedDict[str, dict], topologies: OrderedDict[str
         st.dataframe(CreateTable.topology(topologies), width="stretch")
     col1, col2 = st.columns(2)
     visualize_table(col1, jsons)
-    col2.markdown("## Runtime")
-    col2.dataframe(CreateTable.runtime(jsons), width="stretch")
+    col2.markdown("## Execution time")
+    col2.dataframe(CreateTable.execution_time(jsons), width="stretch")
     col2.markdown("## Gate")
     col2.dataframe(CreateTable.gate(jsons), width="stretch")
     col2.markdown("## Cell consumption")
@@ -715,7 +715,7 @@ def render_time_series_tab(
         if all(isinstance(j.get(k, None), list) and len(j.get(k, [])) > 0 for j in jsons.values())
     ]
     if len(available) == 0:
-        st.info("選択したファイルに時系列データがありません。")
+        st.info("The selected file does not contain time-series data.")
         return
 
     maximum_of_time_series = max(calc_maximum_of_time_series(jsons, key=k) for k in available)
@@ -737,7 +737,7 @@ def render_time_series_tab(
     )
     selected = col3.multiselect("Series", options=available, default=available[:2])
     if len(selected) == 0:
-        st.info("Series を1つ以上選択してください。")
+        st.info("Select at least one series.")
         return
 
     for key in selected:
@@ -775,17 +775,17 @@ def render_topology_tab(topologies: OrderedDict[str, Topology], colors: OrderedD
 
 
 def render_empty_state() -> None:
-    st.markdown('<div class="viz-title">Compile Info Visualizer</div>', unsafe_allow_html=True)
+    st.markdown('<div class="viz-title">Profile Visualizer</div>', unsafe_allow_html=True)
     st.markdown(
-        '<div class="viz-subtitle">右のサイドバーから profile JSON / compile_info JSON をアップロードしてください。</div>',
+        '<div class="viz-subtitle">Upload a profile JSON or profile_info JSON from the right sidebar.</div>',
         unsafe_allow_html=True,
     )
-    st.info("比較したいファイルを複数選ぶと、指標差分・時系列・トポロジーを同時に確認できます。")
+    st.info("Select multiple files to compare metric deltas, time series, and topology together.")
 
 
 def main() -> None:  # noqa:D103
     st.set_page_config(
-        page_title="Visualize compile information",
+        page_title="Profile Visualizer",
         layout="wide",
         initial_sidebar_state="expanded",
     )
@@ -817,7 +817,7 @@ def main() -> None:  # noqa:D103
             continue
         try:
             raw = json.loads(upload_file.getvalue())
-            info = extract_compile_info(raw)
+            info = extract_profile_info(raw)
             raw_jsons[upload_file.name] = info
             topologies[upload_file.name] = parse_topology(info)
         except Exception as ex:  # noqa: BLE001
@@ -827,15 +827,15 @@ def main() -> None:  # noqa:D103
         for name, message in parse_errors:
             st.error(f"{name}: {message}")
     if len(raw_jsons) == 0:
-        st.warning("有効なファイルが選択されていません。")
+        st.warning("No valid file is selected.")
         return
 
-    st.markdown('<div class="viz-title">Compile Info Visualizer</div>', unsafe_allow_html=True)
+    st.markdown('<div class="viz-title">Profile Visualizer</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="viz-subtitle">{get_summary(raw_jsons)}</div>', unsafe_allow_html=True)
 
     renamed = rename_labels(raw_jsons)
     if len(renamed) != len(set(renamed.values())):
-        st.error("同じ表示名は使えません。")
+        st.error("Duplicate display names are not allowed.")
         return
 
     jsons = apply_rename(raw_jsons, renamed)

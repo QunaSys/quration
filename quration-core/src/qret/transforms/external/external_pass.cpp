@@ -46,7 +46,7 @@ void LoadCircuit(const std::string& path, Function& func) {
     for (auto& c : *mod) {
         cmap[std::string(c.GetName())] = &c;
     }
-    for (const auto& tmp : j["circuit_list"]) {
+    for (const auto& tmp : j["function_list"]) {
         if (tmp["name"].template get<std::string>() == func.GetName()) {
             LoadCircuit(tmp, cmap);
         }

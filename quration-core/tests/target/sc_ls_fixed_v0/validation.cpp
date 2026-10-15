@@ -21,9 +21,9 @@ TEST(Validation, UseUnallocatedQ) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -53,9 +53,9 @@ TEST(Validation, UseUnallocatedC) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -103,9 +103,9 @@ TEST(Validation, UseUnallocatedM) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -140,9 +140,9 @@ TEST(Validation, UseUnallocatedE) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -196,9 +196,9 @@ TEST(Validation, ReAllocateQ) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -227,9 +227,9 @@ TEST(Validation, ReAllocateQAfterMove) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -249,9 +249,9 @@ TEST(Validation, ReAllocateQAfterMoveTrans) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -271,9 +271,9 @@ TEST(Validation, ReAllocateC) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -321,9 +321,9 @@ TEST(Validation, ReAllocateReservedC) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -347,9 +347,9 @@ TEST(Validation, ReAllocateM) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );
@@ -379,9 +379,9 @@ TEST(Validation, ReAllocateE) {
             topology,
             ScLsFixedV0MachineOption{
                     .magic_generation_period = 15,
-                    .maximum_magic_state_stock = 100,
+                    .magic_generation_maximum_stock = 100,
                     .entanglement_generation_period = 15,
-                    .maximum_entangled_state_stock = 100,
+                    .entanglement_generation_maximum_stock = 100,
                     .reaction_time = 1,
             }
     );

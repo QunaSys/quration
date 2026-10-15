@@ -81,7 +81,7 @@ void ScLsAsmPrinter::EmitStartOfAsmFile() {
 
     const auto& machine_option = target->machine_option;
     streamer_->EmitComment("target:");
-    streamer_->EmitComment(fmt::format("  type: {}", ToString(machine_option.type)));
+    streamer_->EmitComment(fmt::format("  topology_type: {}", ToString(machine_option.topology_type)));
     streamer_->EmitComment(
             fmt::format(
                     "  use_magic_state_cultivation: {}",
@@ -99,12 +99,12 @@ void ScLsAsmPrinter::EmitStartOfAsmFile() {
     );
     streamer_->EmitComment(
             fmt::format(
-                    "  prob_magic_state_creation: {:.2f}",
-                    machine_option.prob_magic_state_creation
+                    "  magic_generation_success_probability: {:.2f}",
+                    machine_option.magic_generation_success_probability
             )
     );
     streamer_->EmitComment(
-            fmt::format("  maximum_magic_state_stock: {}", machine_option.maximum_magic_state_stock)
+            fmt::format("  magic_generation_maximum_stock: {}", machine_option.magic_generation_maximum_stock)
     );
     streamer_->EmitComment(
             fmt::format(
@@ -114,8 +114,8 @@ void ScLsAsmPrinter::EmitStartOfAsmFile() {
     );
     streamer_->EmitComment(
             fmt::format(
-                    "  maximum_entangled_state_stock: {}",
-                    machine_option.maximum_entangled_state_stock
+                    "  entanglement_generation_maximum_stock: {}",
+                    machine_option.entanglement_generation_maximum_stock
             )
     );
     streamer_->EmitComment(

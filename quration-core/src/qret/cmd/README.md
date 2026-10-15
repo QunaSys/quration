@@ -1,8 +1,8 @@
 \page qret_cmd CMD module
 
-コマンドラインツールを実装する。
+Implements command-line tools.
 
-## コードマップ
+## Code map
 
 * `qret/cmd/common.h`
 * `qret/cmd/asm.h`

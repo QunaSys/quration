@@ -1,7 +1,7 @@
 """pyqret.frontend.gate.intrinsic module."""
 
 from ...._qret_impl.frontend.gate import intrinsic as _M  # pyright: ignore[reportMissingImports]
-from ... import CircuitBuilder, Qubit, Qubits, Register, Registers
+from ... import CircuitBuilder, Pauli, Qubit, Qubits, Register, Registers
 
 # TODO: Return Instruction class
 
@@ -16,6 +16,11 @@ def measure(q: Qubit, r: Register) -> None:
         r (Register): register to save the measurement result.
     """
     _M.measure(q._impl, r._impl)
+
+
+def pauli_product_measure(qs: Qubits, ps: list[Pauli], r: Register) -> None:
+    """Insert a Pauli product measurement instruction to the quantum circuit."""
+    _M.pauli_product_measure(qs._impl, ps, r._impl)
 
 
 def i(q: Qubit) -> None:

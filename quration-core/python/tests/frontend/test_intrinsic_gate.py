@@ -5,6 +5,7 @@ from pyqret.frontend import (
     Context,
     Module,
     Opcode,
+    Pauli,
 )
 from pyqret.frontend.gate import control_flow, intrinsic
 
@@ -51,6 +52,8 @@ class IntrinsicGateTestGen(CircuitGenerator):
         intrinsic.global_phase(self.builder, 0.4)
 
         intrinsic.discrete_distribution([0.1, 0.2, 6.0], bar.range(1, 2))
+
+        intrinsic.pauli_product_measure(foo.range(0, 2), [Pauli.X, Pauli.Z], bar[0])
 
         for q, r in zip(foo, bar):
             intrinsic.measure(q, r)
@@ -110,6 +113,7 @@ def test_intrinsic_gate():
         Opcode.MCX,
         Opcode.GlobalPhase,
         Opcode.DiscreteDistribution,
+        Opcode.PauliProductMeasurement,
         Opcode.Measurement,
         Opcode.Measurement,
         Opcode.Measurement,

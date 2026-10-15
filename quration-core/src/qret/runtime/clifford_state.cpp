@@ -20,9 +20,7 @@ CliffordState::CliffordState(std::uint64_t seed, std::uint64_t num_qubits)
     , num_qubits_(num_qubits)
     , sg_(num_qubits) {}
 
-void CliffordState::Measure(std::uint64_t q, std::uint64_t r) {
-    const auto measurement_base = PauliString::Z(num_qubits_, q);
-
+bool CliffordState::MeasurePauliString(const PauliString& measurement_base) {
     bool found_anti_commute = false;
     std::size_t anti_commute_idx = 0;
 
@@ -64,6 +62,24 @@ void CliffordState::Measure(std::uint64_t q, std::uint64_t r) {
         }
     }
 
+    return result;
+}
+
+void CliffordState::Measure(std::uint64_t q, std::uint64_t r) {
+    const auto measurement_base = PauliString::Z(num_qubits_, q);
+    const auto result = MeasurePauliString(measurement_base);
+    SaveMeasuredResult(r, result);
+}
+void CliffordState::MeasurePauliProduct(
+        const std::vector<std::uint64_t>& qs,
+        const std::vector<math::Pauli>& ps,
+        std::uint64_t r
+) {
+    auto measurement_base = PauliString(num_qubits_);
+    for (auto i = std::size_t{0}; i < qs.size(); ++i) {
+        measurement_base.Set(qs[i], ps[i]);
+    }
+    const auto result = MeasurePauliString(measurement_base);
     SaveMeasuredResult(r, result);
 }
 void CliffordState::X(std::uint64_t q) {

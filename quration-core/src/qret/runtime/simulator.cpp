@@ -28,9 +28,9 @@
 #include "qret/runtime/toffoli_state.h"
 
 namespace qret::runtime {
-using ir::Opcode, ir::Function, ir::Instruction, ir::MeasurementInst, ir::UnaryInst,
-        ir::ParametrizedRotationInst, ir::BinaryInst, ir::TernaryInst, ir::MultiControlInst,
-        ir::GlobalPhaseInst, ir::CleanInst;
+using ir::Opcode, ir::Function, ir::Instruction, ir::MeasurementInst,
+        ir::PauliProductMeasurementInst, ir::UnaryInst, ir::ParametrizedRotationInst,
+        ir::BinaryInst, ir::TernaryInst, ir::MultiControlInst, ir::GlobalPhaseInst, ir::CleanInst;
 namespace {
 void RunMeasurementInst(
         QuantumState* state,
@@ -41,6 +41,20 @@ void RunMeasurementInst(
     const auto q = qmap[inst->GetQubit().id];
     const auto r = rmap[inst->GetRegister().id];
     state->Measure(q, r);
+}
+void RunPauliProductMeasurementInst(
+        QuantumState* state,
+        const PauliProductMeasurementInst* inst,
+        const std::vector<std::uint64_t>& qmap,
+        const std::vector<std::uint64_t>& rmap
+) {
+    auto qs = std::vector<std::uint64_t>{};
+    qs.reserve(inst->GetQubits().size());
+    for (const auto q : inst->GetQubits()) {
+        qs.emplace_back(qmap[q.id]);
+    }
+    const auto r = rmap[inst->GetRegister().id];
+    state->MeasurePauliProduct(qs, inst->GetPaulis(), r);
 }
 void RunUnaryInst(
         QuantumState* state,
@@ -160,8 +174,10 @@ std::optional<std::string> RunInst(
         const std::vector<std::uint64_t>& qmap,
         const std::vector<std::uint64_t>& rmap
 ) {
-    if (inst->IsMeasurement()) {
-        RunMeasurementInst(state, Cast<MeasurementInst>(inst), qmap, rmap);
+    if (const auto* product_measurement = DynCast<PauliProductMeasurementInst>(inst)) {
+        RunPauliProductMeasurementInst(state, product_measurement, qmap, rmap);
+    } else if (const auto* measurement = DynCast<MeasurementInst>(inst)) {
+        RunMeasurementInst(state, measurement, qmap, rmap);
     } else if (inst->IsUnary()) {
         const auto code = inst->GetOpcode().GetCode();
         if (code == Opcode::Table::RX || code == Opcode::Table::RY || code == Opcode::Table::RZ) {

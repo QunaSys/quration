@@ -32,7 +32,7 @@ namespace qret::sc_ls_fixed_v0 {
  * @details
  * Invariants:
  * - 1 <= generation_step <= option.magic_generation_period
- * - magic_state_count <= option.maximum_magic_state_stock
+ * - magic_state_count <= option.magic_generation_maximum_stock
  */
 struct QRET_EXPORT MagicFactoryState {
     static MagicFactoryState Empty(std::uint64_t seed) {
@@ -72,7 +72,7 @@ struct QRET_EXPORT MagicFactoryState {
  * @details  A creation trial occurs when (generation_step == magic_generation_period) at the
  * beginning of this call. After the trial, generation_step is reset to 0, then incremented to 1
  * within the same call.
- * If @p option.maximum_magic_state_stock is already reached, no creation occurs.
+ * If @p option.magic_generation_maximum_stock is already reached, no creation occurs.
  *
  * @return true if a magic state was created in this clock.
  */
@@ -82,9 +82,9 @@ inline bool StepProbabilisticMagicFactoryState(
 ) {
     auto magic_created = false;
     if ((state.generation_step == option.magic_generation_period)
-        && (state.magic_state_count < option.maximum_magic_state_stock)) {
+        && (state.magic_state_count < option.magic_generation_maximum_stock)) {
         // Get chance to create a magic state.
-        auto dist = std::bernoulli_distribution(option.prob_magic_state_creation);
+        auto dist = std::bernoulli_distribution(option.magic_generation_success_probability);
         if (dist(state.engine)) {
             magic_created = true;
             state.magic_state_count++;
@@ -107,7 +107,7 @@ inline bool StepDeterministicMagicFactoryState(
 ) {
     auto magic_created = false;
     if ((state.generation_step == option.magic_generation_period)
-        && (state.magic_state_count < option.maximum_magic_state_stock)) {
+        && (state.magic_state_count < option.magic_generation_maximum_stock)) {
         magic_created = true;
         state.magic_state_count++;
         state.generation_step = 0;
@@ -176,7 +176,7 @@ inline bool StepEntanglementFactoryState(
     auto entanglement_created = false;
     if ((state.entangled_state_generation_elapsed == option.entanglement_generation_period)
         && (state.entangled_state_stock_count_free + state.entangled_state_stock_count_reserve()
-            < option.maximum_entangled_state_stock)) {
+            < option.entanglement_generation_maximum_stock)) {
         entanglement_created = true;
         state.entangled_state_stock_count_free += 1;
         state.entangled_state_generation_elapsed = 0;

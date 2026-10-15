@@ -7,6 +7,7 @@
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
+#include <fmt/std.h>
 
 #include <ostream>
 #include <random>
@@ -157,6 +158,11 @@ void CalculateStaticRegisterInBB(
         if (const auto* tmp = DynCast<MeasurementInst>(&inst)) {
             // Register of measurement target not static (dynamic).
             // Runtime result depends on qubit state, so compile-time certainty is lost.
+            const auto reg = tmp->GetRegister();
+            if (static_register.contains(reg.id)) {
+                static_register.erase(reg.id);
+            }
+        } else if (const auto* tmp = DynCast<PauliProductMeasurementInst>(&inst)) {
             const auto reg = tmp->GetRegister();
             if (static_register.contains(reg.id)) {
                 static_register.erase(reg.id);

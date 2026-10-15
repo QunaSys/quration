@@ -48,11 +48,15 @@ SELECTParams LoadSELECTJson(const std::string& path) {
 
 int main(std::int32_t argc, const char* const* const argv) {
     namespace po = boost::program_options;
-    po::options_description desc("Create SELECT circuit from JSON file");
+    po::options_description desc(
+            "Create SELECT circuit from JSON file\n\n"
+            "Input JSON fields:\n"
+            "  pauli_strings: List of Pauli strings used by SELECT; each Pauli is one of I, X, Y, Z."
+    );
     desc.add_options()
         ("help", "Print usage instructions")
-        ("file", po::value<std::string>()->required(), "Path to JSON file of input parameters")
-        ("out", po::value<std::string>()->default_value("out.json"), "Path to the output file")
+        ("input", po::value<std::string>()->required(), "Input JSON file")
+        ("output", po::value<std::string>()->required(), "Path to the output file")
         ("inline", "Option to enable inline expansion");
 
     po::variables_map vm;
@@ -70,8 +74,8 @@ int main(std::int32_t argc, const char* const* const argv) {
     }
 
     std::string input_file;
-    if (vm.count("file") > 0) {
-        input_file = vm["file"].as<std::string>();
+    if (vm.count("input") > 0) {
+        input_file = vm["input"].as<std::string>();
     }
     const auto params = LoadSELECTJson(input_file);
 
@@ -88,8 +92,8 @@ int main(std::int32_t argc, const char* const* const argv) {
     }
 
     std::string output_file;
-    if (vm.count("out") > 0) {
-        output_file = vm["out"].as<std::string>();
+    if (vm.count("output") > 0) {
+        output_file = vm["output"].as<std::string>();
     }
     std::ofstream ofs(output_file);
     if (!ofs) {
