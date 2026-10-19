@@ -11,12 +11,9 @@ env:
   # CMake version the pinned vcpkg 2026.03.18 registry expects
   SKBUILD_MINIMUM_VERSION: "0.8"
   SKBUILD_CMAKE_VERSION: ">=3.31.10"
-  # Oldest macOS the published wheels are built to run on. scikit-build-core picks
-  # the wheel's platform tag from this, and CMake initialises
-  # CMAKE_OSX_DEPLOYMENT_TARGET from it, so the tag and the compiled extension
-  # agree. Without it both follow the runner's own macOS version, so a wheel built
-  # on macos-latest is tagged macosx_15_0 and pip refuses to install it on macOS 13
-  # or 14. Set at workflow level so vcpkg and every other sub-build see it too.
+  # Oldest macOS the wheels support. Sets both the wheel's platform tag and the
+  # compile target; without it they follow the runner's macOS and pip rejects
+  # the wheel on older versions.
   MACOSX_DEPLOYMENT_TARGET: "13.0"
 
 jobs:
