@@ -124,10 +124,7 @@ jobs:
           SKBUILD_CMAKE_DEFINE: "CMAKE_TOOLCHAIN_FILE=${{env.VCPKG_ROOT}}/scripts/buildsystems/vcpkg.cmake;QRET_BUILD_PYTHON=ON"
         run: |
           if [ "${{ runner.os }}" = "macOS" ]; then
-            # CMake already defaults this to $MACOSX_DEPLOYMENT_TARGET, but pass it
-            # explicitly so recent scikit-build-core, which prefers an explicit
-            # CMAKE_OSX_DEPLOYMENT_TARGET over the environment when it computes the
-            # platform tag, stamps the same version it compiles against.
+            # Some scikit-build-core versions take the tag from this define, not the env.
             export SKBUILD_CMAKE_DEFINE="${SKBUILD_CMAKE_DEFINE};CMAKE_OSX_DEPLOYMENT_TARGET=${MACOSX_DEPLOYMENT_TARGET}"
           fi
           python -m pip install --upgrade pip build pytest coverage wheel numpy
